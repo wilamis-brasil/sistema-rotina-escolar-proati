@@ -272,5 +272,5 @@ Este projeto demonstra que eu consigo:
 
 ## Licença
 
-Ainda sem licença definida. Antes de redistribuir oficialmente, recomenda-se adicionar uma licença como MIT.
+Tem que definir essa parte ainda, o mizera...
 
