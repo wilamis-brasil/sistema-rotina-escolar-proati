@@ -1,6 +1,6 @@
 import { failure } from "../domain/errors";
 import { createEmptyState, migrateState, nowIso } from "../domain/model";
-import { STORAGE_KEY, type AppState, type EmptyResult, type Result, type StorageAdapter } from "../domain/types";
+import { LEGACY_STORAGE_KEYS, STORAGE_KEY, type AppState, type EmptyResult, type Result, type StorageAdapter } from "../domain/types";
 
 export function browserStorage(): StorageAdapter {
   return window.localStorage;
@@ -12,11 +12,27 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
 } {
   try {
     const raw = storage.getItem(STORAGE_KEY);
-    if (!raw) {
-      return { state: createEmptyState(), notice: "Novo armazenamento local criado neste navegador." };
+    if (raw) {
+      return { state: migrateState(JSON.parse(raw)), notice: "Dados locais carregados." };
     }
 
-    return { state: migrateState(JSON.parse(raw)), notice: "Dados locais carregados." };
+    const legacyEntry = LEGACY_STORAGE_KEYS
+      .map((key) => ({ key, raw: storage.getItem(key) }))
+      .find((entry) => Boolean(entry.raw));
+
+    if (legacyEntry?.raw) {
+      const migrated = migrateState(JSON.parse(legacyEntry.raw));
+      try {
+        storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+        storage.removeItem(legacyEntry.key);
+      } catch (persistError) {
+        console.error("Falha ao migrar dados locais para nova chave.", persistError);
+      }
+
+      return { state: migrated, notice: "Dados locais migrados para a nova chave de armazenamento." };
+    }
+
+    return { state: createEmptyState(), notice: "Novo armazenamento local criado neste navegador." };
   } catch (error) {
     console.error("Falha ao carregar dados locais.", error);
     return {
@@ -75,6 +91,9 @@ export function importStateFromText(rawText: string): Result<AppState> {
 export function clearStoredState(storage: StorageAdapter = browserStorage()): EmptyResult {
   try {
     storage.removeItem(STORAGE_KEY);
+    for (const key of LEGACY_STORAGE_KEYS) {
+      storage.removeItem(key);
+    }
     return { ok: true };
   } catch {
     return failure("Não foi possível apagar os dados locais.");

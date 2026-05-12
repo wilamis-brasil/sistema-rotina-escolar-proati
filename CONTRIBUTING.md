@@ -10,7 +10,7 @@ Confira se a mudanca:
 - nao exige backend sem necessidade;
 - nao quebra o GitHub Pages;
 - nao apaga dados ja salvos no navegador;
-- nao muda a chave `kickoff-proati-state-v1` sem migracao;
+- nao muda a chave `sistema-rotina-escolar-proati-state-v1` sem migracao;
 - nao adiciona dependencia desnecessaria.
 
 ## Rodar localmente

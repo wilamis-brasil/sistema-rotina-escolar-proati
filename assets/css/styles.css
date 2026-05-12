@@ -36,6 +36,10 @@
   --radius: 6px;
   --control-height: 42px;
   --content-width: 1240px;
+  --site-logo-width: 148px;
+  --main-menu-button-width: 168px;
+  --main-menu-panel-width: 320px;
+  --main-menu-item-height: 58px;
   font-family: "Rawline", sans-serif;
 }
 
@@ -93,7 +97,7 @@ button {
 .site-logo {
   display: inline-flex;
   align-items: center;
-  width: clamp(132px, 14vw, 188px);
+  width: var(--site-logo-width);
   min-width: 0;
   line-height: 0;
   text-decoration: none;
@@ -115,14 +119,15 @@ button {
 }
 
 .main-nav {
+  position: relative;
   display: flex;
   justify-content: flex-end;
-  gap: 6px;
+  justify-self: end;
+  width: var(--main-menu-button-width);
   min-width: 0;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
 
+.menu-button,
 .nav-button,
 .button,
 .icon-button,
@@ -136,27 +141,124 @@ button {
   transition: none;
 }
 
-.nav-button {
-  flex: 0 0 auto;
-  min-height: 36px;
-  padding: 8px 10px;
-  color: var(--muted);
-  background: transparent;
-  font-size: 0.84rem;
+.menu-button {
+  justify-content: flex-start;
+  width: var(--main-menu-button-width);
+  height: 48px;
+  min-height: 48px;
+  padding: 0 10px;
+  color: #ffffff;
+  background: #000000;
+  border-color: #000000;
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.menu-button:hover,
+.menu-button[aria-expanded="true"] {
+  color: #ffffff;
+  background: #1d1d1d;
+  border-color: #1d1d1d;
+}
+
+.menu-button-copy {
+  display: grid;
+  width: 96px;
+  min-width: 96px;
+  gap: 2px;
+  line-height: 1.05;
+  text-align: left;
+}
+
+.menu-button-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.72rem;
   font-weight: 800;
+}
+
+#main-menu-current {
+  width: 96px;
+  max-width: 96px;
+  overflow: hidden;
+  font-size: 0.88rem;
+  line-height: 1.1;
+  text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.menu-button-chevron {
+  margin-left: auto;
+}
+
+.menu-button[aria-expanded="true"] .menu-button-chevron {
+  transform: rotate(180deg);
+}
+
+.menu-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 40;
+  display: grid;
+  width: var(--main-menu-panel-width);
+  max-width: calc(100vw - 24px);
+  gap: 4px;
+  padding: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
+}
+
+.menu-panel[hidden] {
+  display: none;
+}
+
+.nav-button {
+  justify-content: flex-start;
+  width: 100%;
+  height: var(--main-menu-item-height);
+  min-height: var(--main-menu-item-height);
+  padding: 0 12px;
+  color: var(--text);
+  background: transparent;
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-align: left;
+  white-space: normal;
 }
 
 .nav-button:hover {
   color: var(--text);
   background: var(--surface-soft);
-  border-color: transparent;
+  border-color: var(--border);
 }
 
 .nav-button.is-active {
   color: #ffffff;
   background: #000000;
   border-color: #000000;
+}
+
+.nav-button-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+  line-height: 1.12;
+}
+
+.nav-button-copy span {
+  font-weight: 900;
+}
+
+.nav-button-copy small {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.nav-button.is-active .nav-button-copy small {
+  color: rgba(255, 255, 255, 0.74);
 }
 
 .app-shell {
@@ -658,6 +760,7 @@ textarea:focus-visible {
 }
 
 .button svg,
+.menu-button svg,
 .nav-button svg,
 .icon-button svg,
 .action-button svg {
@@ -1445,14 +1548,9 @@ textarea:focus-visible {
 }
 
 @media (max-width: 1040px) {
-  .app-header,
   .operations-grid,
   .content-grid {
     grid-template-columns: 1fr;
-  }
-
-  .main-nav {
-    justify-content: flex-start;
   }
 
   .operations-actions {
@@ -1467,10 +1565,15 @@ textarea:focus-visible {
 }
 
 @media (max-width: 760px) {
+  :root {
+    --site-logo-width: 172px;
+    --main-menu-button-width: 48px;
+  }
+
   .app-header {
-    position: static;
-    gap: 14px;
-    padding: 14px 16px;
+    grid-template-columns: minmax(0, 1fr) var(--main-menu-button-width);
+    gap: 12px;
+    padding: 12px 16px;
   }
 
   .app-shell {
@@ -1479,13 +1582,29 @@ textarea:focus-visible {
   }
 
   .main-nav {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: visible;
+    justify-content: flex-end;
   }
 
-  .nav-button {
-    width: 100%;
+  .site-logo img {
+    max-height: 42px;
+  }
+
+  .menu-button {
+    justify-content: center;
+    gap: 0;
+    width: var(--main-menu-button-width);
+    height: 48px;
+    padding: 0;
+  }
+
+  .menu-button-copy,
+  .menu-button-chevron {
+    display: none;
+  }
+
+  .menu-panel {
+    top: calc(100% + 8px);
+    width: min(var(--main-menu-panel-width), calc(100vw - 32px));
   }
 
   .operations-copy strong {
@@ -1535,10 +1654,6 @@ textarea:focus-visible {
   .app-shell {
     width: calc(100% - 24px);
     padding-bottom: 96px;
-  }
-
-  .site-logo {
-    width: 148px;
   }
 
   .operations-bar {

@@ -78,10 +78,10 @@ Este projeto resolve esse problema com uma ferramenta simples, visual e feita pa
 - Exportação JSON.
 - Importação JSON com validação.
 - Reset dos dados locais.
-- Compatibilidade com a chave legada:
+- Chave do `localStorage`:
 
 ```txt
-kickoff-proati-state-v1
+sistema-rotina-escolar-proati-state-v1
 ```
 
 ## Destaques Técnicos Para Entrevistadores
@@ -93,7 +93,7 @@ Este projeto demonstra mais do que uma interface bonita. Ele mostra decisões pr
 | Entendimento de negócio | A aplicação foi desenhada a partir da rotina real de um PROATI em escola pública. |
 | Frontend moderno | Vite, TypeScript estrito, módulos separados e build estático. |
 | Arquitetura simples | Separação entre domínio, persistência, controller, notificações e UI. |
-| Preservação de dados | Compatibilidade com `kickoff-proati-state-v1` e normalização do estado local. |
+| Preservação de dados | Migração de dados e normalização do estado local. |
 | Segurança básica | Sem backend, sem segredo no código, validação de JSON e renderização segura via DOM API. |
 | Deploy barato | Compatível com GitHub Pages, sem servidor próprio e sem banco remoto. |
 | Produto real | Foco em produtividade, rotina operacional e usabilidade para ambiente escolar. |
@@ -141,6 +141,7 @@ Documentação complementar:
 +-- assets/
 |   +-- css/
 |   +-- img/
+|   +-- sounds/
 +-- src/
 |   +-- app/
 |   +-- domain/
@@ -148,7 +149,6 @@ Documentação complementar:
 |   +-- persistence/
 |   +-- ui/
 +-- docs/
-+-- alarme.mp3
 +-- package.json
 +-- tsconfig.json
 +-- vite.config.ts

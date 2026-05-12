@@ -5,8 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#000000">
     <meta name="description" content="Kick OFF - Função Estagiário PROATI: rotina local para retirada, uso e devolução de dispositivos eletrônicos.">
+    <meta name="application-name" content="Sistema de Rotina Escolar PROATI">
+    <meta name="apple-mobile-web-app-title" content="PROATI">
     <title>Sistema de Rotina Escolar para - PROATI</title>
-    <link rel="icon" href="./assets/img/logo-proati.png">
+    <link rel="icon" href="./favicon.ico" sizes="any">
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+    <link rel="manifest" href="./site.webmanifest">
     <script type="module" src="./src/main.ts"></script>
   </head>
   <body>
@@ -15,30 +19,65 @@
         <img src="./assets/img/logo-proati.png" alt="SP.PROATI">
       </a>
       <nav class="main-nav" aria-label="Navegação principal">
-        <button class="nav-button is-active" type="button" data-view="today">
-          <i data-lucide="clock-3" aria-hidden="true"></i>
-          <span>Hoje</span>
+        <button
+          class="menu-button"
+          type="button"
+          id="main-menu-button"
+          aria-expanded="false"
+          aria-controls="main-menu-panel"
+          aria-label="Abrir menu de navegação. Seção atual: Home."
+        >
+          <i data-lucide="menu" aria-hidden="true"></i>
+          <span class="menu-button-copy">
+            <span class="menu-button-label">Menu</span>
+            <strong id="main-menu-current">Home</strong>
+          </span>
+          <i class="menu-button-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </button>
-        <button class="nav-button" type="button" data-view="week">
-          <i data-lucide="calendar-days" aria-hidden="true"></i>
-          <span>Semana</span>
-        </button>
-        <button class="nav-button" type="button" data-view="teachers">
-          <i data-lucide="users" aria-hidden="true"></i>
-          <span>Professores</span>
-        </button>
-        <button class="nav-button" type="button" data-view="rooms">
-          <i data-lucide="school" aria-hidden="true"></i>
-          <span>Salas</span>
-        </button>
-        <button class="nav-button" type="button" data-view="devices">
-          <i data-lucide="laptop" aria-hidden="true"></i>
-          <span>Dispositivos</span>
-        </button>
-        <button class="nav-button" type="button" data-view="settings">
-          <i data-lucide="settings" aria-hidden="true"></i>
-          <span>Configurações</span>
-        </button>
+        <div class="menu-panel" id="main-menu-panel" hidden>
+          <button class="nav-button is-active" type="button" data-view="today" aria-current="page">
+            <i data-lucide="clock-3" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Home</span>
+              <small>Painel do dia</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="week">
+            <i data-lucide="calendar-days" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Semana</span>
+              <small>Rotina completa</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="teachers">
+            <i data-lucide="users" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Professores</span>
+              <small>Cadastro reutilizável</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="rooms">
+            <i data-lucide="school" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Salas</span>
+              <small>Turmas e alunos</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="devices">
+            <i data-lucide="laptop" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Dispositivos</span>
+              <small>Equipamentos usados</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="settings">
+            <i data-lucide="settings" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Configurações</span>
+              <small>Alertas e dados locais</small>
+            </span>
+          </button>
+        </div>
       </nav>
     </header>
 
@@ -51,10 +90,6 @@
         </div>
         <div class="operations-actions">
           <div id="today-metrics" class="today-metrics" aria-label="Resumo da rotina"></div>
-          <button class="button button-secondary button-small notification-action" type="button" id="notification-status">
-            <i data-lucide="bell-ring" aria-hidden="true"></i>
-            <span>Permitir alertas</span>
-          </button>
           <button class="button button-secondary button-small" type="button" id="undo-delete-button" hidden>
             <i data-lucide="undo-2" aria-hidden="true"></i>
             <span>Desfazer</span>

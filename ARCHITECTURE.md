@@ -32,7 +32,7 @@ Responsabilidades:
 - ordenar e filtrar rotinas;
 - migrar estado salvo;
 - validar catálogos;
-- preservar compatibilidade com `kickoff-proati-state-v1`.
+- preservar compatibilidade com chaves legadas de `localStorage`.
 
 ### `src/persistence`
 
@@ -90,7 +90,7 @@ Responsabilidades:
 A chave pública de armazenamento é:
 
 ```txt
-kickoff-proati-state-v1
+sistema-rotina-escolar-proati-state-v1
 ```
 
 Entidades principais:

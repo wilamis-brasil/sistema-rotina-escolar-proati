@@ -9,7 +9,7 @@ Isso significa que os dados cadastrados nao sao enviados para servidor pelo app.
 Os dados ficam em `localStorage`, na chave:
 
 ```txt
-kickoff-proati-state-v1
+sistema-rotina-escolar-proati-state-v1
 ```
 
 O navegador mantem esses dados entre sessoes, ate que o usuario apague os dados pelo sistema ou limpe os dados do site no navegador.

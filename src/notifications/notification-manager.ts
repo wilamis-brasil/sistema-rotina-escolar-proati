@@ -1,4 +1,4 @@
-import alarmSoundUrl from "../../alarme.mp3?url";
+import alarmSoundUrl from "../../assets/sounds/alarme.mp3?url";
 import {
   getWeekdayLabel,
   timeToMinutes,

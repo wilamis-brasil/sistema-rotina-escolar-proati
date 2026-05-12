@@ -16,13 +16,24 @@ import { el, icon, option, qs, qsa, replaceChildren, span } from "./dom";
 import { refreshIcons } from "./icons";
 import { createToastManager, type ToastManager, type ToastPayload } from "./toasts";
 
+const NAVIGATION_LABELS: Record<string, string> = {
+  today: "Home",
+  week: "Semana",
+  teachers: "Professores",
+  rooms: "Salas",
+  devices: "Dispositivos",
+  settings: "Configurações",
+};
+
 interface UIRefs {
+  mainMenuButton: HTMLButtonElement;
+  mainMenuPanel: HTMLElement;
+  mainMenuCurrent: HTMLElement;
   navButtons: NodeListOf<HTMLButtonElement>;
   views: NodeListOf<HTMLElement>;
   todayLabel: HTMLElement;
   storageStatus: HTMLElement;
   todayMetrics: HTMLElement;
-  notificationStatus: HTMLButtonElement;
   undoDeleteButton: HTMLButtonElement;
   routineFormPanel: HTMLElement;
   routineForm: HTMLFormElement;
@@ -111,6 +122,7 @@ export function createUI({
   const recentAlerts: RoutineAlert[] = [];
   let activeView = "today";
   let editingRoutineId: string | null = null;
+  let isMainMenuOpen = false;
   let selectedDevices = new Set<string>();
 
   function init(): void {
@@ -127,12 +139,14 @@ export function createUI({
 
   function bindRefs(): UIRefs {
     return {
+      mainMenuButton: qs("#main-menu-button"),
+      mainMenuPanel: qs("#main-menu-panel"),
+      mainMenuCurrent: qs("#main-menu-current"),
       navButtons: qsa<HTMLButtonElement>(".nav-button"),
       views: qsa<HTMLElement>(".view"),
       todayLabel: qs("#today-label"),
       storageStatus: qs("#storage-status"),
       todayMetrics: qs("#today-metrics"),
-      notificationStatus: qs("#notification-status"),
       undoDeleteButton: qs("#undo-delete-button"),
       routineFormPanel: qs("#routine-form-panel"),
       routineForm: qs("#routine-form"),
@@ -197,9 +211,17 @@ export function createUI({
   }
 
   function bindEvents(): void {
+    refs.mainMenuButton.addEventListener("click", toggleMainMenu);
+
     refs.navButtons.forEach((button) => {
-      button.addEventListener("click", () => setView(button.dataset.view ?? "today"));
+      button.addEventListener("click", () => {
+        setView(button.dataset.view ?? "today");
+        closeMainMenu({ focusButton: true });
+      });
     });
+
+    document.addEventListener("click", closeMainMenuOnOutsideClick);
+    document.addEventListener("keydown", closeMainMenuOnEscape);
 
     refs.routineForm.addEventListener("submit", handleRoutineSubmit);
     refs.clearRoutineForm.addEventListener("click", () => {
@@ -210,7 +232,6 @@ export function createUI({
     refs.routineLeadMode.addEventListener("change", renderRoutineLeadMode);
     refs.routineRoom.addEventListener("change", fillStudentCountFromRoom);
 
-    refs.notificationStatus.addEventListener("click", requestNotificationAccess);
     refs.requestNotificationButton.addEventListener("click", requestNotificationAccess);
 
     refs.routineFilter.addEventListener("input", () => {
@@ -281,14 +302,57 @@ export function createUI({
     activeView = viewId;
 
     refs.navButtons.forEach((button) => {
-      button.classList.toggle("is-active", button.dataset.view === viewId);
+      const isCurrent = button.dataset.view === viewId;
+      button.classList.toggle("is-active", isCurrent);
+      if (isCurrent) {
+        button.setAttribute("aria-current", "page");
+      } else {
+        button.removeAttribute("aria-current");
+      }
     });
 
     refs.views.forEach((view) => {
       view.classList.toggle("is-active", view.id === `view-${viewId}`);
     });
 
+    renderMainMenuCurrent();
     refreshIcons();
+  }
+
+  function toggleMainMenu(): void {
+    setMainMenuOpen(!isMainMenuOpen);
+  }
+
+  function setMainMenuOpen(isOpen: boolean): void {
+    isMainMenuOpen = isOpen;
+    refs.mainMenuButton.setAttribute("aria-expanded", String(isOpen));
+    refs.mainMenuPanel.hidden = !isOpen;
+  }
+
+  function closeMainMenu({ focusButton = false }: { focusButton?: boolean } = {}): void {
+    if (!isMainMenuOpen) return;
+    setMainMenuOpen(false);
+    if (focusButton) {
+      refs.mainMenuButton.focus();
+    }
+  }
+
+  function closeMainMenuOnOutsideClick(event: MouseEvent): void {
+    if (!isMainMenuOpen || !(event.target instanceof Node)) return;
+    if (refs.mainMenuButton.contains(event.target) || refs.mainMenuPanel.contains(event.target)) return;
+    closeMainMenu();
+  }
+
+  function closeMainMenuOnEscape(event: KeyboardEvent): void {
+    if (!isMainMenuOpen || event.key !== "Escape") return;
+    event.preventDefault();
+    closeMainMenu({ focusButton: true });
+  }
+
+  function renderMainMenuCurrent(): void {
+    const label = NAVIGATION_LABELS[activeView] ?? "Menu";
+    refs.mainMenuCurrent.textContent = label;
+    refs.mainMenuButton.setAttribute("aria-label", `Abrir menu de navegação. Seção atual: ${label}.`);
   }
 
   function handleRoutineSubmit(event: SubmitEvent): void {
@@ -822,12 +886,9 @@ export function createUI({
   function renderNotificationStatus(): void {
     const status = notifications.getStatus();
     const isActive = status.type === "enabled" || status.type === "unsupported";
-    setButtonLabel(refs.notificationStatus, "Permitir alertas");
-    refs.notificationStatus.hidden = isActive;
-    refs.notificationStatus.title = status.label;
-    refs.notificationStatus.setAttribute("aria-label", "Permitir alertas");
-    refs.notificationStatus.dataset.status = status.type;
     refs.requestNotificationButton.hidden = isActive;
+    refs.requestNotificationButton.title = status.label;
+    refs.requestNotificationButton.dataset.status = status.type;
   }
 
   function addAlert(alert: RoutineAlert): void {
@@ -944,16 +1005,6 @@ export function createUI({
     showToast,
     renderNotificationStatus,
   };
-}
-
-function setButtonLabel(button: HTMLButtonElement, text: string): void {
-  const label = button.querySelector("span");
-  if (label) {
-    label.textContent = text;
-    return;
-  }
-
-  button.replaceChildren(icon("bell-ring"), span(text));
 }
 
 function iconButton(

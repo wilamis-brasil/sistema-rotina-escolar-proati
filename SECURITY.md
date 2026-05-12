@@ -45,7 +45,7 @@ localStorage
 Chave:
 
 ```txt
-kickoff-proati-state-v1
+sistema-rotina-escolar-proati-state-v1
 ```
 
 Isso e suficiente para um app local de rotina, mas nao deve ser tratado como cofre seguro.
