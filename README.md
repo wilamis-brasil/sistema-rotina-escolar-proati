@@ -10,6 +10,10 @@ Aplicação web estática para ajudar PROATIs e estagiários de TI de escolas p�
 
 Este projeto foi criado a partir de uma dor real de trabalho: controlar horários, professores, salas, turmas e dispositivos compartilhados sem depender de papel, memória, planilhas improvisadas ou servidor externo.
 
+## Site Online
+
+> **Acesse o sistema publicado:** [wilamis-brasil.github.io/sistema-rotina-escolar-proati](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)
+
 ## Visão Geral
 
 O Sistema de Rotina Escolar PROATI é um site local-first, compatível com GitHub Pages, que permite registrar rotinas semanais de uso de equipamentos escolares e receber alertas no navegador.
@@ -18,11 +22,9 @@ Ele foi pensado para o cotidiano de um PROATI: uma pessoa que precisa atender ch
 
 ## Demonstração
 
-Quando o GitHub Pages estiver habilitado para este repositório, a URL esperada será:
+A versão pública fica disponível em:
 
-```txt
-https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/
-```
+[https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)
 
 Para rodar localmente:
 
@@ -125,13 +127,13 @@ src/
 
 Documentação complementar:
 
-- [Arquitetura](docs/ARCHITECTURE.md)
-- [Estudo de caso para portfólio](docs/PORTFOLIO_CASE_STUDY.md)
-- [Deploy no GitHub Pages](docs/GITHUB_PAGES.md)
-- [Privacidade e dados locais](docs/PRIVACY.md)
-- [Segurança](docs/SECURITY.md)
-- [Roadmap](docs/ROADMAP.md)
-- [Contribuição](docs/CONTRIBUTING.md)
+- [Arquitetura](ARCHITECTURE.md)
+- [Estudo de caso para portfólio](PORTFOLIO_CASE_STUDY.md)
+- [Deploy no GitHub Pages](GITHUB_PAGES.md)
+- [Privacidade e dados locais](PRIVACY.md)
+- [Segurança](SECURITY.md)
+- [Roadmap](ROADMAP.md)
+- [Contribuição](CONTRIBUTING.md)
 
 ## Estrutura do Repositório
 
@@ -148,7 +150,9 @@ Documentação complementar:
 |   +-- notifications/
 |   +-- persistence/
 |   +-- ui/
-+-- docs/
++-- public/
++-- ARCHITECTURE.md
++-- GITHUB_PAGES.md
 +-- package.json
 +-- tsconfig.json
 +-- vite.config.ts
@@ -220,7 +224,7 @@ Depois publique o conteúdo de:
 dist/
 ```
 
-Mais detalhes em [docs/GITHUB_PAGES.md](docs/GITHUB_PAGES.md).
+Mais detalhes em [GITHUB_PAGES.md](GITHUB_PAGES.md).
 
 ## Privacidade
 
@@ -228,7 +232,7 @@ Os dados ficam no navegador do usuário, usando `localStorage`. O app não envia
 
 Mesmo assim, a rotina escolar pode conter informações sensíveis de contexto, como nomes de professores, salas, horários e observações. Por isso, o sistema evita backend e mantém os dados sob controle local.
 
-Leia [docs/PRIVACY.md](docs/PRIVACY.md) antes de usar em ambiente real.
+Leia [PRIVACY.md](PRIVACY.md) antes de usar em ambiente real.
 
 ## Segurança
 
@@ -242,7 +246,7 @@ Resumo das decisões atuais:
 - validação de JSON antes de persistir;
 - renderização de dados via DOM API, sem `innerHTML` para dados do usuário.
 
-Notas e melhorias recomendadas estão em [docs/SECURITY.md](docs/SECURITY.md).
+Notas e melhorias recomendadas estão em [SECURITY.md](SECURITY.md).
 
 ## Roadmap
 
@@ -255,7 +259,7 @@ Próximas melhorias planejadas:
 - melhorias mobile;
 - tutorial visual para outros PROATIs.
 
-Veja [docs/ROADMAP.md](docs/ROADMAP.md).
+Veja [ROADMAP.md](ROADMAP.md).
 
 ## Valor Como Portfólio
 
@@ -272,5 +276,6 @@ Este projeto demonstra que eu consigo:
 
 ## Licença
 
-Tem que definir essa parte ainda, o mizera...
+Este projeto é distribuído sob a licença MIT.
 
+Veja o arquivo [LICENSE](LICENSE) para os termos completos.

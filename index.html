@@ -11,7 +11,20 @@
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
-    <script type="module" src="./src/main.ts"></script>
+    <script type="module">
+      const isViteDevServer =
+        ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname) && window.location.port === "5173";
+
+      if (!isViteDevServer) {
+        const stylesheet = document.createElement("link");
+        stylesheet.rel = "stylesheet";
+        stylesheet.href = "./assets/app.css";
+        document.head.append(stylesheet);
+      }
+
+      const appModule = new URL(isViteDevServer ? "./src/" + "main.ts" : "./assets/" + "app.js", document.baseURI).href;
+      void import(/* @vite-ignore */ appModule);
+    </script>
   </head>
   <body>
     <header class="app-header">
