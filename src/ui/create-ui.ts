@@ -1,6 +1,6 @@
+import type { AppActions } from "../app/controller";
+import { errorText } from "../domain/errors";
 import {
-  SORT_OPTIONS,
-  WEEKDAYS,
   filterRoutines,
   formatDateTime,
   getTodayWeekdayId,
@@ -8,22 +8,113 @@ import {
   normalizeText,
   sortRoutines,
   timeToMinutes,
-} from "./model.js";
-import { createDialogManager } from "./dialogs.js";
-import { errorText } from "./errors.js";
-import { createToastManager } from "./toasts.js";
+} from "../domain/model";
+import { SORT_OPTIONS, WEEKDAYS, type AppState, type CatalogKind, type EmptyResult, type Routine, type RoutinePayload } from "../domain/types";
+import type { NotificationManager, RoutineAlert } from "../notifications/notification-manager";
+import { createDialogManager, type DialogManager } from "./dialogs";
+import { el, icon, option, qs, qsa, replaceChildren, span } from "./dom";
+import { refreshIcons } from "./icons";
+import { createToastManager, type ToastManager, type ToastPayload } from "./toasts";
 
-export function createUI({ getState, actions, notifications, initialNotice }) {
-  const refs = {};
-  const dialogs = createDialogManager();
-  const toasts = createToastManager();
-  const recentAlerts = [];
+interface UIRefs {
+  navButtons: NodeListOf<HTMLButtonElement>;
+  views: NodeListOf<HTMLElement>;
+  todayLabel: HTMLElement;
+  storageStatus: HTMLElement;
+  todayMetrics: HTMLElement;
+  notificationStatus: HTMLButtonElement;
+  undoDeleteButton: HTMLButtonElement;
+  routineFormPanel: HTMLElement;
+  routineForm: HTMLFormElement;
+  routineFormTitle: HTMLElement;
+  routineFormModeLabel: HTMLElement;
+  routineId: HTMLInputElement;
+  routineWeekday: HTMLSelectElement;
+  routineStartTime: HTMLInputElement;
+  routineEndTime: HTMLInputElement;
+  routineTeacher: HTMLInputElement;
+  routineRoom: HTMLInputElement;
+  routineStudentCount: HTMLInputElement;
+  routineDevices: HTMLElement;
+  routineNewDevice: HTMLInputElement;
+  routineNotes: HTMLTextAreaElement;
+  routineNotificationEnabled: HTMLInputElement;
+  routineLeadMode: HTMLSelectElement;
+  routineCustomLeadWrap: HTMLElement;
+  routineCustomLead: HTMLInputElement;
+  routineFeedback: HTMLElement;
+  saveRoutineButton: HTMLElement;
+  clearRoutineForm: HTMLButtonElement;
+  addDeviceToRoutine: HTMLButtonElement;
+  todaySummary: HTMLElement;
+  todayRoutines: HTMLElement;
+  requestNotificationButton: HTMLButtonElement;
+  weekRoutines: HTMLElement;
+  routineFilter: HTMLInputElement;
+  routineSort: HTMLSelectElement;
+  teachersDatalist: HTMLElement;
+  roomsDatalist: HTMLElement;
+  teacherForm: HTMLFormElement;
+  teacherId: HTMLInputElement;
+  teacherName: HTMLInputElement;
+  teacherFeedback: HTMLElement;
+  teachersListPanel: HTMLElement;
+  roomForm: HTMLFormElement;
+  roomId: HTMLInputElement;
+  roomName: HTMLInputElement;
+  roomStudentCount: HTMLInputElement;
+  roomFeedback: HTMLElement;
+  roomsListPanel: HTMLElement;
+  deviceForm: HTMLFormElement;
+  deviceId: HTMLInputElement;
+  deviceName: HTMLInputElement;
+  deviceFeedback: HTMLElement;
+  devicesListPanel: HTMLElement;
+  settingsForm: HTMLFormElement;
+  settingsNotificationsEnabled: HTMLInputElement;
+  settingsDefaultLead: HTMLSelectElement;
+  settingsCustomLeadWrap: HTMLElement;
+  settingsCustomLead: HTMLInputElement;
+  settingsSoundEnabled: HTMLInputElement;
+  settingsFeedback: HTMLElement;
+  exportDataButton: HTMLButtonElement;
+  importDataFile: HTMLInputElement;
+  resetDataButton: HTMLButtonElement;
+  alertList: HTMLElement;
+  clearAlertsButton: HTMLButtonElement;
+  alertDock: HTMLElement;
+}
+
+export interface UIApi {
+  init(): void;
+  render(): void;
+  addAlert(alert: RoutineAlert): void;
+  showAlarm(alert: RoutineAlert): Promise<void>;
+  showToast(payload: ToastPayload): void;
+  renderNotificationStatus(): void;
+}
+
+export function createUI({
+  getState,
+  actions,
+  notifications,
+  initialNotice,
+}: {
+  getState: () => AppState;
+  actions: AppActions;
+  notifications: NotificationManager;
+  initialNotice: string;
+}): UIApi {
+  let refs: UIRefs;
+  const dialogs: DialogManager = createDialogManager();
+  const toasts: ToastManager = createToastManager();
+  const recentAlerts: RoutineAlert[] = [];
   let activeView = "today";
-  let editingRoutineId = null;
-  let selectedDevices = new Set();
+  let editingRoutineId: string | null = null;
+  let selectedDevices = new Set<string>();
 
-  function init() {
-    bindRefs();
+  function init(): void {
+    refs = bindRefs();
     bindEvents();
     renderStaticOptions();
     setView(activeView);
@@ -34,86 +125,80 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function bindRefs() {
-    refs.navButtons = document.querySelectorAll(".nav-button");
-    refs.views = document.querySelectorAll(".view");
-    refs.todayLabel = document.querySelector("#today-label");
-    refs.storageStatus = document.querySelector("#storage-status");
-    refs.todayMetrics = document.querySelector("#today-metrics");
-    refs.notificationStatus = document.querySelector("#notification-status");
-    refs.undoDeleteButton = document.querySelector("#undo-delete-button");
-
-    refs.routineFormPanel = document.querySelector("#routine-form-panel");
-    refs.routineForm = document.querySelector("#routine-form");
-    refs.routineFormTitle = document.querySelector("#routine-form-title");
-    refs.routineFormModeLabel = document.querySelector("#routine-form-mode-label");
-    refs.routineId = document.querySelector("#routine-id");
-    refs.routineWeekday = document.querySelector("#routine-weekday");
-    refs.routineStartTime = document.querySelector("#routine-start-time");
-    refs.routineEndTime = document.querySelector("#routine-end-time");
-    refs.routineTeacher = document.querySelector("#routine-teacher");
-    refs.routineRoom = document.querySelector("#routine-room");
-    refs.routineStudentCount = document.querySelector("#routine-student-count");
-    refs.routineDevices = document.querySelector("#routine-devices");
-    refs.routineNewDevice = document.querySelector("#routine-new-device");
-    refs.routineNotes = document.querySelector("#routine-notes");
-    refs.routineNotificationEnabled = document.querySelector("#routine-notification-enabled");
-    refs.routineLeadMode = document.querySelector("#routine-lead-mode");
-    refs.routineCustomLeadWrap = document.querySelector("#routine-custom-lead-wrap");
-    refs.routineCustomLead = document.querySelector("#routine-custom-lead");
-    refs.routineFeedback = document.querySelector("#routine-form-feedback");
-    refs.saveRoutineButton = document.querySelector("#save-routine-button span");
-    refs.clearRoutineForm = document.querySelector("#clear-routine-form");
-    refs.addDeviceToRoutine = document.querySelector("#add-device-to-routine");
-
-    refs.todaySummary = document.querySelector("#today-summary");
-    refs.todayRoutines = document.querySelector("#today-routines");
-    refs.requestNotificationButton = document.querySelector("#request-notification-button");
-    refs.weekRoutines = document.querySelector("#week-routines");
-    refs.routineFilter = document.querySelector("#routine-filter");
-    refs.routineSort = document.querySelector("#routine-sort");
-
-    refs.teachersDatalist = document.querySelector("#teachers-list");
-    refs.roomsDatalist = document.querySelector("#rooms-list");
-
-    refs.teacherForm = document.querySelector("#teacher-form");
-    refs.teacherId = document.querySelector("#teacher-id");
-    refs.teacherName = document.querySelector("#teacher-name");
-    refs.teacherFeedback = document.querySelector("#teacher-feedback");
-    refs.teachersListPanel = document.querySelector("#teachers-list-panel");
-
-    refs.roomForm = document.querySelector("#room-form");
-    refs.roomId = document.querySelector("#room-id");
-    refs.roomName = document.querySelector("#room-name");
-    refs.roomStudentCount = document.querySelector("#room-student-count");
-    refs.roomFeedback = document.querySelector("#room-feedback");
-    refs.roomsListPanel = document.querySelector("#rooms-list-panel");
-
-    refs.deviceForm = document.querySelector("#device-form");
-    refs.deviceId = document.querySelector("#device-id");
-    refs.deviceName = document.querySelector("#device-name");
-    refs.deviceFeedback = document.querySelector("#device-feedback");
-    refs.devicesListPanel = document.querySelector("#devices-list-panel");
-
-    refs.settingsForm = document.querySelector("#settings-form");
-    refs.settingsNotificationsEnabled = document.querySelector("#settings-notifications-enabled");
-    refs.settingsDefaultLead = document.querySelector("#settings-default-lead");
-    refs.settingsCustomLeadWrap = document.querySelector("#settings-custom-lead-wrap");
-    refs.settingsCustomLead = document.querySelector("#settings-custom-lead");
-    refs.settingsSoundEnabled = document.querySelector("#settings-sound-enabled");
-    refs.settingsFeedback = document.querySelector("#settings-feedback");
-    refs.exportDataButton = document.querySelector("#export-data-button");
-    refs.importDataFile = document.querySelector("#import-data-file");
-    refs.resetDataButton = document.querySelector("#reset-data-button");
-
-    refs.alertList = document.querySelector("#alert-list");
-    refs.clearAlertsButton = document.querySelector("#clear-alerts-button");
-    refs.alertDock = document.querySelector(".alert-dock");
+  function bindRefs(): UIRefs {
+    return {
+      navButtons: qsa<HTMLButtonElement>(".nav-button"),
+      views: qsa<HTMLElement>(".view"),
+      todayLabel: qs("#today-label"),
+      storageStatus: qs("#storage-status"),
+      todayMetrics: qs("#today-metrics"),
+      notificationStatus: qs("#notification-status"),
+      undoDeleteButton: qs("#undo-delete-button"),
+      routineFormPanel: qs("#routine-form-panel"),
+      routineForm: qs("#routine-form"),
+      routineFormTitle: qs("#routine-form-title"),
+      routineFormModeLabel: qs("#routine-form-mode-label"),
+      routineId: qs("#routine-id"),
+      routineWeekday: qs("#routine-weekday"),
+      routineStartTime: qs("#routine-start-time"),
+      routineEndTime: qs("#routine-end-time"),
+      routineTeacher: qs("#routine-teacher"),
+      routineRoom: qs("#routine-room"),
+      routineStudentCount: qs("#routine-student-count"),
+      routineDevices: qs("#routine-devices"),
+      routineNewDevice: qs("#routine-new-device"),
+      routineNotes: qs("#routine-notes"),
+      routineNotificationEnabled: qs("#routine-notification-enabled"),
+      routineLeadMode: qs("#routine-lead-mode"),
+      routineCustomLeadWrap: qs("#routine-custom-lead-wrap"),
+      routineCustomLead: qs("#routine-custom-lead"),
+      routineFeedback: qs("#routine-form-feedback"),
+      saveRoutineButton: qs("#save-routine-button span"),
+      clearRoutineForm: qs("#clear-routine-form"),
+      addDeviceToRoutine: qs("#add-device-to-routine"),
+      todaySummary: qs("#today-summary"),
+      todayRoutines: qs("#today-routines"),
+      requestNotificationButton: qs("#request-notification-button"),
+      weekRoutines: qs("#week-routines"),
+      routineFilter: qs("#routine-filter"),
+      routineSort: qs("#routine-sort"),
+      teachersDatalist: qs("#teachers-list"),
+      roomsDatalist: qs("#rooms-list"),
+      teacherForm: qs("#teacher-form"),
+      teacherId: qs("#teacher-id"),
+      teacherName: qs("#teacher-name"),
+      teacherFeedback: qs("#teacher-feedback"),
+      teachersListPanel: qs("#teachers-list-panel"),
+      roomForm: qs("#room-form"),
+      roomId: qs("#room-id"),
+      roomName: qs("#room-name"),
+      roomStudentCount: qs("#room-student-count"),
+      roomFeedback: qs("#room-feedback"),
+      roomsListPanel: qs("#rooms-list-panel"),
+      deviceForm: qs("#device-form"),
+      deviceId: qs("#device-id"),
+      deviceName: qs("#device-name"),
+      deviceFeedback: qs("#device-feedback"),
+      devicesListPanel: qs("#devices-list-panel"),
+      settingsForm: qs("#settings-form"),
+      settingsNotificationsEnabled: qs("#settings-notifications-enabled"),
+      settingsDefaultLead: qs("#settings-default-lead"),
+      settingsCustomLeadWrap: qs("#settings-custom-lead-wrap"),
+      settingsCustomLead: qs("#settings-custom-lead"),
+      settingsSoundEnabled: qs("#settings-sound-enabled"),
+      settingsFeedback: qs("#settings-feedback"),
+      exportDataButton: qs("#export-data-button"),
+      importDataFile: qs("#import-data-file"),
+      resetDataButton: qs("#reset-data-button"),
+      alertList: qs("#alert-list"),
+      clearAlertsButton: qs("#clear-alerts-button"),
+      alertDock: qs(".alert-dock"),
+    };
   }
 
-  function bindEvents() {
+  function bindEvents(): void {
     refs.navButtons.forEach((button) => {
-      button.addEventListener("click", () => setView(button.dataset.view));
+      button.addEventListener("click", () => setView(button.dataset.view ?? "today"));
     });
 
     refs.routineForm.addEventListener("submit", handleRoutineSubmit);
@@ -133,7 +218,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
       renderWeek();
     });
     refs.routineSort.addEventListener("change", () => {
-      actions.updateUiFilters({ sortBy: refs.routineSort.value });
+      actions.updateUiFilters({ sortBy: refs.routineSort.value as AppState["settings"]["sortBy"] });
       renderWeek();
     });
 
@@ -156,11 +241,9 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
       recentAlerts.length = 0;
       renderAlerts();
     });
-
-    document.addEventListener("click", handleDocumentClick);
   }
 
-  function renderStaticOptions() {
+  function renderStaticOptions(): void {
     replaceChildren(
       refs.routineWeekday,
       WEEKDAYS.map((day) => option(day.id, day.label)),
@@ -172,7 +255,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     );
   }
 
-  function render() {
+  function render(): void {
     const state = getState();
     const todayId = getTodayWeekdayId();
     const today = todayId ? getWeekdayLabel(todayId) : "Fim de semana";
@@ -194,7 +277,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refreshIcons();
   }
 
-  function setView(viewId) {
+  function setView(viewId: string): void {
     activeView = viewId;
 
     refs.navButtons.forEach((button) => {
@@ -208,7 +291,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refreshIcons();
   }
 
-  function handleRoutineSubmit(event) {
+  function handleRoutineSubmit(event: SubmitEvent): void {
     event.preventDefault();
     const payload = collectRoutinePayload();
     const result = editingRoutineId
@@ -230,13 +313,13 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function collectRoutinePayload() {
+  function collectRoutinePayload(): RoutinePayload {
     const extraDevice = normalizeText(refs.routineNewDevice.value);
     if (extraDevice) {
       selectedDevices.add(extraDevice);
     }
 
-    let leadMinutes = null;
+    let leadMinutes: string | null = null;
     if (refs.routineLeadMode.value === "custom") {
       leadMinutes = refs.routineCustomLead.value;
     } else if (refs.routineLeadMode.value !== "global") {
@@ -257,7 +340,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     };
   }
 
-  function resetRoutineForm() {
+  function resetRoutineForm(): void {
     editingRoutineId = null;
     selectedDevices = new Set();
     refs.routineForm.reset();
@@ -276,7 +359,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     renderRoutineDevices();
   }
 
-  function fillRoutineForm(routine) {
+  function fillRoutineForm(routine: Routine): void {
     editingRoutineId = routine.id;
     selectedDevices = new Set(routine.devices);
     refs.routineFormTitle.textContent = "Editar rotina";
@@ -309,22 +392,22 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refs.routineStartTime.focus();
   }
 
-  function startNewRoutine() {
+  function startNewRoutine(): void {
     resetRoutineForm();
     setView("today");
     refs.routineFormPanel.scrollIntoView({ behavior: "smooth", block: "start" });
     refs.routineStartTime.focus();
   }
 
-  function renderRoutineLeadMode() {
+  function renderRoutineLeadMode(): void {
     refs.routineCustomLeadWrap.classList.toggle("is-hidden", refs.routineLeadMode.value !== "custom");
   }
 
-  function renderSettingsLeadMode() {
+  function renderSettingsLeadMode(): void {
     refs.settingsCustomLeadWrap.classList.toggle("is-hidden", refs.settingsDefaultLead.value !== "custom");
   }
 
-  async function requestNotificationAccess() {
+  async function requestNotificationAccess(): Promise<void> {
     const result = await notifications.requestPermission();
     if (!result.ok) {
       setFeedback(refs.settingsFeedback, result.message, "error");
@@ -348,7 +431,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function addDeviceFromRoutineInput() {
+  function addDeviceFromRoutineInput(): void {
     const name = normalizeText(refs.routineNewDevice.value);
     if (!name) return;
     selectedDevices.add(name);
@@ -356,14 +439,9 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     renderRoutineDevices();
   }
 
-  function renderRoutineDevices() {
-    if (!refs.routineDevices) return;
-
+  function renderRoutineDevices(): void {
     const state = getState();
-    const deviceNames = [
-      ...state.devices.map((device) => device.name),
-      ...selectedDevices,
-    ];
+    const deviceNames = [...state.devices.map((device) => device.name), ...selectedDevices];
 
     replaceChildren(
       refs.routineDevices,
@@ -387,20 +465,26 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     );
   }
 
-  function renderDatalists() {
+  function renderDatalists(): void {
     const state = getState();
-    replaceChildren(refs.teachersDatalist, state.teachers.map((teacher) => option(teacher.name, teacher.name)));
-    replaceChildren(refs.roomsDatalist, state.rooms.map((room) => option(room.name, room.name)));
+    replaceChildren(
+      refs.teachersDatalist,
+      state.teachers.map((teacher) => option(teacher.name, teacher.name)),
+    );
+    replaceChildren(
+      refs.roomsDatalist,
+      state.rooms.map((room) => option(room.name, room.name)),
+    );
   }
 
-  function fillStudentCountFromRoom() {
+  function fillStudentCountFromRoom(): void {
     const room = getState().rooms.find((item) => item.name === refs.routineRoom.value);
     if (room?.studentCount && !refs.routineStudentCount.value) {
       refs.routineStudentCount.value = String(room.studentCount);
     }
   }
 
-  function renderToday() {
+  function renderToday(): void {
     const state = getState();
     const todayId = getTodayWeekdayId();
 
@@ -415,9 +499,8 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
       "time",
     );
 
-    refs.todaySummary.textContent = routines.length === 1
-      ? "1 retirada programada."
-      : `${routines.length} retiradas programadas.`;
+    refs.todaySummary.textContent =
+      routines.length === 1 ? "1 retirada programada." : `${routines.length} retiradas programadas.`;
 
     replaceChildren(
       refs.todayRoutines,
@@ -425,11 +508,14 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     );
   }
 
-  function renderTodayMetrics() {
+  function renderTodayMetrics(): void {
     const state = getState();
     const todayId = getTodayWeekdayId();
     const todayRoutines = todayId
-      ? sortRoutines(state.routines.filter((routine) => routine.weekday === todayId), "time")
+      ? sortRoutines(
+          state.routines.filter((routine) => routine.weekday === todayId),
+          "time",
+        )
       : [];
     const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
     const nextRoutine = todayRoutines.find((routine) => (timeToMinutes(routine.startTime) ?? 0) >= currentMinutes);
@@ -443,12 +529,9 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     ]);
   }
 
-  function renderWeek() {
+  function renderWeek(): void {
     const state = getState();
-    const filtered = sortRoutines(
-      filterRoutines(state.routines, state.settings.filterText),
-      state.settings.sortBy,
-    );
+    const filtered = sortRoutines(filterRoutines(state.routines, state.settings.filterText), state.settings.sortBy);
 
     replaceChildren(
       refs.weekRoutines,
@@ -469,59 +552,71 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     );
   }
 
-  function routineCard(routine, compact = false) {
+  function routineCard(routine: Routine, compact = false): HTMLElement {
     const title = `${routine.startTime}${routine.endTime ? `-${routine.endTime}` : ""}`;
-    const leadLabel = routine.leadMinutes === null || routine.leadMinutes === undefined
-      ? `Global: ${getState().settings.defaultLeadMinutes} min`
-      : `${routine.leadMinutes} min`;
+    const leadLabel =
+      routine.leadMinutes === null || routine.leadMinutes === undefined
+        ? `Global: ${getState().settings.defaultLeadMinutes} min`
+        : `${routine.leadMinutes} min`;
 
-    return el("article", { className: compact ? "routine-card is-compact" : "routine-card" }, [
-      el("div", { className: "routine-card-top" }, [
-        el("div", {}, [
-          el("strong", { className: "routine-time", text: title }),
-          el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
-        ]),
+    return el(
+      "article",
+      { className: compact ? "routine-card is-compact" : "routine-card" },
+      [
+        el("div", { className: "routine-card-top" }, [
+          el("div", {}, [
+            el("strong", { className: "routine-time", text: title }),
+            el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
+          ]),
           el("div", { className: "routine-actions" }, [
-          actionButton("copy", "Duplicar", "Duplicar rotina", () => {
-            const result = actions.duplicateRoutine(routine.id);
-            showResult(result, refs.routineFeedback, "Rotina duplicada.");
-            render();
-          }),
-          actionButton("pencil", "Editar", "Editar rotina", () => fillRoutineForm(routine)),
-          actionButton("trash-2", "Excluir", "Excluir rotina", async () => {
-            const confirmed = await dialogs.dangerConfirm({
-              title: "Excluir rotina?",
-              message: "A rotina será removida da agenda. Você ainda poderá usar Desfazer logo após a exclusão.",
-              confirmLabel: "Excluir",
-            });
-            if (!confirmed) return;
+            actionButton("copy", "Duplicar", "Duplicar rotina", () => {
+              const result = actions.duplicateRoutine(routine.id);
+              showResult(result, refs.routineFeedback, "Rotina duplicada.");
+              render();
+            }),
+            actionButton("pencil", "Editar", "Editar rotina", () => fillRoutineForm(routine)),
+            actionButton(
+              "trash-2",
+              "Excluir",
+              "Excluir rotina",
+              async () => {
+                const confirmed = await dialogs.dangerConfirm({
+                  title: "Excluir rotina?",
+                  message:
+                    "A rotina será removida da agenda. Você ainda poderá usar Desfazer logo após a exclusão.",
+                  confirmLabel: "Excluir",
+                });
+                if (!confirmed) return;
 
-            const result = actions.deleteRoutine(routine.id);
-            showResult(result, refs.routineFeedback, "Rotina excluída.");
-            render();
-          }, "danger"),
+                const result = actions.deleteRoutine(routine.id);
+                showResult(result, refs.routineFeedback, "Rotina excluída.");
+                render();
+              },
+              "danger",
+            ),
+          ]),
         ]),
-      ]),
-      detailLine("user", routine.teacher),
-      detailLine("map-pin", routine.room),
-      detailLine("users", `${routine.studentCount} aluno(s)`),
-      detailLine("laptop", routine.devices.join(", ")),
-      routine.notes ? detailLine("file-text", routine.notes) : null,
-      el("div", { className: "routine-meta" }, [
-        el("span", { text: routine.notificationEnabled ? `Alerta ${leadLabel}` : "Alerta desativado" }),
-        el("span", { text: `Atualizado: ${formatDateTime(routine.updatedAt)}` }),
-      ]),
-    ].filter(Boolean));
+        detailLine("user", routine.teacher),
+        detailLine("map-pin", routine.room),
+        detailLine("users", `${routine.studentCount} aluno(s)`),
+        detailLine("laptop", routine.devices.join(", ")),
+        routine.notes ? detailLine("file-text", routine.notes) : null,
+        el("div", { className: "routine-meta" }, [
+          el("span", { text: routine.notificationEnabled ? `Alerta ${leadLabel}` : "Alerta desativado" }),
+          el("span", { text: `Atualizado: ${formatDateTime(routine.updatedAt)}` }),
+        ]),
+      ].filter(Boolean),
+    );
   }
 
-  function renderCatalogs() {
+  function renderCatalogs(): void {
     const state = getState();
     renderCatalogList("teachers", state.teachers, refs.teachersListPanel);
     renderCatalogList("rooms", state.rooms, refs.roomsListPanel);
     renderCatalogList("devices", state.devices, refs.devicesListPanel);
   }
 
-  function renderCatalogList(kind, items, container) {
+  function renderCatalogList(kind: CatalogKind, items: AppState[CatalogKind], container: HTMLElement): void {
     if (!items.length) {
       replaceChildren(container, [emptyState("Nenhum cadastro ainda.")]);
       return;
@@ -530,36 +625,39 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     replaceChildren(
       container,
       items.map((item) => {
-        const caption = kind === "rooms" && item.studentCount
-          ? `${item.studentCount} aluno(s) padrão`
-          : countUsage(kind, item.name);
+        const caption =
+          kind === "rooms" && "studentCount" in item && item.studentCount
+            ? `${item.studentCount} aluno(s) padrão`
+            : countUsage(kind, item.name);
 
         return el("article", { className: "catalog-item" }, [
-          el("div", {}, [
-            el("strong", { text: item.name }),
-            el("span", { text: caption }),
-          ]),
+          el("div", {}, [el("strong", { text: item.name }), el("span", { text: caption })]),
           el("div", { className: "routine-actions" }, [
             iconButton("pencil", "Editar", () => startCatalogEdit(kind, item)),
-            iconButton("trash-2", "Excluir", async () => {
-              const confirmed = await dialogs.dangerConfirm({
-                title: "Excluir cadastro?",
-                message: "As rotinas já salvas continuarão com o texto atual. Apenas o item do catálogo será removido.",
-                confirmLabel: "Excluir",
-              });
-              if (!confirmed) return;
+            iconButton(
+              "trash-2",
+              "Excluir",
+              async () => {
+                const confirmed = await dialogs.dangerConfirm({
+                  title: "Excluir cadastro?",
+                  message: "As rotinas já salvas continuarão com o texto atual. Apenas o item do catálogo será removido.",
+                  confirmLabel: "Excluir",
+                });
+                if (!confirmed) return;
 
-              const result = actions.deleteCatalogItem(kind, item.id);
-              showCatalogResult(kind, result, "Cadastro excluído.");
-              render();
-            }, "danger"),
+                const result = actions.deleteCatalogItem(kind, item.id);
+                showCatalogResult(kind, result, "Cadastro excluído.");
+                render();
+              },
+              "danger",
+            ),
           ]),
         ]);
       }),
     );
   }
 
-  function countUsage(kind, name) {
+  function countUsage(kind: CatalogKind, name: string): string {
     const routines = getState().routines;
     const count = routines.filter((routine) => {
       if (kind === "teachers") return routine.teacher === name;
@@ -570,7 +668,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     return count === 1 ? "Usado em 1 rotina" : `Usado em ${count} rotinas`;
   }
 
-  function startCatalogEdit(kind, item) {
+  function startCatalogEdit(kind: CatalogKind, item: AppState[CatalogKind][number]): void {
     if (kind === "teachers") {
       refs.teacherId.value = item.id;
       refs.teacherName.value = item.name;
@@ -581,7 +679,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     if (kind === "rooms") {
       refs.roomId.value = item.id;
       refs.roomName.value = item.name;
-      refs.roomStudentCount.value = item.studentCount ?? "";
+      refs.roomStudentCount.value = "studentCount" in item && item.studentCount ? String(item.studentCount) : "";
       refs.roomName.focus();
       return;
     }
@@ -591,7 +689,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refs.deviceName.focus();
   }
 
-  function handleTeacherSubmit(event) {
+  function handleTeacherSubmit(event: SubmitEvent): void {
     event.preventDefault();
     const result = refs.teacherId.value
       ? actions.updateCatalogItem("teachers", refs.teacherId.value, { name: refs.teacherName.value })
@@ -602,7 +700,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function handleRoomSubmit(event) {
+  function handleRoomSubmit(event: SubmitEvent): void {
     event.preventDefault();
     const payload = { name: refs.roomName.value, studentCount: refs.roomStudentCount.value };
     const result = refs.roomId.value
@@ -614,7 +712,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function handleDeviceSubmit(event) {
+  function handleDeviceSubmit(event: SubmitEvent): void {
     event.preventDefault();
     const result = refs.deviceId.value
       ? actions.updateCatalogItem("devices", refs.deviceId.value, { name: refs.deviceName.value })
@@ -625,7 +723,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function showCatalogResult(kind, result, successMessage) {
+  function showCatalogResult(kind: CatalogKind, result: EmptyResult, successMessage: string): void {
     const feedback = {
       teachers: refs.teacherFeedback,
       rooms: refs.roomFeedback,
@@ -634,7 +732,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     showResult(result, feedback, successMessage);
   }
 
-  function renderSettings() {
+  function renderSettings(): void {
     const settings = getState().settings;
     refs.settingsNotificationsEnabled.checked = settings.notificationsEnabled;
     refs.settingsSoundEnabled.checked = settings.soundEnabled;
@@ -649,11 +747,10 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     renderSettingsLeadMode();
   }
 
-  function handleSettingsSubmit(event) {
+  function handleSettingsSubmit(event: SubmitEvent): void {
     event.preventDefault();
-    const defaultLeadMinutes = refs.settingsDefaultLead.value === "custom"
-      ? refs.settingsCustomLead.value
-      : refs.settingsDefaultLead.value;
+    const defaultLeadMinutes =
+      refs.settingsDefaultLead.value === "custom" ? refs.settingsCustomLead.value : refs.settingsDefaultLead.value;
     const result = actions.updateSettings({
       notificationsEnabled: refs.settingsNotificationsEnabled.checked,
       defaultLeadMinutes,
@@ -664,7 +761,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function handleExport() {
+  function handleExport(): void {
     const blob = new Blob([actions.exportData()], { type: "application/json" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
@@ -673,8 +770,9 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     URL.revokeObjectURL(link.href);
   }
 
-  function handleImport(event) {
-    const [file] = event.target.files;
+  function handleImport(event: Event): void {
+    const input = event.target instanceof HTMLInputElement ? event.target : refs.importDataFile;
+    const [file] = input.files ?? [];
     if (!file) return;
 
     const reader = new FileReader();
@@ -686,13 +784,13 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
         confirmLabel: "Importar",
       });
       if (!confirmed) {
-        event.target.value = "";
+        input.value = "";
         return;
       }
 
       const result = actions.importData(String(reader.result ?? ""));
       showResult(result, refs.settingsFeedback, "Dados importados.");
-      event.target.value = "";
+      input.value = "";
       render();
     });
     reader.addEventListener("error", () => {
@@ -701,12 +799,12 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
         refs.settingsFeedback,
         "Dados importados.",
       );
-      event.target.value = "";
+      input.value = "";
     });
     reader.readAsText(file);
   }
 
-  async function handleResetData() {
+  async function handleResetData(): Promise<void> {
     const confirmed = await dialogs.textConfirm({
       title: "Apagar dados locais?",
       message: "Esta ação remove todas as rotinas, professores, salas, dispositivos e configurações salvas neste navegador.",
@@ -721,7 +819,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     render();
   }
 
-  function renderNotificationStatus() {
+  function renderNotificationStatus(): void {
     const status = notifications.getStatus();
     const isActive = status.type === "enabled" || status.type === "unsupported";
     setButtonLabel(refs.notificationStatus, "Permitir alertas");
@@ -732,7 +830,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refs.requestNotificationButton.hidden = isActive;
   }
 
-  function addAlert(alert) {
+  function addAlert(alert: RoutineAlert): void {
     recentAlerts.unshift(alert);
     recentAlerts.splice(5);
     renderAlerts();
@@ -744,58 +842,66 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     });
   }
 
-  async function showAlarm(alert) {
+  async function showAlarm(alert: RoutineAlert): Promise<void> {
     addAlert(alert);
     try {
       await dialogs.alarm({
         kicker: "Alarme PROATI",
         title: "Retirada agora",
         message: alert.body,
-        details: alert.details ?? [],
+        details: alert.details,
       });
     } finally {
-      notifications.stopSound?.();
+      notifications.stopSound();
     }
   }
 
-  function showToast(payload) {
+  function showToast(payload: ToastPayload): void {
     toasts.show(payload);
   }
 
-  function renderAlerts() {
+  function renderAlerts(): void {
     replaceChildren(
       refs.alertList,
       recentAlerts.length
-        ? recentAlerts.map((alert) => el("article", { className: "alert-item" }, [
-          el("strong", { text: alert.title }),
-          el("span", { text: alert.body }),
-          el("small", { text: formatDateTime(alert.createdAt) }),
-        ]))
+        ? recentAlerts.map((alert) =>
+            el("article", { className: "alert-item" }, [
+              el("strong", { text: alert.title }),
+              el("span", { text: alert.body }),
+              el("small", { text: formatDateTime(alert.createdAt) }),
+            ]),
+          )
         : [emptyState("Nenhum alerta recente.")],
     );
     refs.alertDock.classList.toggle("is-quiet", recentAlerts.length === 0);
   }
 
-  function todayEmptyState(message) {
-    const button = el("button", {
-      className: "button button-primary button-small",
-      attrs: { type: "button" },
-    }, [icon("plus"), span("Cadastrar rotina")]);
+  function todayEmptyState(message: string): HTMLElement {
+    const button = el(
+      "button",
+      {
+        className: "button button-primary button-small",
+        attrs: { type: "button" },
+      },
+      [icon("plus"), span("Cadastrar rotina")],
+    );
     button.addEventListener("click", startNewRoutine);
 
     return el("div", { className: "empty-state empty-state-action" }, [
       el("strong", { text: message }),
-      el("span", { text: "Cadastre horários, professor, sala, alunos e dispositivos para não depender de papel." }),
+      el("span", {
+        text: "Cadastre horários, professor, sala, alunos e dispositivos para não depender de papel.",
+      }),
       button,
     ]);
   }
 
-  function handleDocumentClick(event) {
-    const target = event.target.closest("[data-action]");
-    if (!target) return;
-  }
-
-  function showResult(result, feedbackNode, successMessage, options = {}) {
+  function showResult(
+    result: EmptyResult,
+    feedbackNode: HTMLElement,
+    successMessage: string,
+    options: { errorTitle?: string; successTitle?: string } = {},
+  ): void {
     if (!result.ok) {
       const message = errorText(result);
       setFeedback(feedbackNode, message, "error");
@@ -817,20 +923,16 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
     refs.storageStatus.textContent = "Dados locais salvos.";
   }
 
-  function setFeedback(node, message, type) {
-    if (!node) return;
+  function setFeedback(node: HTMLElement, message: string, type: string): void {
     node.textContent = message;
     node.dataset.type = type;
   }
 
-  function detailLine(iconName, text) {
-    return el("p", { className: "detail-line" }, [
-      icon(iconName),
-      span(text),
-    ]);
+  function detailLine(iconName: string, text: string): HTMLElement {
+    return el("p", { className: "detail-line" }, [icon(iconName), span(text)]);
   }
 
-  function emptyState(message) {
+  function emptyState(message: string): HTMLElement {
     return el("div", { className: "empty-state", text: message });
   }
 
@@ -844,33 +946,7 @@ export function createUI({ getState, actions, notifications, initialNotice }) {
   };
 }
 
-function replaceChildren(parent, children) {
-  parent.replaceChildren(...children.filter(Boolean));
-}
-
-function el(tag, options = {}, children = []) {
-  const node = document.createElement(tag);
-  if (options.className) node.className = options.className;
-  if (options.text !== undefined) node.textContent = options.text;
-  if (options.attrs) {
-    Object.entries(options.attrs).forEach(([key, value]) => {
-      node.setAttribute(key, value);
-    });
-  }
-
-  children.forEach((child) => {
-    if (child instanceof Node) node.appendChild(child);
-    else if (child !== null && child !== undefined) node.appendChild(document.createTextNode(String(child)));
-  });
-
-  return node;
-}
-
-function span(text) {
-  return el("span", { text });
-}
-
-function setButtonLabel(button, text) {
+function setButtonLabel(button: HTMLButtonElement, text: string): void {
   const label = button.querySelector("span");
   if (label) {
     label.textContent = text;
@@ -880,44 +956,52 @@ function setButtonLabel(button, text) {
   button.replaceChildren(icon("bell-ring"), span(text));
 }
 
-function option(value, label) {
-  const node = document.createElement("option");
-  node.value = value;
-  node.textContent = label;
-  return node;
-}
-
-function icon(name) {
-  return el("i", { attrs: { "data-lucide": name, "aria-hidden": "true" } });
-}
-
-function iconButton(iconName, label, onClick, variant = "neutral") {
-  const button = el("button", {
-    className: `icon-button${variant === "danger" ? " is-danger" : ""}`,
-    attrs: {
-      type: "button",
-      "aria-label": label,
-      title: label,
+function iconButton(
+  iconName: string,
+  label: string,
+  onClick: () => void | Promise<void>,
+  variant = "neutral",
+): HTMLButtonElement {
+  const button = el(
+    "button",
+    {
+      className: `icon-button${variant === "danger" ? " is-danger" : ""}`,
+      attrs: {
+        type: "button",
+        "aria-label": label,
+        title: label,
+      },
     },
-  }, [icon(iconName)]);
-  button.addEventListener("click", onClick);
+    [icon(iconName)],
+  );
+  button.addEventListener("click", () => void onClick());
   return button;
 }
 
-function actionButton(iconName, label, ariaLabel, onClick, variant = "neutral") {
-  const button = el("button", {
-    className: `action-button${variant === "danger" ? " is-danger" : ""}`,
-    attrs: {
-      type: "button",
-      "aria-label": ariaLabel,
-      title: ariaLabel,
+function actionButton(
+  iconName: string,
+  label: string,
+  ariaLabel: string,
+  onClick: () => void | Promise<void>,
+  variant = "neutral",
+): HTMLButtonElement {
+  const button = el(
+    "button",
+    {
+      className: `action-button${variant === "danger" ? " is-danger" : ""}`,
+      attrs: {
+        type: "button",
+        "aria-label": ariaLabel,
+        title: ariaLabel,
+      },
     },
-  }, [icon(iconName), span(label)]);
-  button.addEventListener("click", onClick);
+    [icon(iconName), span(label)],
+  );
+  button.addEventListener("click", () => void onClick());
   return button;
 }
 
-function metricItem(label, value, helper) {
+function metricItem(label: string, value: string, helper: string): HTMLElement {
   return el("div", { className: "metric-item" }, [
     el("span", { text: label }),
     el("strong", { text: value }),
@@ -925,15 +1009,9 @@ function metricItem(label, value, helper) {
   ]);
 }
 
-function slug(value) {
+function slug(value: string): string {
   return normalizeText(value)
     .toLocaleLowerCase("pt-BR")
     .replace(/[^a-z0-9]+/gi, "-")
     .replace(/^-|-$/g, "");
-}
-
-function refreshIcons() {
-  if (globalThis.lucide?.createIcons) {
-    globalThis.lucide.createIcons();
-  }
 }

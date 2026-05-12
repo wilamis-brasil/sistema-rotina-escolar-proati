@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build and coverage
+dist/
+coverage/
+
+# Local environment
+.env*.local
+.openclaude/
+
+# Tool caches and reports
+.playwright-cli/
+playwright-report/
+test-results/
+*.trace.zip
+*.har
+
+# Generated screenshots and temporary outputs
+output/
+playwright/
+
+# OS/editor noise
+.DS_Store
+Thumbs.db

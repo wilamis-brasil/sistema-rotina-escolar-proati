@@ -1,0 +1,21 @@
+{
+  "name": "sistema-rotina-escolar-proati",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "description": "Sistema local para rotina escolar PROATI, com persistencia no navegador e deploy estatico no GitHub Pages.",
+  "dependencies": {
+    "lucide": "^1.14.0",
+    "zod": "^4.4.3"
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vite": "^8.0.12"
+  },
+  "private": true,
+  "type": "module"
+}
