@@ -1,0 +1,194 @@
+Fazer um MVP utilizando HTML, CSS e JavaScript.
+
+O projeto deve seguir os requisitos funcionais definidos no kickoff e priorizar simplicidade, clareza e entrega rápida de valor. Evite arquitetura excessivamente complexa, overengineering ou soluções desnecessárias para esta etapa inicial.
+
+Requisitos principais:
+1. A stack obrigatória deve ser HTML, CSS e JavaScript.
+2. O foco deve ser um MVP funcional, simples e validável.
+3. A solução deve permitir ampla flexibilidade ao usuário, respeitando as regras e objetivos definidos no KickOff.
+4. A estrutura do código deve ser organizada, fácil de entender e fácil de evoluir.
+5. A interface deve ser intuitiva, responsiva e compatível com navegadores modernos.
+6. Todas as decisões técnicas devem priorizar praticidade, manutenção simples e velocidade de desenvolvimento.
+
+Antes de implementar, considere os pontos definidos no KickOff como fonte principal de verdade. Caso algum requisito esteja ambíguo, faça uma suposição razoável, explique brevemente essa suposição e siga com a melhor solução para o MVP.
+
+Você deve atuar como um especialista em desenvolvimento de sistemas de produtividade, organização escolar e automação de rotinas.
+Crie um sistema chamado Kick OFF — Função Estagiário PROATI, voltado para auxiliar os estagiários PROATI no controle da rotina diária de retirada, uso e devolução de dispositivos eletrônicos nas escolas estaduais.
+Contexto do PROATI
+Os estagiários PROATI fazem parte de uma iniciativa para modernizar o ambiente escolar e auxiliar estudantes e professores no uso de ferramentas digitais. Eles são profissionais responsáveis pelo apoio tecnológico dentro da escola.
+Nas escolas estaduais, os alunos utilizam dispositivos eletrônicos como notebooks, Chromebooks, tablets e headsets para realizar atividades em plataformas online, como a Sala do Futuro.
+Existe um espaço/armazém de carregamento e armazenamento desses dispositivos eletrônicos. O estagiário PROATI é responsável por acompanhar a rotina dos estudantes e professores, garantindo que os dispositivos corretos sejam entregues nos horários corretos.
+Informações que o PROATI precisa acompanhar
+O sistema deve permitir o registro e controle de:
+
+
+Horário em que os alunos irão buscar os dispositivos;
+Tipo de dispositivo necessário:
+Notebook;
+Chromebook;
+Notebook/Chromebook;
+Tablet;
+Headset;
+Outros dispositivos configuráveis;
+Nome do professor responsável;
+Sala/turma;
+Quantidade de alunos;
+Dia da semana;
+Horário de início;
+Horário de término, caso necessário;
+
+
+Observações adicionais.
+Rotina semanal
+A rotina deve considerar apenas os dias úteis:
+Segunda-feira;
+Terça-feira;
+Quarta-feira;
+Quinta-feira;
+Sexta-feira.
+Sábado e domingo devem ser excluídos por padrão.
+
+Cada dia da semana pode possuir uma rotina diferente, com professores, horários, salas, quantidades de alunos e dispositivos diferentes.
+
+A rotina não deve ser fixa. Tudo deve ser variável, flexível, editável e reutilizável.
+A imagem de referência da rotina está localizada em:
+C:\Users\$0ldM4n\Downloads\files\estagio\rolltimes\docs\imagem-rotina.jpeg
+
+O sistema deve permitir que os dados dessa rotina sejam cadastrados, editados e reorganizados manualmente com base nessa referência.
+
+Objetivo principal do sistema
+O objetivo é criar uma ferramenta de produtividade e organização para o estagiário PROATI, ajudando-o a lembrar dos horários, dos professores, das salas, da quantidade de alunos e dos dispositivos que precisam ser entregues.
+O sistema deve notificar o PROATI:
+
+
+No horário exato da retirada dos dispositivos;
+X minutos antes do horário, sendo esse tempo configurável pelo próprio usuário.
+
+Exemplo: o usuário pode escolher ser avisado 5, 10, 15, 20 ou 30 minutos antes, ou definir um tempo personalizado.
+Armazenamento local
+As informações devem ser armazenadas localmente, sem necessidade de login, POIS O SITE SERÁ ACESSADO VIA GITHUB PAGES.
+O sistema deve evitar que o usuário precise escrever as mesmas informações todos os dias. Dados como professores, salas, horários, dispositivos, quantidade de alunos e rotinas semanais devem poder ser salvos e reutilizados.
+O armazenamento deve funcionar localmente, podendo usar recursos como:
+
+
+LocalStorage;
+IndexedDB;
+Banco de dados local;
+Arquivo local;
+
+Ou outra solução adequada para persistência de dados sem login.
+Controle total do usuário
+O usuário deve sempre ter controle total sobre o sistema.
+Tudo que for útil deve ser:
+Editável;
+Apagável;
+Reescrevível;
+Configurável;
+Ordenável;
+Reorganizável;
+Reutilizável.
+O usuário deve poder:
+Voltar ações quando possível;
+Apagar registros;
+Editar qualquer informação;
+Ordenar rotinas por dia, horário, professor, sala ou dispositivo;
+Criar novas rotinas;
+Duplicar rotinas existentes;
+Reutilizar dados já cadastrados;
+Alterar configurações de notificação;
+Corrigir informações facilmente;
+Ter acesso simples e rápido a todas as funções importantes.
+Nada importante deve ficar rígido, travado ou difícil de modificar.
+Requisitos de organização
+O sistema deve ser modular, altamente organizado e reutilizável.
+
+A estrutura deve facilitar:
+Manutenção;
+Escalabilidade;
+Clareza;
+Produtividade;
+Organização visual;
+Facilidade de uso;
+Personalização para diferentes cenários escolares.
+A interface deve ser simples, intuitiva e prática, pensando no uso diário por um estagiário PROATI durante a rotina escolar.
+
+Funcionalidades esperadas
+O sistema deve conter, no mínimo:
+Cadastro de rotina
+Dia da semana;
+Horário;
+Professor;
+Sala;
+Quantidade de alunos;
+Dispositivos necessários;
+Observações.
+Visualização da rotina;
+Por dia;
+Por semana;
+Por horário;
+Por professor;
+Por sala;
+Por tipo de dispositivo.
+Sistema de notificações com Alarme ALTAMENTE PERSONALIZÁVEL.
+Aviso no horário exato;
+Aviso antecipado com tempo configurável;
+Possibilidade de ativar ou desativar notificações;
+Configuração individual ou global dos alertas.
+
+Os ícones devem ser:
+https://lucide.dev/icons/
+
+Gerenciamento de dispositivos
+Cadastro de tipos de dispositivos;
+Edição dos nomes dos dispositivos;
+Controle visual do que será usado em cada horário.
+Gerenciamento de professores
+Cadastro de professores;
+Edição;
+Exclusão;
+Reutilização em várias rotinas.
+
+Gerenciamento de salas/turmas
+Cadastro de salas;
+Quantidade de alunos;
+Edição;
+Exclusão;
+Reutilização.
+
+Persistência local
+Salvar os dados localmente;
+Carregar os dados automaticamente ao abrir o sistema;
+Não exigir login;
+Não depender de internet para funcionar, sempre que possível.
+
+Controle e personalização
+Editar tudo;
+Apagar tudo;
+Ordenar tudo;
+Reconfigurar tudo;
+Permitir personalização máxima para diferentes rotinas escolares.
+
+Critérios importantes
+O sistema deve ser pensado para uso real no dia a dia do PROATI.
+Ele deve reduzir esquecimentos, facilitar a organização da rotina e garantir que o estagiário saiba exatamente:
+Qual professor irá usar os dispositivos;
+Qual sala/turma irá retirar os dispositivos;
+Quantos alunos participarão;
+Quais dispositivos serão usados;
+Em qual horário a retirada ocorrerá;
+Quando ele deve ser notificado.
+
+Priorize uma solução prática, flexível, reutilizável, bem estruturada e fácil de usar.
+Caso não precise de qualquer uma dessas coisas, ele mesmo pode remover e deixar apenas o que ele quer. Ou caso ele precise de algo além, ele poderá configurar, e isso poderá se tornar uma ação, integrada.
+
+Entrega esperada
+Com base em todos os requisitos acima, desenvolva uma solução completa para esse sistema, incluindo:
+Arquitetura modular;
+Estrutura de dados;
+Fluxo de funcionamento;
+Interface sugerida;
+Funcionalidades principais;
+Sistema de notificações;
+Armazenamento local;
+Possibilidades de edição, exclusão, ordenação e personalização;
+Código organizado, reutilizável e fácil de manter

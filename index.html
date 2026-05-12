@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="Kick OFF - Função Estagiário PROATI: rotina local para retirada, uso e devolução de dispositivos eletrônicos.">
+    <title>Sistema de Rotina Escolar para - PROATI</title>
+    <link rel="icon" href="https://www.educacao.sp.gov.br/statics/src/favicon.ico">
+    <link rel="stylesheet" href="./assets/css/styles.css?v=20260512-logo-header">
+    <script src="https://unpkg.com/lucide@1.14.0/dist/umd/lucide.min.js" defer></script>
+    <script type="module" src="./assets/js/app.js?v=20260512-popups"></script>
+  </head>
+  <body>
+    <header class="app-header">
+      <a class="site-logo" href="./" aria-label="Kick OFF - Função Estagiário PROATI">
+        <img src="./assets/img/logo-proati.png" alt="SP.PROATI">
+      </a>
+
+      <nav class="main-nav" aria-label="Navegação principal">
+        <button class="nav-button is-active" type="button" data-view="today">
+          <i data-lucide="clock-3" aria-hidden="true"></i>
+          <span>Hoje</span>
+        </button>
+        <button class="nav-button" type="button" data-view="week">
+          <i data-lucide="calendar-days" aria-hidden="true"></i>
+          <span>Semana</span>
+        </button>
+        <button class="nav-button" type="button" data-view="teachers">
+          <i data-lucide="users" aria-hidden="true"></i>
+          <span>Professores</span>
+        </button>
+        <button class="nav-button" type="button" data-view="rooms">
+          <i data-lucide="school" aria-hidden="true"></i>
+          <span>Salas</span>
+        </button>
+        <button class="nav-button" type="button" data-view="devices">
+          <i data-lucide="laptop" aria-hidden="true"></i>
+          <span>Dispositivos</span>
+        </button>
+        <button class="nav-button" type="button" data-view="settings">
+          <i data-lucide="settings" aria-hidden="true"></i>
+          <span>Configurações</span>
+        </button>
+      </nav>
+    </header>
+
+    <main class="app-shell">
+      <section class="operations-bar" aria-live="polite">
+        <div class="operations-copy">
+          <span class="eyebrow">Painel operacional</span>
+          <strong id="today-label">Hoje</strong>
+          <span id="storage-status">Dados locais carregados.</span>
+        </div>
+        <div class="operations-actions">
+          <div id="today-metrics" class="today-metrics" aria-label="Resumo da rotina"></div>
+          <button class="button button-secondary button-small notification-action" type="button" id="notification-status">
+            <i data-lucide="bell-ring" aria-hidden="true"></i>
+            <span>Permitir alertas</span>
+          </button>
+          <button class="button button-secondary button-small" type="button" id="undo-delete-button" hidden>
+            <i data-lucide="undo-2" aria-hidden="true"></i>
+            <span>Desfazer</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="view is-active" id="view-today" aria-labelledby="today-heading">
+        <div class="operations-grid">
+          <section class="panel today-panel priority-panel" aria-labelledby="today-heading">
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow">Próximas ações</span>
+                <h2 id="today-heading">Retiradas de hoje</h2>
+                <p id="today-summary">Carregando rotina.</p>
+              </div>
+              <button class="button button-secondary button-small" type="button" id="request-notification-button">
+                <i data-lucide="bell-ring" aria-hidden="true"></i>
+                <span>Permitir alertas</span>
+              </button>
+            </div>
+            <div id="today-routines" class="routine-list" aria-live="polite"></div>
+          </section>
+
+          <section class="panel routine-panel" id="routine-form-panel" aria-labelledby="routine-form-title">
+            <div class="panel-heading">
+              <div>
+                <span class="eyebrow" id="routine-form-mode-label">Cadastro rápido</span>
+                <h2 id="routine-form-title">Nova rotina</h2>
+                <p>Registre retirada, turma, professor, dispositivos e alerta.</p>
+              </div>
+              <button class="icon-button" type="button" id="clear-routine-form" aria-label="Limpar formulário" title="Limpar formulário">
+                <i data-lucide="eraser" aria-hidden="true"></i>
+              </button>
+            </div>
+
+            <form id="routine-form" class="stacked-form" novalidate>
+              <input type="hidden" id="routine-id" name="routine-id">
+
+              <section class="form-block" aria-label="Quando acontece">
+                <h3>Quando</h3>
+                <div class="form-row form-row-3">
+                  <label>
+                    <span>Dia útil</span>
+                    <select id="routine-weekday" name="weekday" required></select>
+                  </label>
+                  <label>
+                    <span>Horário de retirada</span>
+                    <input id="routine-start-time" name="startTime" type="time" required>
+                  </label>
+                  <label>
+                    <span>Término opcional</span>
+                    <input id="routine-end-time" name="endTime" type="time">
+                  </label>
+                </div>
+              </section>
+
+              <section class="form-block" aria-label="Quem usa os dispositivos">
+                <h3>Quem usa</h3>
+                <div class="form-row form-row-3">
+                  <label>
+                    <span>Professor responsável</span>
+                    <input id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
+                    <datalist id="teachers-list"></datalist>
+                  </label>
+                  <label>
+                    <span>Sala ou turma</span>
+                    <input id="routine-room" name="room" list="rooms-list" autocomplete="off" placeholder="..." required>
+                    <datalist id="rooms-list"></datalist>
+                  </label>
+                  <label>
+                    <span>Quantidade de alunos</span>
+                    <input id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="..." required>
+                  </label>
+                </div>
+              </section>
+
+              <fieldset class="device-fieldset form-block">
+                <legend>Dispositivos necessários</legend>
+                <div id="routine-devices" class="check-grid"></div>
+                <div class="inline-add">
+                  <label class="sr-only" for="routine-new-device">Outro dispositivo</label>
+                  <input id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo">
+                  <button class="button button-secondary button-small" type="button" id="add-device-to-routine">
+                    <i data-lucide="plus" aria-hidden="true"></i>
+                    <span>Adicionar</span>
+                  </button>
+                </div>
+              </fieldset>
+
+              <section class="form-block" aria-label="Alertas e observações">
+                <h3>Alertas e observações</h3>
+                <label>
+                  <span>Observações</span>
+                  <textarea id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..."></textarea>
+                </label>
+
+                <div class="routine-footer-row">
+                  <div class="routine-alert-controls">
+                    <label class="toggle-label">
+                      <input id="routine-notification-enabled" name="notificationEnabled" type="checkbox" checked>
+                      <span>Alertar esta rotina</span>
+                    </label>
+                    <label>
+                      <span>Antecedência</span>
+                      <select id="routine-lead-mode" name="leadMode">
+                        <option value="global">Usar padrão</option>
+                        <option value="5">5 min</option>
+                        <option value="10">10 min</option>
+                        <option value="15">15 min</option>
+                        <option value="20">20 min</option>
+                        <option value="30">30 min</option>
+                        <option value="custom">Personalizado</option>
+                      </select>
+                    </label>
+                    <label id="routine-custom-lead-wrap" class="is-hidden">
+                      <span>Minutos</span>
+                      <input id="routine-custom-lead" name="customLead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
+                    </label>
+                  </div>
+                  <div class="form-actions routine-save-actions">
+                    <p id="routine-form-feedback" class="form-feedback" role="alert"></p>
+                    <button class="button button-primary" type="submit" id="save-routine-button">
+                      <i data-lucide="save" aria-hidden="true"></i>
+                      <span>Salvar rotina</span>
+                    </button>
+                  </div>
+                </div>
+              </section>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section class="view" id="view-week" aria-labelledby="week-heading">
+        <section class="panel">
+          <div class="panel-heading toolbar-heading">
+            <div>
+              <h2 id="week-heading">Rotina semanal</h2>
+              <p>Segunda a sexta por padrão, com filtros e ordenação.</p>
+            </div>
+            <div class="toolbar">
+              <label>
+                <span>Buscar</span>
+                <input id="routine-filter" type="search" placeholder="Professor, sala, dispositivo...">
+              </label>
+              <label>
+                <span>Ordenar</span>
+                <select id="routine-sort"></select>
+              </label>
+            </div>
+          </div>
+          <div id="week-routines" class="week-grid"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-teachers" aria-labelledby="teachers-heading">
+        <section class="panel catalog-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="teachers-heading">Professores</h2>
+              <p>Cadastro reutilizável para várias rotinas.</p>
+            </div>
+          </div>
+          <form id="teacher-form" class="catalog-form" novalidate>
+            <input type="hidden" id="teacher-id">
+            <label>
+              <span>Nome</span>
+              <input id="teacher-name" type="text" autocomplete="off" placeholder="..." required>
+            </label>
+            <button class="button button-primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>
+              <span>Salvar professor</span>
+            </button>
+          </form>
+          <p id="teacher-feedback" class="form-feedback" role="alert"></p>
+          <div id="teachers-list-panel" class="catalog-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-rooms" aria-labelledby="rooms-heading">
+        <section class="panel catalog-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="rooms-heading">Salas e turmas</h2>
+              <p>Salve turmas e quantidade padrão de alunos.</p>
+            </div>
+          </div>
+          <form id="room-form" class="catalog-form catalog-form-room" novalidate>
+            <input type="hidden" id="room-id">
+            <label>
+              <span>Sala/turma</span>
+              <input id="room-name" type="text" autocomplete="off" placeholder="..." required>
+            </label>
+            <label>
+              <span>Alunos padrão</span>
+              <input id="room-student-count" type="number" min="1" step="1" placeholder="...">
+            </label>
+            <button class="button button-primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>
+              <span>Salvar sala</span>
+            </button>
+          </form>
+          <p id="room-feedback" class="form-feedback" role="alert"></p>
+          <div id="rooms-list-panel" class="catalog-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-devices" aria-labelledby="devices-heading">
+        <section class="panel catalog-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="devices-heading">Dispositivos</h2>
+              <p>Tipos usados na retirada: notebooks, Chromebooks, tablets, headsets e outros.</p>
+            </div>
+          </div>
+          <form id="device-form" class="catalog-form" novalidate>
+            <input type="hidden" id="device-id">
+            <label>
+              <span>Dispositivo</span>
+              <input id="device-name" type="text" autocomplete="off" placeholder="..." required>
+            </label>
+            <button class="button button-primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>
+              <span>Salvar dispositivo</span>
+            </button>
+          </form>
+          <p id="device-feedback" class="form-feedback" role="alert"></p>
+          <div id="devices-list-panel" class="catalog-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-settings" aria-labelledby="settings-heading">
+        <section class="panel settings-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="settings-heading">Configurações locais</h2>
+              <p>Dados salvos neste navegador, sem login e sem servidor.</p>
+            </div>
+          </div>
+
+          <form id="settings-form" class="stacked-form" novalidate>
+            <div class="form-row form-row-3 align-end">
+              <label class="toggle-label">
+                <input id="settings-notifications-enabled" type="checkbox">
+                <span>Ativar notificações</span>
+              </label>
+              <label>
+                <span>Antecedência Padrão</span>
+                <select id="settings-default-lead">
+                  <option value="5">5 min</option>
+                  <option value="10">10 min</option>
+                  <option value="15">15 min</option>
+                  <option value="20">20 min</option>
+                  <option value="30">30 min</option>
+                  <option value="custom">Personalizado</option>
+                </select>
+              </label>
+              <label id="settings-custom-lead-wrap" class="is-hidden">
+                <span>Minutos</span>
+                <input id="settings-custom-lead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
+              </label>
+            </div>
+            <label class="toggle-label">
+              <input id="settings-sound-enabled" type="checkbox">
+              <span>Som de alerta quando a página estiver aberta</span>
+            </label>
+            <p class="notice-text">As notificações do navegador dependem da permissão do usuário e da página aberta. O sistema mantém um alerta visual dentro da aplicação.</p>
+            <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, salas e horários; guarde-os com cuidado em computadores compartilhados.</p>
+            <div class="form-actions">
+              <p id="settings-feedback" class="form-feedback" role="alert"></p>
+              <button class="button button-primary" type="submit">
+                <i data-lucide="save" aria-hidden="true"></i>
+                <span>Salvar configurações</span>
+              </button>
+            </div>
+          </form>
+
+          <div class="settings-actions">
+            <button class="button button-secondary" type="button" id="export-data-button">
+              <i data-lucide="download" aria-hidden="true"></i>
+              <span>Exportar JSON</span>
+            </button>
+            <label class="button button-secondary import-button">
+              <i data-lucide="upload" aria-hidden="true"></i>
+              <span>Importar JSON</span>
+              <input id="import-data-file" type="file" accept="application/json,.json">
+            </label>
+            <button class="button button-danger" type="button" id="reset-data-button">
+              <i data-lucide="trash-2" aria-hidden="true"></i>
+              <span>Apagar dados locais</span>
+            </button>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <aside class="alert-dock" aria-label="Alertas recentes">
+      <div class="alert-dock-heading">
+        <strong>Alertas</strong>
+        <button class="icon-button" type="button" id="clear-alerts-button" aria-label="Limpar alertas" title="Limpar alertas">
+          <i data-lucide="x" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div id="alert-list" class="alert-list" aria-live="assertive"></div>
+    </aside>
+
+    <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="false"></div>
+    <div id="dialog-root" class="dialog-root"></div>
+  </body>
+</html>
