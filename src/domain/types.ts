@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const STORAGE_KEY = "sistema-rotina-escolar-proati-state-v1";
 export const LEGACY_STORAGE_KEYS = ["kickoff-proati-state-v1"] as const;
 

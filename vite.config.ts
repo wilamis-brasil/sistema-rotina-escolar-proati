@@ -1,4 +1,4 @@
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { defineConfig } from "vite";
 
 export default defineConfig({
@@ -9,8 +9,8 @@ export default defineConfig({
     sourcemap: false,
     rollupOptions: {
       input: {
-        index: resolve(__dirname, "index.html"),
-        app: resolve(__dirname, "src/main.ts"),
+        index: fileURLToPath(new URL("./index.html", import.meta.url)),
+        app: fileURLToPath(new URL("./src/main.ts", import.meta.url)),
       },
       output: {
         entryFileNames: (chunkInfo) => (chunkInfo.name === "app" ? "assets/app.js" : "assets/[name].js"),

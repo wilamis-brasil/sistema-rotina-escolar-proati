@@ -130,7 +130,7 @@ export function createEmptyState(): AppState {
     rooms: [],
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
     settings: {
-      notificationsEnabled: false,
+      notificationsEnabled: true,
       defaultLeadMinutes: 10,
       soundEnabled: true,
       sortBy: "weekday-time",
@@ -322,7 +322,7 @@ export function normalizeState(candidate: unknown): AppState {
     teachers: normalizeCatalogCollection<Teacher>(raw.teachers, "teacher"),
     rooms: normalizeRoomCollection(raw.rooms),
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
-    settings: normalizeSettings(raw.settings, base.settings),
+    settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
     meta: {
       createdAt: normalizeText(readObjectField(raw.meta, "createdAt")) || base.meta.createdAt,
       updatedAt: nowIso(),
@@ -479,15 +479,23 @@ function normalizeRoomCollection(items: unknown): Room[] {
   }, []);
 }
 
-function normalizeSettings(settings: unknown, defaults: Settings): Settings {
+function normalizeSettings(settings: unknown, defaults: Settings, schemaVersion: unknown): Settings {
   const settingsRecord = toRecord(settings);
   const lead = validateLeadMinutes(settingsRecord.defaultLeadMinutes, "Antecedência Padrão");
   const sortBy = SORT_OPTIONS.some((option) => option.value === settingsRecord.sortBy)
     ? (settingsRecord.sortBy as SortOption)
     : defaults.sortBy;
+  const schemaNumber = Number(schemaVersion);
+  const isLegacyState = !Number.isInteger(schemaNumber) || schemaNumber < 2;
+  const rawNotificationsEnabled = settingsRecord.notificationsEnabled;
 
   return {
-    notificationsEnabled: Boolean(settingsRecord.notificationsEnabled),
+    notificationsEnabled:
+      typeof rawNotificationsEnabled === "boolean"
+        ? isLegacyState && !rawNotificationsEnabled
+          ? defaults.notificationsEnabled
+          : rawNotificationsEnabled
+        : defaults.notificationsEnabled,
     defaultLeadMinutes: lead.error ? defaults.defaultLeadMinutes : lead.value ?? defaults.defaultLeadMinutes,
     soundEnabled: settingsRecord.soundEnabled !== false,
     sortBy,

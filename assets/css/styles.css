@@ -886,8 +886,7 @@ textarea:focus-visible {
 }
 
 .routine-list,
-.catalog-list,
-.day-routines {
+.catalog-list {
   display: grid;
   gap: 10px;
 }
@@ -908,11 +907,6 @@ textarea:focus-visible {
   background: #ededec;
 }
 
-.routine-card.is-compact {
-  gap: 10px;
-  padding: 13px;
-}
-
 .routine-card-top,
 .catalog-item {
   display: flex;
@@ -927,10 +921,6 @@ textarea:focus-visible {
   font-size: 1.72rem;
   font-weight: 900;
   line-height: 1;
-}
-
-.routine-card.is-compact .routine-time {
-  font-size: 1.34rem;
 }
 
 .routine-day {
@@ -977,45 +967,273 @@ textarea:focus-visible {
   font-weight: 800;
 }
 
-.week-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(210px, 1fr));
-  gap: 10px;
-  overflow-x: auto;
-  padding-bottom: 4px;
+.week-sort-control {
+  display: none;
 }
 
-.day-column {
-  min-width: 210px;
-  padding: 12px;
-  background: var(--surface-soft);
+.weekly-schedule {
+  display: grid;
+  gap: 18px;
+}
+
+.weekly-schedule-empty {
+  display: grid;
+  gap: 6px;
+  padding: 18px;
+  background: #ffffff;
+  border: 1px dashed var(--border-strong);
   border-radius: var(--radius);
 }
 
-.day-column-header {
+.weekly-schedule-empty strong,
+.weekly-schedule-empty span {
+  display: block;
+}
+
+.weekly-schedule-empty span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.equipment-section {
+  overflow: hidden;
+  background: #ffffff;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+}
+
+.equipment-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 12px;
-  padding-bottom: 10px;
+  gap: 16px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border-bottom: 1px solid var(--border-strong);
 }
 
-.day-column-header strong {
-  font-size: 0.84rem;
+.equipment-section-header h3,
+.equipment-section-header span {
+  margin: 0;
+}
+
+.equipment-kicker {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
   font-weight: 900;
+  line-height: 1;
   text-transform: uppercase;
 }
 
-.day-column-header span {
-  display: grid;
-  min-width: 28px;
-  min-height: 28px;
-  place-items: center;
-  color: #ffffff;
-  background: #000000;
-  border-radius: 4px;
-  font-size: 0.8rem;
+.equipment-section-header h3 {
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 1rem;
   font-weight: 900;
+  line-height: 1.1;
+  text-transform: uppercase;
+}
+
+.equipment-count {
+  flex: 0 0 auto;
+  padding: 5px 8px;
+  color: #000000;
+  background: #eef3dd;
+  border: 1px solid #d6dfba;
+  border-radius: 4px;
+  font-size: 0.74rem;
+  font-weight: 900;
+}
+
+.schedule-table-wrap {
+  max-height: min(68vh, 720px);
+  overflow: auto;
+  background:
+    linear-gradient(90deg, #ffffff 30%, rgba(255, 255, 255, 0)),
+    linear-gradient(270deg, #ffffff 30%, rgba(255, 255, 255, 0)) 100% 0,
+    linear-gradient(90deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0)),
+    linear-gradient(270deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0)) 100% 0;
+  background-attachment: local, local, scroll, scroll;
+  background-repeat: no-repeat;
+  background-size: 34px 100%, 34px 100%, 10px 100%, 10px 100%;
+}
+
+.schedule-table {
+  width: 100%;
+  min-width: 1440px;
+  border-collapse: separate;
+  border-spacing: 0;
+  color: var(--text);
+  table-layout: fixed;
+}
+
+.schedule-time-col {
+  width: 106px;
+}
+
+.schedule-room-col {
+  width: 96px;
+}
+
+.schedule-teacher-col {
+  width: 166px;
+}
+
+.schedule-table th,
+.schedule-table td {
+  border-right: 1px solid var(--border-strong);
+  border-bottom: 1px solid var(--border-strong);
+  vertical-align: top;
+}
+
+.schedule-table th:last-child,
+.schedule-table td:last-child {
+  border-right: 0;
+}
+
+.schedule-table thead th {
+  position: sticky;
+  z-index: 5;
+  padding: 8px 7px;
+  font-size: 0.72rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.schedule-table thead tr:first-child th {
+  top: 0;
+}
+
+.schedule-table thead tr:nth-child(2) th {
+  top: 31px;
+}
+
+.schedule-time-header,
+.schedule-time-cell {
+  position: sticky;
+  left: 0;
+  width: 106px;
+  min-width: 106px;
+  max-width: 106px;
+  text-align: left;
+}
+
+.schedule-time-header {
+  z-index: 8;
+  color: #000000;
+  background: #f6d447;
+}
+
+.schedule-time-cell {
+  z-index: 3;
+  padding: 10px 8px;
+  background: #fbfbfa;
+  font-size: 0.78rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.schedule-day-header {
+  color: #1e2a10;
+  background: #b8cf65;
+}
+
+.schedule-subheader {
+  color: #000000;
+  background: #f2f4ea;
+}
+
+.schedule-cell {
+  padding: 0;
+  background: #ffffff;
+}
+
+.schedule-cell.is-empty {
+  background: #fbfbfa;
+}
+
+.schedule-cell-entry {
+  display: grid;
+  gap: 2px;
+  min-height: 42px;
+  padding: 7px 7px 8px;
+}
+
+.schedule-cell-entry + .schedule-cell-entry {
+  border-top: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+.schedule-cell-entry strong,
+.schedule-cell-entry small {
+  min-width: 0;
+  overflow-wrap: break-word;
+}
+
+.schedule-cell-entry strong {
+  font-size: 0.76rem;
+  font-weight: 900;
+  line-height: 1.2;
+}
+
+.schedule-cell-entry small {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.schedule-teacher-entry {
+  position: relative;
+  display: block;
+  padding-right: 86px;
+}
+
+.schedule-teacher-entry strong,
+.schedule-teacher-entry small {
+  display: block;
+}
+
+.schedule-teacher-entry strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow-wrap: normal;
+}
+
+.schedule-teacher-entry small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.schedule-entry-actions {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  display: grid;
+  grid-template-columns: repeat(3, 26px);
+  gap: 3px;
+}
+
+.schedule-entry-actions .icon-button {
+  width: 26px;
+  height: 26px;
+  color: var(--muted);
+  background: #f0f0ef;
+}
+
+.schedule-entry-actions .icon-button svg {
+  width: 14px;
+  height: 14px;
+}
+
+.schedule-cell-entry:hover .icon-button,
+.schedule-cell-entry:focus-within .icon-button {
+  color: var(--text);
+  background: #e5e5e4;
 }
 
 .catalog-panel,

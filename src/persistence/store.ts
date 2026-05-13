@@ -2,6 +2,8 @@ import { failure } from "../domain/errors";
 import { createEmptyState, migrateState, nowIso } from "../domain/model";
 import { LEGACY_STORAGE_KEYS, STORAGE_KEY, type AppState, type EmptyResult, type Result, type StorageAdapter } from "../domain/types";
 
+const ALERT_STORAGE_KEY = "sistema-rotina-escolar-proati-alerts-v1";
+
 export function browserStorage(): StorageAdapter {
   return window.localStorage;
 }
@@ -91,6 +93,7 @@ export function importStateFromText(rawText: string): Result<AppState> {
 export function clearStoredState(storage: StorageAdapter = browserStorage()): EmptyResult {
   try {
     storage.removeItem(STORAGE_KEY);
+    storage.removeItem(ALERT_STORAGE_KEY);
     for (const key of LEGACY_STORAGE_KEYS) {
       storage.removeItem(key);
     }

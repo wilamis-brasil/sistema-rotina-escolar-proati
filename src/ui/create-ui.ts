@@ -15,6 +15,7 @@ import { createDialogManager, type DialogManager } from "./dialogs";
 import { el, icon, option, qs, qsa, replaceChildren, span } from "./dom";
 import { refreshIcons } from "./icons";
 import { createToastManager, type ToastManager, type ToastPayload } from "./toasts";
+import { buildWeekSchedule, type WeekScheduleCell, type WeekScheduleEntry, type WeekScheduleSection } from "./week-schedule";
 
 const NAVIGATION_LABELS: Record<string, string> = {
   today: "Home",
@@ -120,7 +121,9 @@ export function createUI({
   const dialogs: DialogManager = createDialogManager();
   const toasts: ToastManager = createToastManager();
   const recentAlerts: RoutineAlert[] = [];
+  const queuedAlarms: RoutineAlert[] = [];
   let activeView = "today";
+  let activeAlarmKey: string | null = null;
   let editingRoutineId: string | null = null;
   let isMainMenuOpen = false;
   let selectedDevices = new Set<string>();
@@ -472,26 +475,37 @@ export function createUI({
   }
 
   async function requestNotificationAccess(): Promise<void> {
-    const result = await notifications.requestPermission();
-    if (!result.ok) {
-      setFeedback(refs.settingsFeedback, result.message, "error");
-      toasts.show({
-        type: "warning",
-        title: "Alertas do navegador indisponíveis",
-        message: result.message,
-      });
-      renderNotificationStatus();
-      return;
-    }
-
     const settings = getState().settings;
     const updateResult = actions.updateSettings({
       notificationsEnabled: true,
       defaultLeadMinutes: settings.defaultLeadMinutes,
       soundEnabled: settings.soundEnabled,
     });
+    if (!updateResult.ok) {
+      showResult(updateResult, refs.settingsFeedback, "Alertas visuais ativados.");
+      render();
+      return;
+    }
 
-    showResult(updateResult, refs.settingsFeedback, result.message);
+    const result = await notifications.requestPermission();
+    if (!result.ok) {
+      setFeedback(refs.settingsFeedback, result.message, "success");
+      toasts.show({
+        type: "warning",
+        title: "Alertas visuais ativos",
+        message: result.message,
+      });
+      render();
+      return;
+    }
+
+    setFeedback(refs.settingsFeedback, result.message, "success");
+    toasts.show({
+      type: "success",
+      title: "Notificações do navegador ativas",
+      message: result.message,
+      timeout: 3600,
+    });
     render();
   }
 
@@ -595,28 +609,156 @@ export function createUI({
 
   function renderWeek(): void {
     const state = getState();
-    const filtered = sortRoutines(filterRoutines(state.routines, state.settings.filterText), state.settings.sortBy);
+    const filtered = filterRoutines(state.routines, state.settings.filterText);
+    const schedule = buildWeekSchedule(filtered, state.devices);
+    const routineById = new Map(filtered.map((routine) => [routine.id, routine]));
 
     replaceChildren(
       refs.weekRoutines,
-      WEEKDAYS.map((day) => {
-        const routines = filtered.filter((routine) => routine.weekday === day.id);
-        return el("section", { className: "day-column" }, [
-          el("header", { className: "day-column-header" }, [
-            el("strong", { text: day.shortLabel }),
-            el("span", { text: routines.length.toString() }),
-          ]),
-          el(
-            "div",
-            { className: "day-routines" },
-            routines.length ? routines.map((routine) => routineCard(routine, true)) : [emptyState("Sem registros.")],
-          ),
-        ]);
-      }),
+      schedule.sections.length
+        ? schedule.sections.map((section) => renderEquipmentSection(section, routineById))
+        : [weeklyScheduleEmptyState()],
     );
   }
 
-  function routineCard(routine: Routine, compact = false): HTMLElement {
+  function renderEquipmentSection(section: WeekScheduleSection, routineById: Map<string, Routine>): HTMLElement {
+    const titleId = `schedule-equipment-${slug(section.deviceName)}`;
+
+    return el("section", { className: "equipment-section", attrs: { "aria-labelledby": titleId } }, [
+      el("header", { className: "equipment-section-header" }, [
+        el("div", {}, [
+          el("span", { className: "equipment-kicker", text: "Equipamento" }),
+          el("h3", { text: section.deviceName, attrs: { id: titleId } }),
+        ]),
+        el("span", {
+          className: "equipment-count",
+          text: section.routineCount === 1 ? "1 reserva" : `${section.routineCount} reservas`,
+        }),
+      ]),
+      el("div", { className: "schedule-table-wrap" }, [
+        el("table", { className: "schedule-table" }, [
+          renderScheduleColgroup(),
+          renderScheduleHead(),
+          el(
+            "tbody",
+            {},
+            section.rows.map((row) =>
+              el("tr", {}, [
+                el("th", { className: "schedule-time-cell", text: row.timeLabel, attrs: { scope: "row" } }),
+                ...row.cells.flatMap((cell) => renderScheduleDayCells(cell, routineById)),
+              ]),
+            ),
+          ),
+        ]),
+      ]),
+    ]);
+  }
+
+  function renderScheduleColgroup(): HTMLTableColElement {
+    return el("colgroup", {}, [
+      el("col", { className: "schedule-time-col" }),
+      ...WEEKDAYS.flatMap(() => [
+        el("col", { className: "schedule-room-col" }),
+        el("col", { className: "schedule-teacher-col" }),
+      ]),
+    ]);
+  }
+
+  function renderScheduleHead(): HTMLTableSectionElement {
+    return el("thead", {}, [
+      el("tr", {}, [
+        el("th", {
+          className: "schedule-time-header",
+          text: "Horário",
+          attrs: { scope: "col", rowspan: "2" },
+        }),
+        ...WEEKDAYS.map((day) =>
+          el("th", {
+            className: "schedule-day-header",
+            text: day.label,
+            attrs: { scope: "colgroup", colspan: "2" },
+          }),
+        ),
+      ]),
+      el(
+        "tr",
+        {},
+        WEEKDAYS.flatMap(() => [
+          el("th", { className: "schedule-subheader", text: "Sala/Turma", attrs: { scope: "col" } }),
+          el("th", { className: "schedule-subheader", text: "Professor", attrs: { scope: "col" } }),
+        ]),
+      ),
+    ]);
+  }
+
+  function renderScheduleDayCells(cell: WeekScheduleCell, routineById: Map<string, Routine>): HTMLTableCellElement[] {
+    return [
+      el(
+        "td",
+        { className: cell.entries.length ? "schedule-cell schedule-room-cell" : "schedule-cell schedule-room-cell is-empty" },
+        cell.entries.length ? cell.entries.map(renderRoomEntry) : [span("")],
+      ),
+      el(
+        "td",
+        { className: cell.entries.length ? "schedule-cell schedule-teacher-cell" : "schedule-cell schedule-teacher-cell is-empty" },
+        cell.entries.length ? cell.entries.map((entry) => renderTeacherEntry(entry, routineById)) : [span("")],
+      ),
+    ];
+  }
+
+  function renderRoomEntry(entry: WeekScheduleEntry): HTMLElement {
+    return el("div", { className: "schedule-cell-entry" }, [
+      el("strong", { text: entry.room }),
+      el("small", { text: `${entry.studentCount} aluno(s)` }),
+    ]);
+  }
+
+  function renderTeacherEntry(entry: WeekScheduleEntry, routineById: Map<string, Routine>): HTMLElement {
+    const routine = routineById.get(entry.routineId);
+
+    return el("div", { className: "schedule-cell-entry schedule-teacher-entry" }, [
+      el("strong", { text: entry.teacher }),
+      entry.notes ? el("small", { text: entry.notes }) : null,
+      routine ? scheduleEntryActions(routine) : null,
+    ]);
+  }
+
+  function scheduleEntryActions(routine: Routine): HTMLElement {
+    const copyButton = iconButton("copy", "Duplicar reserva", () => duplicateRoutine(routine));
+    const editButton = iconButton("pencil", "Editar reserva", () => fillRoutineForm(routine));
+    const deleteButton = iconButton("trash-2", "Excluir reserva", () => confirmDeleteRoutine(routine), "danger");
+
+    return el("div", { className: "schedule-entry-actions" }, [copyButton, editButton, deleteButton]);
+  }
+
+  function weeklyScheduleEmptyState(): HTMLElement {
+    return el("div", { className: "weekly-schedule-empty" }, [
+      el("strong", { text: "Nenhuma reserva encontrada." }),
+      el("span", { text: "Ajuste o filtro ou cadastre uma rotina para montar a matriz semanal por equipamento." }),
+    ]);
+  }
+
+  function duplicateRoutine(routine: Routine): void {
+    const result = actions.duplicateRoutine(routine.id);
+    showResult(result, refs.routineFeedback, "Rotina duplicada.");
+    render();
+  }
+
+  async function confirmDeleteRoutine(routine: Routine): Promise<void> {
+    const confirmed = await dialogs.dangerConfirm({
+      title: "Excluir rotina?",
+      message:
+        "A rotina será removida da agenda. Você ainda poderá usar Desfazer logo após a exclusão.",
+      confirmLabel: "Excluir",
+    });
+    if (!confirmed) return;
+
+    const result = actions.deleteRoutine(routine.id);
+    showResult(result, refs.routineFeedback, "Rotina excluída.");
+    render();
+  }
+
+  function routineCard(routine: Routine): HTMLElement {
     const title = `${routine.startTime}${routine.endTime ? `-${routine.endTime}` : ""}`;
     const leadLabel =
       routine.leadMinutes === null || routine.leadMinutes === undefined
@@ -625,7 +767,7 @@ export function createUI({
 
     return el(
       "article",
-      { className: compact ? "routine-card is-compact" : "routine-card" },
+      { className: "routine-card" },
       [
         el("div", { className: "routine-card-top" }, [
           el("div", {}, [
@@ -633,11 +775,7 @@ export function createUI({
             el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
           ]),
           el("div", { className: "routine-actions" }, [
-            actionButton("copy", "Duplicar", "Duplicar rotina", () => {
-              const result = actions.duplicateRoutine(routine.id);
-              showResult(result, refs.routineFeedback, "Rotina duplicada.");
-              render();
-            }),
+            actionButton("copy", "Duplicar", "Duplicar rotina", () => duplicateRoutine(routine)),
             actionButton("pencil", "Editar", "Editar rotina", () => fillRoutineForm(routine)),
             actionButton(
               "trash-2",
@@ -811,17 +949,29 @@ export function createUI({
     renderSettingsLeadMode();
   }
 
-  function handleSettingsSubmit(event: SubmitEvent): void {
+  async function handleSettingsSubmit(event: SubmitEvent): Promise<void> {
     event.preventDefault();
     const defaultLeadMinutes =
       refs.settingsDefaultLead.value === "custom" ? refs.settingsCustomLead.value : refs.settingsDefaultLead.value;
+    const wantsNotifications = refs.settingsNotificationsEnabled.checked;
     const result = actions.updateSettings({
-      notificationsEnabled: refs.settingsNotificationsEnabled.checked,
+      notificationsEnabled: wantsNotifications,
       defaultLeadMinutes,
       soundEnabled: refs.settingsSoundEnabled.checked,
     });
 
     showResult(result, refs.settingsFeedback, "Configurações salvas.");
+    if (result.ok && wantsNotifications && notifications.getStatus().type === "pending") {
+      const permission = await notifications.requestPermission();
+      if (!permission.ok) {
+        setFeedback(refs.settingsFeedback, permission.message, "success");
+        toasts.show({
+          type: "warning",
+          title: "Alertas visuais ativos",
+          message: permission.message,
+        });
+      }
+    }
     render();
   }
 
@@ -886,13 +1036,24 @@ export function createUI({
   function renderNotificationStatus(): void {
     const status = notifications.getStatus();
     const isActive = status.type === "enabled" || status.type === "unsupported";
+    const buttonLabel = refs.requestNotificationButton.querySelector("span");
     refs.requestNotificationButton.hidden = isActive;
     refs.requestNotificationButton.title = status.label;
     refs.requestNotificationButton.dataset.status = status.type;
+    if (buttonLabel) {
+      buttonLabel.textContent =
+        status.type === "denied"
+          ? "Permissão bloqueada"
+          : status.type === "disabled"
+            ? "Alertas pausados"
+            : "Permitir navegador";
+    }
   }
 
   function addAlert(alert: RoutineAlert): void {
-    recentAlerts.unshift(alert);
+    if (!recentAlerts.some((item) => item.key === alert.key)) {
+      recentAlerts.unshift(alert);
+    }
     recentAlerts.splice(5);
     renderAlerts();
     toasts.show({
@@ -904,16 +1065,34 @@ export function createUI({
   }
 
   async function showAlarm(alert: RoutineAlert): Promise<void> {
+    if (activeAlarmKey === alert.key || queuedAlarms.some((item) => item.key === alert.key)) {
+      return;
+    }
+
+    queuedAlarms.push(alert);
+    await drainAlarmQueue();
+  }
+
+  async function drainAlarmQueue(): Promise<void> {
+    if (activeAlarmKey) return;
+    const alert = queuedAlarms.shift();
+    if (!alert) return;
+
+    activeAlarmKey = alert.key;
     addAlert(alert);
     try {
       await dialogs.alarm({
         kicker: "Alarme PROATI",
-        title: "Retirada agora",
+        title: alert.title,
         message: alert.body,
         details: alert.details,
+        confirmLabel: "Confirmar",
+        cancelLabel: "Fechar",
       });
     } finally {
-      notifications.stopSound();
+      notifications.acknowledgeAlert(alert.key);
+      activeAlarmKey = null;
+      void drainAlarmQueue();
     }
   }
 
