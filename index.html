@@ -146,16 +146,16 @@
                 <h3>Quando</h3>
                 <div class="form-row form-row-3">
                   <label>
-                    <span>Dia útil</span>
-                    <select id="routine-weekday" name="weekday" required></select>
+                    <span class="form-label">Dia útil</span>
+                    <select class="form-input" id="routine-weekday" name="weekday" required></select>
                   </label>
                   <label>
-                    <span>Horário de retirada</span>
-                    <input id="routine-start-time" name="startTime" type="time" required>
+                    <span class="form-label">Horário de retirada</span>
+                    <input class="form-input" id="routine-start-time" name="startTime" type="time" required>
                   </label>
                   <label>
-                    <span>Término opcional</span>
-                    <input id="routine-end-time" name="endTime" type="time">
+                    <span class="form-label">Término opcional</span>
+                    <input class="form-input" id="routine-end-time" name="endTime" type="time">
                   </label>
                 </div>
               </section>
@@ -164,23 +164,23 @@
                 <h3>Quem usa</h3>
                 <div class="form-row form-row-4">
                   <label>
-                    <span>Aula</span>
-                    <input id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História...">
+                    <span class="form-label">Aula</span>
+                    <input class="form-input" id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História...">
                     <datalist id="subjects-list"></datalist>
                   </label>
                   <label>
-                    <span>Professor responsável</span>
-                    <input id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
+                    <span class="form-label">Professor responsável</span>
+                    <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
                     <datalist id="teachers-list"></datalist>
                   </label>
                   <label>
-                    <span>Sala ou turma</span>
-                    <input id="routine-room" name="room" list="rooms-list" autocomplete="off" placeholder="..." required>
+                    <span class="form-label">Sala ou turma</span>
+                    <input class="form-input" id="routine-room" name="room" list="rooms-list" autocomplete="off" placeholder="..." required>
                     <datalist id="rooms-list"></datalist>
                   </label>
                   <label>
-                    <span>Quantidade de alunos</span>
-                    <input id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="..." required>
+                    <span class="form-label">Quantidade de alunos</span>
+                    <input class="form-input" id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="..." required>
                   </label>
                 </div>
               </section>
@@ -190,7 +190,7 @@
                 <div id="routine-devices" class="check-grid"></div>
                 <div class="inline-add">
                   <label class="sr-only" for="routine-new-device">Outro dispositivo</label>
-                  <input id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo">
+                  <input class="form-input" id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo">
                   <button class="button button-secondary button-small" type="button" id="add-device-to-routine">
                     <i data-lucide="plus" aria-hidden="true"></i>
                     <span>Adicionar</span>
@@ -202,7 +202,7 @@
                 <h3>Alertas e observações</h3>
                 <label>
                   <span>Observações</span>
-                  <textarea id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..."></textarea>
+                  <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..."></textarea>
                 </label>
 
                 <div class="routine-footer-row">
@@ -213,7 +213,7 @@
                     </label>
                     <label>
                       <span>Antecedência</span>
-                      <select id="routine-lead-mode" name="leadMode">
+                      <select class="form-input" id="routine-lead-mode" name="leadMode">
                         <option value="global">Usar padrão</option>
                         <option value="5">5 min</option>
                         <option value="10">10 min</option>
@@ -225,7 +225,7 @@
                     </label>
                     <label id="routine-custom-lead-wrap" class="is-hidden">
                       <span>Minutos</span>
-                      <input id="routine-custom-lead" name="customLead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
+                      <input class="form-input" id="routine-custom-lead" name="customLead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
                     </label>
                   </div>
                   <div class="form-actions routine-save-actions">
