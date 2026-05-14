@@ -485,7 +485,28 @@ button {
 
 .form-row-4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
 }
+
+/* ─── Sistema de inputs padronizados ─────────────────────── */
+
+.form-input {
+  height: 40px;
+  min-height: 40px;
+}
+
+textarea.form-input {
+  height: auto;
+  min-height: 100px;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.form-input--full    { width: 100%; }
+.form-input--half    { max-width: 50%; }
+.form-input--quarter { max-width: 25%; }
 
 .align-end {
   align-items: end;
