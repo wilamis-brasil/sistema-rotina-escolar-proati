@@ -483,6 +483,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.form-row-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .align-end {
   align-items: end;
 }
@@ -1061,7 +1065,7 @@ textarea:focus-visible {
 
 .schedule-table {
   width: 100%;
-  min-width: 1440px;
+  min-width: 1796px;
   border-collapse: separate;
   border-spacing: 0;
   color: var(--text);
@@ -1073,11 +1077,11 @@ textarea:focus-visible {
 }
 
 .schedule-room-col {
-  width: 96px;
+  width: 118px;
 }
 
 .schedule-teacher-col {
-  width: 166px;
+  width: 220px;
 }
 
 .schedule-table th,
@@ -1157,9 +1161,9 @@ textarea:focus-visible {
 
 .schedule-cell-entry {
   display: grid;
-  gap: 2px;
-  min-height: 42px;
-  padding: 7px 7px 8px;
+  gap: 3px;
+  min-height: 52px;
+  padding: 8px;
 }
 
 .schedule-cell-entry + .schedule-cell-entry {
@@ -1186,33 +1190,30 @@ textarea:focus-visible {
 }
 
 .schedule-teacher-entry {
-  position: relative;
-  display: block;
-  padding-right: 86px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  column-gap: 8px;
 }
 
 .schedule-teacher-entry strong,
 .schedule-teacher-entry small {
   display: block;
+  grid-column: 1;
 }
 
 .schedule-teacher-entry strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  overflow-wrap: normal;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .schedule-teacher-entry small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .schedule-entry-actions {
-  position: absolute;
-  top: 7px;
-  right: 7px;
+  grid-column: 2;
+  grid-row: 1 / span 2;
   display: grid;
   grid-template-columns: repeat(3, 26px);
   gap: 3px;
@@ -1849,6 +1850,7 @@ textarea:focus-visible {
   }
 
   .form-row-3,
+  .form-row-4,
   .catalog-form,
   .catalog-form-room {
     grid-template-columns: 1fr;

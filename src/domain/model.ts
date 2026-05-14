@@ -170,6 +170,7 @@ export function buildRoutine(
   const weekday = normalizeText(payload.weekday);
   const startTime = normalizeText(payload.startTime);
   const endTime = normalizeText(payload.endTime);
+  const subject = normalizeText(payload.subject);
   const teacher = normalizeText(payload.teacher);
   const room = normalizeText(payload.room);
   const studentCount = Number(payload.studentCount);
@@ -226,6 +227,7 @@ export function buildRoutine(
       weekday: weekday as WeekdayId,
       startTime,
       endTime,
+      subject,
       teacher,
       room,
       studentCount,
@@ -276,6 +278,7 @@ export function sortRoutines(routines: Routine[], sortBy: SortOption = "weekday-
   const sorters: Record<SortOption, (a: Routine, b: Routine) => number> = {
     "weekday-time": (a, b) => byDay(a, b) || byTime(a, b) || byText((item) => item.teacher)(a, b),
     time: (a, b) => byTime(a, b) || byDay(a, b),
+    subject: (a, b) => byText((item) => item.subject)(a, b) || byDay(a, b) || byTime(a, b),
     teacher: (a, b) => byText((item) => item.teacher)(a, b) || byDay(a, b) || byTime(a, b),
     room: (a, b) => byText((item) => item.room)(a, b) || byDay(a, b) || byTime(a, b),
     device: (a, b) => byText((item) => item.devices[0] ?? "")(a, b) || byDay(a, b) || byTime(a, b),
@@ -291,6 +294,7 @@ export function filterRoutines(routines: Routine[], query: unknown): Routine[] {
   return routines.filter((routine) => {
     const haystack = [
       routine.teacher,
+      routine.subject,
       routine.room,
       routine.studentCount,
       routine.weekday,

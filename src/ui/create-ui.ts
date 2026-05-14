@@ -9,7 +9,15 @@ import {
   sortRoutines,
   timeToMinutes,
 } from "../domain/model";
-import { SORT_OPTIONS, WEEKDAYS, type AppState, type CatalogKind, type EmptyResult, type Routine, type RoutinePayload } from "../domain/types";
+import {
+  SORT_OPTIONS,
+  WEEKDAYS,
+  type AppState,
+  type CatalogKind,
+  type EmptyResult,
+  type Routine,
+  type RoutinePayload,
+} from "../domain/types";
 import type { NotificationManager, RoutineAlert } from "../notifications/notification-manager";
 import { createDialogManager, type DialogManager } from "./dialogs";
 import { el, icon, option, qs, qsa, replaceChildren, span } from "./dom";
@@ -25,6 +33,8 @@ const NAVIGATION_LABELS: Record<string, string> = {
   devices: "Dispositivos",
   settings: "Configurações",
 };
+
+const IMPORTED_FIXED_EQUIPMENT_NOTE = "Importado da folha de reserva de equipamentos eletr\u00f4nicos fixos.";
 
 interface UIRefs {
   mainMenuButton: HTMLButtonElement;
@@ -44,6 +54,7 @@ interface UIRefs {
   routineWeekday: HTMLSelectElement;
   routineStartTime: HTMLInputElement;
   routineEndTime: HTMLInputElement;
+  routineSubject: HTMLInputElement;
   routineTeacher: HTMLInputElement;
   routineRoom: HTMLInputElement;
   routineStudentCount: HTMLInputElement;
@@ -66,6 +77,7 @@ interface UIRefs {
   routineSort: HTMLSelectElement;
   teachersDatalist: HTMLElement;
   roomsDatalist: HTMLElement;
+  subjectsDatalist: HTMLElement;
   teacherForm: HTMLFormElement;
   teacherId: HTMLInputElement;
   teacherName: HTMLInputElement;
@@ -159,6 +171,7 @@ export function createUI({
       routineWeekday: qs("#routine-weekday"),
       routineStartTime: qs("#routine-start-time"),
       routineEndTime: qs("#routine-end-time"),
+      routineSubject: qs("#routine-subject"),
       routineTeacher: qs("#routine-teacher"),
       routineRoom: qs("#routine-room"),
       routineStudentCount: qs("#routine-student-count"),
@@ -181,6 +194,7 @@ export function createUI({
       routineSort: qs("#routine-sort"),
       teachersDatalist: qs("#teachers-list"),
       roomsDatalist: qs("#rooms-list"),
+      subjectsDatalist: qs("#subjects-list"),
       teacherForm: qs("#teacher-form"),
       teacherId: qs("#teacher-id"),
       teacherName: qs("#teacher-name"),
@@ -272,7 +286,6 @@ export function createUI({
       refs.routineWeekday,
       WEEKDAYS.map((day) => option(day.id, day.label)),
     );
-
     replaceChildren(
       refs.routineSort,
       SORT_OPTIONS.map((item) => option(item.value, item.label)),
@@ -397,6 +410,7 @@ export function createUI({
       weekday: refs.routineWeekday.value,
       startTime: refs.routineStartTime.value,
       endTime: refs.routineEndTime.value,
+      subject: refs.routineSubject.value,
       teacher: refs.routineTeacher.value,
       room: refs.routineRoom.value,
       studentCount: refs.routineStudentCount.value,
@@ -416,6 +430,7 @@ export function createUI({
     refs.routineFormModeLabel.textContent = "Cadastro rápido";
     refs.routineFormPanel.dataset.mode = "create";
     refs.routineWeekday.value = getTodayWeekdayId() ?? WEEKDAYS[0].id;
+    refs.routineSubject.value = "";
     refs.routineNotificationEnabled.checked = true;
     refs.routineLeadMode.value = "global";
     refs.routineCustomLead.value = String(getState().settings.defaultLeadMinutes);
@@ -436,6 +451,7 @@ export function createUI({
     refs.routineWeekday.value = routine.weekday;
     refs.routineStartTime.value = routine.startTime;
     refs.routineEndTime.value = routine.endTime;
+    refs.routineSubject.value = routine.subject;
     refs.routineTeacher.value = routine.teacher;
     refs.routineRoom.value = routine.room;
     refs.routineStudentCount.value = String(routine.studentCount);
@@ -552,6 +568,10 @@ export function createUI({
     replaceChildren(
       refs.roomsDatalist,
       state.rooms.map((room) => option(room.name, room.name)),
+    );
+    replaceChildren(
+      refs.subjectsDatalist,
+      uniqueRoutineSubjects(state.routines).map((subject) => option(subject, subject)),
     );
   }
 
@@ -715,10 +735,12 @@ export function createUI({
 
   function renderTeacherEntry(entry: WeekScheduleEntry, routineById: Map<string, Routine>): HTMLElement {
     const routine = routineById.get(entry.routineId);
+    const notes = entry.notes === IMPORTED_FIXED_EQUIPMENT_NOTE ? "" : entry.notes;
 
     return el("div", { className: "schedule-cell-entry schedule-teacher-entry" }, [
       el("strong", { text: entry.teacher }),
-      entry.notes ? el("small", { text: entry.notes }) : null,
+      entry.subject ? el("small", { text: `Aula: ${entry.subject}` }) : null,
+      notes ? el("small", { text: notes }) : null,
       routine ? scheduleEntryActions(routine) : null,
     ]);
   }
@@ -799,6 +821,7 @@ export function createUI({
           ]),
         ]),
         detailLine("user", routine.teacher),
+        routine.subject ? detailLine("book-open-check", `Aula: ${routine.subject}`) : null,
         detailLine("map-pin", routine.room),
         detailLine("users", `${routine.studentCount} aluno(s)`),
         detailLine("laptop", routine.devices.join(", ")),
@@ -860,8 +883,7 @@ export function createUI({
   }
 
   function countUsage(kind: CatalogKind, name: string): string {
-    const routines = getState().routines;
-    const count = routines.filter((routine) => {
+    const count = getState().routines.filter((routine) => {
       if (kind === "teachers") return routine.teacher === name;
       if (kind === "rooms") return routine.room === name;
       return routine.devices.includes(name);
@@ -1170,6 +1192,21 @@ export function createUI({
 
   function detailLine(iconName: string, text: string): HTMLElement {
     return el("p", { className: "detail-line" }, [icon(iconName), span(text)]);
+  }
+
+  function uniqueRoutineSubjects(routines: Routine[]): string[] {
+    const seen = new Set<string>();
+    const subjects: string[] = [];
+
+    routines.forEach((routine) => {
+      const subject = normalizeText(routine.subject);
+      const key = subject.toLocaleLowerCase("pt-BR");
+      if (!subject || seen.has(key)) return;
+      seen.add(key);
+      subjects.push(subject);
+    });
+
+    return subjects.sort((a, b) => a.localeCompare(b, "pt-BR"));
   }
 
   function emptyState(message: string): HTMLElement {

@@ -15,6 +15,7 @@ export type WeekdayId = (typeof WEEKDAYS)[number]["id"];
 export const SORT_OPTIONS = [
   { value: "weekday-time", label: "Dia e horário" },
   { value: "time", label: "Horário" },
+  { value: "subject", label: "Aula" },
   { value: "teacher", label: "Professor" },
   { value: "room", label: "Sala/turma" },
   { value: "device", label: "Dispositivo" },
@@ -50,6 +51,7 @@ export interface Routine {
   weekday: WeekdayId;
   startTime: string;
   endTime: string;
+  subject: string;
   teacher: string;
   room: string;
   studentCount: number;
@@ -89,6 +91,7 @@ export interface RoutinePayload {
   weekday: unknown;
   startTime: unknown;
   endTime?: unknown;
+  subject?: unknown;
   teacher: unknown;
   room: unknown;
   studentCount: unknown;

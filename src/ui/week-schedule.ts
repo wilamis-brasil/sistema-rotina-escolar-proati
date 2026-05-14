@@ -18,6 +18,7 @@ export interface WeekScheduleEntry {
   timeLabel: string;
   startTime: string;
   endTime: string;
+  subject: string;
   teacher: string;
   room: string;
   studentCount: number;
@@ -77,6 +78,7 @@ export function buildWeekSchedule(
         timeLabel: timeSlot.label,
         startTime: routine.startTime,
         endTime: routine.endTime,
+        subject: routine.subject,
         teacher: routine.teacher,
         room: routine.room,
         studentCount: routine.studentCount,

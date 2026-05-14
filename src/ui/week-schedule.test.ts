@@ -7,6 +7,7 @@ const baseRoutine: Routine = {
   weekday: "monday",
   startTime: "07:00",
   endTime: "07:50",
+  subject: "Matemática",
   teacher: "Jussara",
   room: "8B",
   studentCount: 28,
@@ -104,6 +105,7 @@ describe("buildWeekSchedule", () => {
         routine({
           id: "routine-details",
           teacher: "JUSSARA/MATIFIC",
+          subject: "Redação",
           room: "Sala 9A",
           studentCount: 31,
           notes: "Levar carregador",
@@ -121,6 +123,7 @@ describe("buildWeekSchedule", () => {
       timeLabel: "7H-7H50",
       room: "Sala 9A",
       teacher: "JUSSARA/MATIFIC",
+      subject: "Redação",
       studentCount: 31,
       notes: "Levar carregador",
     });

@@ -90,6 +90,7 @@ function routine(overrides: Partial<Routine> = {}): Routine {
     weekday: "monday",
     startTime: "09:00",
     endTime: "10:00",
+    subject: "",
     teacher: "Ana",
     room: "1A",
     studentCount: 30,

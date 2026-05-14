@@ -162,7 +162,12 @@
 
               <section class="form-block" aria-label="Quem usa os dispositivos">
                 <h3>Quem usa</h3>
-                <div class="form-row form-row-3">
+                <div class="form-row form-row-4">
+                  <label>
+                    <span>Aula</span>
+                    <input id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História...">
+                    <datalist id="subjects-list"></datalist>
+                  </label>
                   <label>
                     <span>Professor responsável</span>
                     <input id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
@@ -242,12 +247,12 @@
           <div class="panel-heading toolbar-heading">
             <div>
               <h2 id="week-heading">Rotina semanal</h2>
-              <p>Matriz semanal por equipamento, horário, turma/sala e professor.</p>
+              <p>Matriz semanal por equipamento, horário, turma/sala, professor e aula.</p>
             </div>
             <div class="toolbar">
               <label>
                 <span>Buscar</span>
-                <input id="routine-filter" type="search" placeholder="Professor, sala, dispositivo...">
+                <input id="routine-filter" type="search" placeholder="Aula, professor, sala, dispositivo...">
               </label>
               <label class="week-sort-control">
                 <span>Ordenar</span>

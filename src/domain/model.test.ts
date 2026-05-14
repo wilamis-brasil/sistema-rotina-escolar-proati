@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { buildRoutine, createEmptyState, normalizeState, validateLeadMinutes } from "./model";
+import { buildRoutine, createEmptyState, filterRoutines, normalizeState, sortRoutines, validateLeadMinutes } from "./model";
 
 const validRoutinePayload = {
   weekday: "monday",
   startTime: "08:00",
   endTime: "09:00",
+  subject: "Matemática",
   teacher: "Ana",
   room: "1A",
   studentCount: "30",
@@ -15,6 +16,18 @@ const validRoutinePayload = {
 };
 
 describe("buildRoutine", () => {
+  it("normalizes the class subject as part of the routine", () => {
+    const result = buildRoutine({
+      ...validRoutinePayload,
+      subject: "  Redação  ",
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.subject).toBe("Redação");
+    }
+  });
+
   it("rejects an end time before the start time", () => {
     const result = buildRoutine({
       ...validRoutinePayload,
@@ -25,6 +38,31 @@ describe("buildRoutine", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.errors.join(" ")).toContain("anterior");
+    }
+  });
+
+  it("finds routines by class subject", () => {
+    const math = buildRoutine({ ...validRoutinePayload, subject: "Matemática" });
+    const history = buildRoutine({ ...validRoutinePayload, subject: "História", startTime: "10:00", endTime: "11:00" });
+
+    expect(math.ok).toBe(true);
+    expect(history.ok).toBe(true);
+    if (math.ok && history.ok) {
+      expect(filterRoutines([math.value, history.value], "matemática")).toEqual([math.value]);
+    }
+  });
+
+  it("sorts routines by class subject with weekday and time fallback", () => {
+    const history = buildRoutine({ ...validRoutinePayload, subject: "História", startTime: "10:00", endTime: "11:00" });
+    const math = buildRoutine({ ...validRoutinePayload, subject: "Matemática", startTime: "08:00" });
+
+    expect(history.ok).toBe(true);
+    expect(math.ok).toBe(true);
+    if (history.ok && math.ok) {
+      expect(sortRoutines([math.value, history.value], "subject").map((routine) => routine.subject)).toEqual([
+        "História",
+        "Matemática",
+      ]);
     }
   });
 });
@@ -70,6 +108,24 @@ describe("settings defaults", () => {
     });
 
     expect(state.settings.notificationsEnabled).toBe(false);
+  });
+
+  it("normalizes old routines without class subject to an empty string", () => {
+    const state = normalizeState({
+      schemaVersion: 2,
+      routines: [
+        {
+          ...validRoutinePayload,
+          subject: undefined,
+        },
+      ],
+      teachers: [],
+      rooms: [],
+      devices: [],
+      settings: {},
+    });
+
+    expect(state.routines[0]?.subject).toBe("");
   });
 });
 
