@@ -169,7 +169,7 @@
                     <datalist id="subjects-list"></datalist>
                   </label>
                   <label>
-                    <span class="form-label">Professor responsável</span>
+                    <span class="form-label">Professor</span>
                     <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
                     <datalist id="teachers-list"></datalist>
                   </label>
@@ -179,8 +179,8 @@
                     <datalist id="rooms-list"></datalist>
                   </label>
                   <label>
-                    <span class="form-label">Quantidade de alunos</span>
-                    <input class="form-input" id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="..." required>
+                    <span class="form-label">Alunos</span>
+                    <input class="form-input" id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="Ex.: 12" required>
                   </label>
                 </div>
               </section>
@@ -245,19 +245,81 @@
       <section class="view" id="view-week" aria-labelledby="week-heading">
         <section class="panel">
           <div class="panel-heading toolbar-heading">
-            <div>
-              <h2 id="week-heading">Rotina semanal</h2>
-              <p>Matriz semanal por equipamento, horário, turma/sala, professor e aula.</p>
+            <div class="heading-row">
+              <div>
+                <h2 id="week-heading">Rotina semanal</h2>
+                <p>Matriz semanal por equipamento, horário, turma/sala, professor e aula.</p>
+              </div>
+              <div class="filter-summary">
+                <span id="filter-results-count"></span>
+              </div>
             </div>
-            <div class="toolbar">
-              <label>
-                <span>Buscar</span>
-                <input id="routine-filter" type="search" placeholder="Aula, professor, sala, dispositivo...">
-              </label>
-              <label class="week-sort-control">
-                <span>Ordenar</span>
-                <select id="routine-sort"></select>
-              </label>
+
+            <div class="filter-bar" id="week-filter-bar" role="search" aria-label="Filtros da rotina semanal">
+
+              <div class="filter-header-row">
+                <div class="filter-search-wrap">
+                  <div class="filter-search-input-wrap">
+                    <i data-lucide="search" class="filter-search-icon" aria-hidden="true"></i>
+                    <input id="routine-filter" type="search" autocomplete="off"
+                           class="filter-search-input"
+                           placeholder="Professor, sala, aula…" aria-label="Buscar rotinas">
+                  </div>
+                </div>
+                <button id="filter-clear-all" class="filter-clear-btn" type="button" hidden>
+                  <i data-lucide="x" aria-hidden="true"></i>
+                  <span>Limpar filtros</span>
+                </button>
+              </div>
+
+              <div class="filter-grid">
+                <div class="filter-group">
+                  <span class="filter-group-label" id="label-weekday">Dia</span>
+                  <div class="filter-pills" id="filter-weekday-chips" role="group" aria-labelledby="label-weekday">
+                    <label class="filter-pill"><input type="checkbox" value="monday"><span>Seg</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="tuesday"><span>Ter</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="wednesday"><span>Qua</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="thursday"><span>Qui</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="friday"><span>Sex</span></label>
+                  </div>
+                </div>
+
+                <div class="filter-group">
+                  <span class="filter-group-label" id="label-time">Horário</span>
+                  <div class="filter-time-row">
+                    <select id="filter-time-start" class="filter-select-input" aria-label="Das"></select>
+                    <span class="filter-time-sep" aria-hidden="true">até</span>
+                    <select id="filter-time-end" class="filter-select-input" aria-label="Às"></select>
+                  </div>
+                </div>
+
+                <div class="filter-group">
+                  <label class="filter-group-label" for="filter-teacher">Professor</label>
+                  <select id="filter-teacher" class="filter-select-input"></select>
+                </div>
+
+                <div class="filter-group">
+                  <label class="filter-group-label" for="filter-room">Sala</label>
+                  <select id="filter-room" class="filter-select-input"></select>
+                </div>
+              </div>
+
+              <div class="filter-grid filter-grid--row2">
+                <div class="filter-group">
+                  <span class="filter-group-label" id="label-device">Dispositivo</span>
+                  <div class="filter-pills" id="filter-device-chips" role="group" aria-labelledby="label-device">
+                    <label class="filter-pill"><input type="checkbox" value="Notebook"><span>Notebook</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="Chromebook"><span>Chromebook</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="Notebook/Chromebook"><span>NB/CB</span></label>
+                  </div>
+                </div>
+
+                <div class="filter-group">
+                  <label class="filter-group-label" for="routine-sort">Ordenar por</label>
+                  <select id="routine-sort" class="filter-select-input"></select>
+                </div>
+              </div>
+
             </div>
           </div>
           <div id="week-routines" class="weekly-schedule"></div>
@@ -377,30 +439,31 @@
             </label>
             <p class="notice-text">As notificações do navegador dependem da permissão do usuário e da página aberta. O sistema mantém um alerta visual dentro da aplicação.</p>
             <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, salas e horários; guarde-os com cuidado em computadores compartilhados.</p>
-            <div class="form-actions">
-              <p id="settings-feedback" class="form-feedback" role="alert"></p>
-              <button class="button button-primary" type="submit">
-                <i data-lucide="save" aria-hidden="true"></i>
-                <span>Salvar configurações</span>
-              </button>
+            <div class="settings-footer">
+              <div class="settings-data-actions">
+                <button class="button button-secondary" type="button" id="export-data-button">
+                  <i data-lucide="download" aria-hidden="true"></i>
+                  <span>Exportar JSON</span>
+                </button>
+                <label class="button button-secondary import-button">
+                  <i data-lucide="upload" aria-hidden="true"></i>
+                  <span>Importar JSON</span>
+                  <input id="import-data-file" type="file" accept="application/json,.json">
+                </label>
+                <button class="button button-danger" type="button" id="reset-data-button">
+                  <i data-lucide="trash-2" aria-hidden="true"></i>
+                  <span>Apagar dados locais</span>
+                </button>
+              </div>
+              <div class="settings-save-actions">
+                <p id="settings-feedback" class="form-feedback" role="alert"></p>
+                <button class="button button-primary" type="submit">
+                  <i data-lucide="save" aria-hidden="true"></i>
+                  <span>Salvar configurações</span>
+                </button>
+              </div>
             </div>
           </form>
-
-          <div class="settings-actions">
-            <button class="button button-secondary" type="button" id="export-data-button">
-              <i data-lucide="download" aria-hidden="true"></i>
-              <span>Exportar JSON</span>
-            </button>
-            <label class="button button-secondary import-button">
-              <i data-lucide="upload" aria-hidden="true"></i>
-              <span>Importar JSON</span>
-              <input id="import-data-file" type="file" accept="application/json,.json">
-            </label>
-            <button class="button button-danger" type="button" id="reset-data-button">
-              <i data-lucide="trash-2" aria-hidden="true"></i>
-              <span>Apagar dados locais</span>
-            </button>
-          </div>
         </section>
       </section>
     </main>

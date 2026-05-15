@@ -35,6 +35,203 @@ const NAVIGATION_LABELS: Record<string, string> = {
 };
 
 const IMPORTED_FIXED_EQUIPMENT_NOTE = "Importado da folha de reserva de equipamentos eletr\u00f4nicos fixos.";
+export const TODAY_VISIBLE_ROUTINE_LIMIT = 3;
+export const TODAY_LOOKAHEAD_MINUTES = 120;
+
+interface RoutineTimeSegment {
+  startMinutes: number;
+  endMinutes: number | null;
+}
+
+export interface SmartRoutineGroup {
+  routines: Routine[];
+  representative: Routine;
+  timeLabel: string;
+  startMinutes: number;
+  endMinutes: number | null;
+  isActiveNow: boolean;
+}
+
+export function getCurrentMinutes(date = new Date()): number {
+  return date.getHours() * 60 + date.getMinutes();
+}
+
+export function getRoutineStartMinutes(routine: Routine): number | null {
+  return timeToMinutes(routine.startTime);
+}
+
+export function getRoutineEndMinutes(routine: Routine): number | null {
+  if (!routine.endTime) return null;
+  return timeToMinutes(routine.endTime);
+}
+
+export function isRoutinePendingOrActive(routine: Routine, currentMinutes: number): boolean {
+  const startMinutes = getRoutineStartMinutes(routine);
+  if (startMinutes === null) return false;
+
+  const endMinutes = getRoutineEndMinutes(routine);
+  if (endMinutes !== null) {
+    return currentMinutes < endMinutes;
+  }
+
+  return currentMinutes <= startMinutes;
+}
+
+export function isRoutineActiveNow(routine: Routine, currentMinutes: number): boolean {
+  const startMinutes = getRoutineStartMinutes(routine);
+  if (startMinutes === null) return false;
+
+  const endMinutes = getRoutineEndMinutes(routine);
+  if (endMinutes !== null) {
+    return startMinutes <= currentMinutes && currentMinutes < endMinutes;
+  }
+
+  return currentMinutes === startMinutes;
+}
+
+export function normalizeRoutineDevices(devices: string[]): string[] {
+  return [...new Set(devices.map((device) => normalizeText(device).toLocaleLowerCase("pt-BR")).filter(Boolean))].sort(
+    (a, b) => a.localeCompare(b, "pt-BR"),
+  );
+}
+
+export function createRoutineGroupKey(routine: Routine): string {
+  return JSON.stringify([
+    normalizeText(routine.teacher),
+    normalizeText(routine.subject),
+    normalizeText(routine.room),
+    routine.studentCount,
+    normalizeRoutineDevices(routine.devices).join("\u0000"),
+    normalizeText(routine.notes),
+    routine.notificationEnabled,
+    routine.leadMinutes ?? null,
+  ]);
+}
+
+export function areRoutineConfigsEquivalent(a: Routine, b: Routine): boolean {
+  return createRoutineGroupKey(a) === createRoutineGroupKey(b);
+}
+
+export function groupEquivalentRoutines(routines: Routine[], currentMinutes = getCurrentMinutes()): SmartRoutineGroup[] {
+  const buckets = new Map<string, Routine[]>();
+
+  sortRoutines(routines, "time").forEach((routine) => {
+    const key = createRoutineGroupKey(routine);
+    const bucket = buckets.get(key) ?? [];
+    bucket.push(routine);
+    buckets.set(key, bucket);
+  });
+
+  return [...buckets.values()].map((group) => createSmartRoutineGroup(group, currentMinutes)).sort(compareSmartRoutineGroups);
+}
+
+export function mergeRoutineGroupTimes(group: Pick<SmartRoutineGroup, "routines">): string {
+  return buildRoutineTimeLabel(group.routines);
+}
+
+export function getSmartTodayRoutineGroups(routines: Routine[], currentMinutes = getCurrentMinutes()): SmartRoutineGroup[] {
+  const pendingRoutines = sortRoutines(
+    routines.filter((routine) => isRoutinePendingOrActive(routine, currentMinutes)),
+    "time",
+  );
+
+  return groupEquivalentRoutines(pendingRoutines, currentMinutes);
+}
+
+export function getVisibleSmartTodayRoutineGroups(
+  routines: Routine[],
+  currentMinutes = getCurrentMinutes(),
+  limit = TODAY_VISIBLE_ROUTINE_LIMIT,
+  lookaheadMinutes = TODAY_LOOKAHEAD_MINUTES,
+): SmartRoutineGroup[] {
+  const pendingRoutines = sortRoutines(
+    routines.filter((routine) => isRoutinePendingOrActive(routine, currentMinutes)),
+    "time",
+  );
+  if (pendingRoutines.length === 0) return [];
+
+  const visibleRoutines = pendingRoutines.filter((routine) => {
+    const startMinutes = getRoutineStartMinutes(routine);
+    return (
+      isRoutineActiveNow(routine, currentMinutes) ||
+      (startMinutes !== null && startMinutes >= currentMinutes && startMinutes <= currentMinutes + lookaheadMinutes)
+    );
+  });
+  const candidates = visibleRoutines.length ? visibleRoutines : [pendingRoutines[0]!];
+
+  return groupEquivalentRoutines(candidates, currentMinutes).slice(0, limit);
+}
+
+function createSmartRoutineGroup(routines: Routine[], currentMinutes: number): SmartRoutineGroup {
+  const sorted = sortRoutines(routines, "time").filter((routine) => getRoutineStartMinutes(routine) !== null);
+  const representative = sorted[0] ?? routines[0]!;
+  const startMinutes = getRoutineStartMinutes(representative) ?? 0;
+  const endMinutes = sorted.reduce<number | null>((latestEnd, routine) => {
+    const endMinutes = getRoutineEndMinutes(routine);
+    if (endMinutes === null) return latestEnd;
+    return latestEnd === null || endMinutes > latestEnd ? endMinutes : latestEnd;
+  }, null);
+
+  return {
+    routines: sorted,
+    representative,
+    timeLabel: buildRoutineTimeLabel(sorted),
+    startMinutes,
+    endMinutes,
+    isActiveNow: sorted.some((routine) => isRoutineActiveNow(routine, currentMinutes)),
+  };
+}
+
+function compareSmartRoutineGroups(a: SmartRoutineGroup, b: SmartRoutineGroup): number {
+  if (a.isActiveNow !== b.isActiveNow) return a.isActiveNow ? -1 : 1;
+  return (
+    a.startMinutes - b.startMinutes ||
+    normalizeText(a.representative.teacher).localeCompare(normalizeText(b.representative.teacher), "pt-BR") ||
+    normalizeText(a.representative.room).localeCompare(normalizeText(b.representative.room), "pt-BR")
+  );
+}
+
+function buildRoutineTimeLabel(routines: Routine[]): string {
+  const segments = sortRoutines(routines, "time")
+    .map(toRoutineTimeSegment)
+    .filter((segment): segment is RoutineTimeSegment => segment !== null)
+    .reduce<RoutineTimeSegment[]>((result, segment) => {
+      const last = result.at(-1);
+      if (last?.endMinutes !== null && last?.endMinutes !== undefined && segment.endMinutes !== null && segment.startMinutes <= last.endMinutes) {
+        last.endMinutes = Math.max(last.endMinutes, segment.endMinutes);
+        return result;
+      }
+
+      result.push({ ...segment });
+      return result;
+    }, []);
+
+  return segments.map(formatRoutineTimeSegment).join(" \u00b7 ");
+}
+
+function toRoutineTimeSegment(routine: Routine): RoutineTimeSegment | null {
+  const startMinutes = getRoutineStartMinutes(routine);
+  if (startMinutes === null) return null;
+
+  return {
+    startMinutes,
+    endMinutes: getRoutineEndMinutes(routine),
+  };
+}
+
+function formatRoutineTimeSegment(segment: RoutineTimeSegment): string {
+  const start = formatMinutesAsTime(segment.startMinutes);
+  if (segment.endMinutes === null) return start;
+  return `${start}-${formatMinutesAsTime(segment.endMinutes)}`;
+}
+
+function formatMinutesAsTime(minutes: number): string {
+  const hours = Math.floor(minutes / 60)
+    .toString()
+    .padStart(2, "0");
+  const remainder = (minutes % 60).toString().padStart(2, "0");
+  return `${hours}:${remainder}`;
+}
 
 interface UIRefs {
   mainMenuButton: HTMLButtonElement;
@@ -75,6 +272,12 @@ interface UIRefs {
   weekRoutines: HTMLElement;
   routineFilter: HTMLInputElement;
   routineSort: HTMLSelectElement;
+  filterTimeStart: HTMLSelectElement;
+  filterTimeEnd: HTMLSelectElement;
+  filterTeacher: HTMLSelectElement;
+  filterRoom: HTMLSelectElement;
+  filterResultsCount: HTMLElement;
+  filterClearAll: HTMLButtonElement;
   teachersDatalist: HTMLElement;
   roomsDatalist: HTMLElement;
   subjectsDatalist: HTMLElement;
@@ -192,6 +395,12 @@ export function createUI({
       weekRoutines: qs("#week-routines"),
       routineFilter: qs("#routine-filter"),
       routineSort: qs("#routine-sort"),
+      filterTimeStart: qs("#filter-time-start"),
+      filterTimeEnd: qs("#filter-time-end"),
+      filterTeacher: qs("#filter-teacher"),
+      filterRoom: qs("#filter-room"),
+      filterResultsCount: qs("#filter-results-count"),
+      filterClearAll: qs("#filter-clear-all"),
       teachersDatalist: qs("#teachers-list"),
       roomsDatalist: qs("#rooms-list"),
       subjectsDatalist: qs("#subjects-list"),
@@ -253,12 +462,23 @@ export function createUI({
 
     refs.routineFilter.addEventListener("input", () => {
       actions.updateUiFilters({ filterText: refs.routineFilter.value });
-      renderWeek();
+      applyWeekFilters();
     });
     refs.routineSort.addEventListener("change", () => {
       actions.updateUiFilters({ sortBy: refs.routineSort.value as AppState["settings"]["sortBy"] });
-      renderWeek();
+      applyWeekFilters();
     });
+    qsa<HTMLInputElement>("#filter-weekday-chips input").forEach((cb) =>
+      cb.addEventListener("change", applyWeekFilters),
+    );
+    refs.filterTimeStart.addEventListener("change", applyWeekFilters);
+    refs.filterTimeEnd.addEventListener("change", applyWeekFilters);
+    refs.filterTeacher.addEventListener("change", applyWeekFilters);
+    refs.filterRoom.addEventListener("change", applyWeekFilters);
+    qsa<HTMLInputElement>("#filter-device-chips input").forEach((cb) =>
+      cb.addEventListener("change", applyWeekFilters),
+    );
+    refs.filterClearAll.addEventListener("click", clearAllFilters);
 
     refs.teacherForm.addEventListener("submit", handleTeacherSubmit);
     refs.roomForm.addEventListener("submit", handleRoomSubmit);
@@ -592,17 +812,21 @@ export function createUI({
       return;
     }
 
-    const routines = sortRoutines(
+    const todayRoutines = sortRoutines(
       state.routines.filter((routine) => routine.weekday === todayId),
       "time",
     );
+    const currentMinutes = getCurrentMinutes();
+    const pendingRoutines = todayRoutines.filter((routine) => isRoutinePendingOrActive(routine, currentMinutes));
+    const visibleGroups = getVisibleSmartTodayRoutineGroups(todayRoutines, currentMinutes);
 
-    refs.todaySummary.textContent =
-      routines.length === 1 ? "1 retirada programada." : `${routines.length} retiradas programadas.`;
+    refs.todaySummary.textContent = todaySummaryText(todayRoutines.length, pendingRoutines, visibleGroups, currentMinutes);
 
     replaceChildren(
       refs.todayRoutines,
-      routines.length ? routines.map((routine) => routineCard(routine)) : [todayEmptyState("Nenhuma rotina cadastrada para hoje.")],
+      visibleGroups.length
+        ? visibleGroups.map((group) => smartRoutineCard(group))
+        : [todayEmptyState(todayRoutines.length ? "Nenhuma retirada pendente para hoje." : "Nenhuma rotina cadastrada para hoje.")],
     );
   }
 
@@ -615,23 +839,132 @@ export function createUI({
           "time",
         )
       : [];
-    const currentMinutes = new Date().getHours() * 60 + new Date().getMinutes();
-    const nextRoutine = todayRoutines.find((routine) => (timeToMinutes(routine.startTime) ?? 0) >= currentMinutes);
+    const currentMinutes = getCurrentMinutes();
+    const pendingRoutines = todayRoutines.filter((routine) => isRoutinePendingOrActive(routine, currentMinutes));
+    const activeRoutine = pendingRoutines.find((routine) => isRoutineActiveNow(routine, currentMinutes));
+    const nextRoutine = activeRoutine
+      ? { ...activeRoutine, startTime: "Agora" }
+      : pendingRoutines.find((routine) => (getRoutineStartMinutes(routine) ?? 0) >= currentMinutes);
     const activeAlerts = state.routines.filter((routine) => routine.notificationEnabled).length;
 
     replaceChildren(refs.todayMetrics, [
-      metricItem("Hoje", todayRoutines.length.toString(), todayRoutines.length === 1 ? "retirada" : "retiradas"),
+      metricItem("Hoje", pendingRoutines.length.toString(), pendingRoutines.length === 1 ? "pendente" : "pendentes"),
       metricItem("Próxima", nextRoutine ? nextRoutine.startTime : "Livre", nextRoutine ? nextRoutine.room : "sem pendência"),
       metricItem("Semana", state.routines.length.toString(), state.routines.length === 1 ? "rotina" : "rotinas"),
       metricItem("Alertas", activeAlerts.toString(), state.settings.notificationsEnabled ? "ativos" : "pausados"),
     ]);
   }
 
+  function todaySummaryText(
+    totalTodayRoutines: number,
+    pendingRoutines: Routine[],
+    visibleGroups: SmartRoutineGroup[],
+    currentMinutes: number,
+  ): string {
+    if (pendingRoutines.length === 0) {
+      return totalTodayRoutines > 0 ? "Nenhuma retirada pendente para hoje." : "Nenhuma rotina cadastrada para hoje.";
+    }
+
+    const activeNow = pendingRoutines.some((routine) => isRoutineActiveNow(routine, currentMinutes));
+    const nextRoutine = pendingRoutines.find((routine) => {
+      const startMinutes = getRoutineStartMinutes(routine);
+      if (startMinutes === null) return false;
+      return activeNow ? startMinutes > currentMinutes : startMinutes >= currentMinutes;
+    });
+    const cardsLabel =
+      visibleGroups.length === 1 ? "1 card inteligente agora." : `${visibleGroups.length} cards inteligentes agora.`;
+    const pendingLabel =
+      pendingRoutines.length === 1 ? "1 retirada restante hoje." : `${pendingRoutines.length} retiradas restantes hoje.`;
+    const nextLabel = activeNow
+      ? nextRoutine
+        ? `Há retirada em andamento. Próxima às ${nextRoutine.startTime}.`
+        : "Há retirada em andamento."
+      : nextRoutine
+        ? `Próxima retirada às ${nextRoutine.startTime}.`
+        : "";
+
+    return [cardsLabel, pendingLabel, nextLabel].filter(Boolean).join(" ");
+  }
+
   function renderWeek(): void {
+    populateWeekFilters();
+    applyWeekFilters();
+  }
+
+  function populateWeekFilters(): void {
     const state = getState();
-    const filtered = filterRoutines(state.routines, state.settings.filterText);
-    const schedule = buildWeekSchedule(filtered, state.devices);
-    const routineById = new Map(filtered.map((routine) => [routine.id, routine]));
+
+    const prevTeacher = refs.filterTeacher.value;
+    replaceChildren(refs.filterTeacher, [
+      option("", "Todos"),
+      ...state.teachers.map((t) => option(t.name, t.name)),
+    ]);
+    refs.filterTeacher.value = prevTeacher;
+
+    const prevRoom = refs.filterRoom.value;
+    replaceChildren(refs.filterRoom, [
+      option("", "Todas"),
+      ...state.rooms.map((r) => option(r.name, r.name)),
+    ]);
+    refs.filterRoom.value = prevRoom;
+
+    const startTimes = [...new Set(state.routines.map((r) => r.startTime))]
+      .filter(Boolean)
+      .sort();
+    const prevStart = refs.filterTimeStart.value;
+    replaceChildren(refs.filterTimeStart, [
+      option("", "Início"),
+      ...startTimes.map((t) => option(t, t)),
+    ]);
+    refs.filterTimeStart.value = prevStart;
+
+    const endTimes = [...new Set(state.routines.map((r) => r.endTime))]
+      .filter(Boolean)
+      .sort();
+    const prevEnd = refs.filterTimeEnd.value;
+    replaceChildren(refs.filterTimeEnd, [
+      option("", "Fim"),
+      ...endTimes.map((t) => option(t, t)),
+    ]);
+    refs.filterTimeEnd.value = prevEnd;
+  }
+
+  function applyWeekFilters(): void {
+    const state = getState();
+    let routines = filterRoutines(state.routines, refs.routineFilter.value);
+
+    const checkedDays = new Set(
+      [...qsa<HTMLInputElement>("#filter-weekday-chips input:checked")].map((cb) => cb.value),
+    );
+    if (checkedDays.size > 0) {
+      routines = routines.filter((r) => checkedDays.has(r.weekday));
+    }
+
+    if (refs.filterTimeStart.value) {
+      routines = routines.filter((r) => r.startTime >= refs.filterTimeStart.value);
+    }
+    if (refs.filterTimeEnd.value) {
+      routines = routines.filter((r) => !r.endTime || r.endTime <= refs.filterTimeEnd.value);
+    }
+
+    if (refs.filterTeacher.value) {
+      routines = routines.filter((r) => r.teacher === refs.filterTeacher.value);
+    }
+
+    if (refs.filterRoom.value) {
+      routines = routines.filter((r) => r.room === refs.filterRoom.value);
+    }
+
+    const checkedDevices = new Set(
+      [...qsa<HTMLInputElement>("#filter-device-chips input:checked")].map((cb) => cb.value),
+    );
+    if (checkedDevices.size > 0) {
+      routines = routines.filter((r) => r.devices.some((d) => checkedDevices.has(d)));
+    }
+
+    const sorted = sortRoutines(routines, state.settings.sortBy);
+    const schedule = buildWeekSchedule(sorted, state.devices);
+    const routineById = new Map(sorted.map((r) => [r.id, r]));
 
     replaceChildren(
       refs.weekRoutines,
@@ -639,6 +972,40 @@ export function createUI({
         ? schedule.sections.map((section) => renderEquipmentSection(section, routineById))
         : [weeklyScheduleEmptyState()],
     );
+
+    const total = state.routines.length;
+    const shown = routines.length;
+    refs.filterResultsCount.textContent =
+      shown < total
+        ? `${shown} de ${total} rotina${total !== 1 ? "s" : ""}`
+        : `${total} rotina${total !== 1 ? "s" : ""}`;
+
+    const hasFilters =
+      !!refs.routineFilter.value ||
+      checkedDays.size > 0 ||
+      !!refs.filterTimeStart.value ||
+      !!refs.filterTimeEnd.value ||
+      !!refs.filterTeacher.value ||
+      !!refs.filterRoom.value ||
+      checkedDevices.size > 0;
+    refs.filterClearAll.hidden = !hasFilters;
+    refreshIcons(refs.weekRoutines);
+  }
+
+  function clearAllFilters(): void {
+    refs.routineFilter.value = "";
+    actions.updateUiFilters({ filterText: "" });
+    qsa<HTMLInputElement>("#filter-weekday-chips input").forEach((cb) => {
+      cb.checked = false;
+    });
+    refs.filterTimeStart.value = "";
+    refs.filterTimeEnd.value = "";
+    refs.filterTeacher.value = "";
+    refs.filterRoom.value = "";
+    qsa<HTMLInputElement>("#filter-device-chips input").forEach((cb) => {
+      cb.checked = false;
+    });
+    applyWeekFilters();
   }
 
   function renderEquipmentSection(section: WeekScheduleSection, routineById: Map<string, Routine>): HTMLElement {
@@ -780,6 +1147,48 @@ export function createUI({
     render();
   }
 
+  function smartRoutineCard(group: SmartRoutineGroup): HTMLElement {
+    if (group.routines.length === 1) {
+      return routineCard(group.representative);
+    }
+
+    const routine = group.representative;
+    const leadLabel = routineLeadLabel(routine);
+    const groupedLabel =
+      group.routines.length === 2 ? "2 retiradas agrupadas" : `${group.routines.length} horários agrupados`;
+
+    return el(
+      "article",
+      { className: "routine-card routine-card-smart" },
+      [
+        el("div", { className: "routine-card-top" }, [
+          el("div", {}, [
+            el("strong", { className: "routine-time", text: group.timeLabel }),
+            el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
+          ]),
+          el("div", { className: "routine-group-status" }, [
+            el("span", { className: "routine-group-badge", text: "Agrupado" }),
+          ]),
+        ]),
+        detailLine("user", routine.teacher),
+        routine.subject ? detailLine("book-open-check", `Aula: ${routine.subject}`) : null,
+        detailLine("map-pin", routine.room),
+        detailLine("users", `${routine.studentCount} aluno(s)`),
+        detailLine("laptop", routine.devices.join(", ")),
+        routine.notes ? detailLine("file-text", routine.notes) : null,
+        el("div", { className: "routine-meta" }, [
+          el("span", { text: routine.notificationEnabled ? `Alerta ${leadLabel}` : "Alerta desativado" }),
+          el("span", { text: groupedLabel }),
+          el("span", { text: `Atualizado: ${formatDateTime(latestRoutineUpdatedAt(group.routines))}` }),
+        ]),
+        el("p", { className: "routine-group-note" }, [
+          icon("info"),
+          span("Use a Rotina semanal para editar horários individuais."),
+        ]),
+      ].filter(Boolean),
+    );
+  }
+
   function routineCard(routine: Routine): HTMLElement {
     const title = `${routine.startTime}${routine.endTime ? `-${routine.endTime}` : ""}`;
     const leadLabel =
@@ -832,6 +1241,16 @@ export function createUI({
         ]),
       ].filter(Boolean),
     );
+  }
+
+  function routineLeadLabel(routine: Routine): string {
+    return routine.leadMinutes === null || routine.leadMinutes === undefined
+      ? `Global: ${getState().settings.defaultLeadMinutes} min`
+      : `${routine.leadMinutes} min`;
+  }
+
+  function latestRoutineUpdatedAt(routines: Routine[]): string {
+    return routines.reduce((latest, routine) => (routine.updatedAt > latest ? routine.updatedAt : latest), routines[0]?.updatedAt ?? "");
   }
 
   function renderCatalogs(): void {
