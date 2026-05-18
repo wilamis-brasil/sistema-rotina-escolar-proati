@@ -95,6 +95,15 @@ export function normalizeRoutineDevices(devices: string[]): string[] {
   );
 }
 
+function normalizeRoutineGroupNote(note: string): string {
+  return normalizeText(note).replace(/\s*\(cópia\)$/iu, "");
+}
+
+function hasCopyNoteMarker(note: string): boolean {
+  const normalized = normalizeText(note);
+  return normalized === "Cópia" || /\s*\(cópia\)$/iu.test(normalized);
+}
+
 export function createRoutineGroupKey(routine: Routine): string {
   return JSON.stringify([
     normalizeText(routine.teacher),
@@ -102,7 +111,7 @@ export function createRoutineGroupKey(routine: Routine): string {
     normalizeText(routine.room),
     routine.studentCount,
     normalizeRoutineDevices(routine.devices).join("\u0000"),
-    normalizeText(routine.notes),
+    normalizeRoutineGroupNote(routine.notes),
     routine.notificationEnabled,
     routine.leadMinutes ?? null,
   ]);
@@ -159,7 +168,40 @@ export function getVisibleSmartTodayRoutineGroups(
   });
   const candidates = visibleRoutines.length ? visibleRoutines : [pendingRoutines[0]!];
 
-  return groupEquivalentRoutines(candidates, currentMinutes).slice(0, limit);
+  return groupEquivalentRoutines(removeCopiedRoutineCardDuplicates(candidates), currentMinutes).slice(0, limit);
+}
+
+function removeCopiedRoutineCardDuplicates(routines: Routine[]): Routine[] {
+  const selectedByKey = new Map<string, Routine>();
+  const passthrough: Routine[] = [];
+
+  sortRoutines(routines, "time").forEach((routine) => {
+    const key = JSON.stringify([
+      routine.weekday,
+      routine.startTime,
+      routine.endTime,
+      createRoutineGroupKey(routine),
+    ]);
+    const existing = selectedByKey.get(key);
+
+    if (!existing) {
+      selectedByKey.set(key, routine);
+      return;
+    }
+
+    const existingIsCopy = hasCopyNoteMarker(existing.notes);
+    const routineIsCopy = hasCopyNoteMarker(routine.notes);
+    if (existingIsCopy || routineIsCopy) {
+      if (existingIsCopy && !routineIsCopy) {
+        selectedByKey.set(key, routine);
+      }
+      return;
+    }
+
+    passthrough.push(routine);
+  });
+
+  return sortRoutines([...selectedByKey.values(), ...passthrough], "time");
 }
 
 function createSmartRoutineGroup(routines: Routine[], currentMinutes: number): SmartRoutineGroup {

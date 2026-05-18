@@ -122,6 +122,23 @@ describe("smart today routine helpers", () => {
     expect(groups[0]!.routines.map((item) => item.id)).toEqual(["routine-a", "routine-b"]);
   });
 
+  it("does not render an exact copied routine as a separate smart card", () => {
+    const groups = getVisibleSmartTodayRoutineGroups(
+      [
+        routine({ id: "routine-a", startTime: "07:00", endTime: "07:50", notes: "Importado da folha" }),
+        routine({ id: "routine-b", startTime: "07:50", endTime: "08:40", notes: "Importado da folha" }),
+        routine({ id: "routine-copy", startTime: "07:00", endTime: "07:50", notes: "Importado da folha (cópia)" }),
+      ],
+      420,
+      3,
+      120,
+    );
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0]!.timeLabel).toBe("07:00-08:40");
+    expect(groups[0]!.routines.map((item) => item.id)).toEqual(["routine-a", "routine-b"]);
+  });
+
   it("falls back to the next pending routine when all pending routines are outside the lookahead window", () => {
     const groups = getVisibleSmartTodayRoutineGroups(
       [routine({ id: "far", startTime: "12:00", endTime: "13:00" })],
