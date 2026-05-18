@@ -1573,6 +1573,17 @@ textarea:focus-visible {
   grid-template-columns: minmax(0, 1fr) minmax(140px, 0.35fr) auto;
 }
 
+#password-form {
+  grid-template-columns: 1fr;
+}
+
+.catalog-item span:has(.icon-button) {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
 .catalog-item strong,
 .catalog-item span {
   display: block;

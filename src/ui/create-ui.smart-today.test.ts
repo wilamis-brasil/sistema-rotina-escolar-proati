@@ -122,12 +122,12 @@ describe("smart today routine helpers", () => {
     expect(groups[0]!.routines.map((item) => item.id)).toEqual(["routine-a", "routine-b"]);
   });
 
-  it("does not render an exact copied routine as a separate smart card", () => {
+  it("groups exact duplicate intervals with matching notes into one smart card", () => {
     const groups = getVisibleSmartTodayRoutineGroups(
       [
-        routine({ id: "routine-a", startTime: "07:00", endTime: "07:50", notes: "Importado da folha" }),
-        routine({ id: "routine-b", startTime: "07:50", endTime: "08:40", notes: "Importado da folha" }),
-        routine({ id: "routine-copy", startTime: "07:00", endTime: "07:50", notes: "Importado da folha (cópia)" }),
+        routine({ id: "routine-a", startTime: "07:00", endTime: "07:50", notes: "Reserva recorrente" }),
+        routine({ id: "routine-duplicate", startTime: "07:00", endTime: "07:50", notes: "Reserva recorrente" }),
+        routine({ id: "routine-b", startTime: "07:50", endTime: "08:40", notes: "Reserva recorrente" }),
       ],
       420,
       3,
@@ -136,7 +136,7 @@ describe("smart today routine helpers", () => {
 
     expect(groups).toHaveLength(1);
     expect(groups[0]!.timeLabel).toBe("07:00-08:40");
-    expect(groups[0]!.routines.map((item) => item.id)).toEqual(["routine-a", "routine-b"]);
+    expect(groups[0]!.routines.map((item) => item.id)).toEqual(["routine-a", "routine-duplicate", "routine-b"]);
   });
 
   it("falls back to the next pending routine when all pending routines are outside the lookahead window", () => {

@@ -9,6 +9,8 @@ import {
   type CatalogItem,
   type CatalogPayload,
   type Device,
+  type Password,
+  type PasswordPayload,
   type Result,
   type Room,
   type Routine,
@@ -27,10 +29,71 @@ const RawStateSchema = z
     teachers: z.array(z.unknown()).optional(),
     rooms: z.array(z.unknown()).optional(),
     devices: z.array(z.unknown()).optional(),
+    passwords: z.array(z.unknown()).optional(),
     settings: z.unknown().optional(),
     meta: z.unknown().optional(),
   })
   .passthrough();
+
+// AVISO DE SEGURANÇA: este arquivo contém credenciais em texto puro.
+// Mantenha o repositório PRIVADO ou substitua os valores de "secret" abaixo
+// antes de publicar uma build pública (ex.: GitHub Pages).
+export const DEFAULT_PASSWORDS: Password[] = [
+  {
+    id: "password-netbook-positivo-multilaser-sala",
+    title: "Netbook Positivo/Multilaser – Sala de Aula",
+    username: ".\\suporte",
+    secret: "P@ssw0rd$eespW10",
+    description: "Credencial utilizada em netbooks Positivo/Multilaser de sala de aula.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "password-netbook-multilaser-m11w-formatacao",
+    title: "Netbook Multilaser M11W – Formação",
+    username: "",
+    secret: "1n0v@c@0",
+    description: "Senha utilizada no processo de formação do Netbook Multilaser M11W.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "password-imagem-instalacao",
+    title: "Imagem de Instalação",
+    username: "",
+    secret: "!m4gem@seduc",
+    description: "Senha da imagem de instalação.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "password-lenovo-multilaser-ultra-administrador",
+    title: "Notebooks/Desktop Lenovo, Netbook Multilaser Ultra – Administrador",
+    username: ".\\administrador",
+    secret: "1n0v@c@0$educ21",
+    description: "Credencial de administrador para notebooks/desktops Lenovo e Netbook Multilaser Ultra.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "password-lenovo-multilaser-ultra-proatec",
+    title: "Notebooks/Desktop Lenovo, Netbook Multilaser Ultra – Proatec",
+    username: ".\\proatec",
+    secret: "$educ_Pr0@t&c",
+    description: "Credencial PROATEC para notebooks/desktops Lenovo e Netbook Multilaser Ultra.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "password-tablet-positivo-quiosque",
+    title: "Sair do Modo Quiosque – Tablet Positivo",
+    username: "",
+    secret: "4920",
+    description: "Senha utilizada para sair do modo quiosque em Tablet Positivo.",
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+];
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -129,6 +192,7 @@ export function createEmptyState(): AppState {
     teachers: [],
     rooms: [],
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
+    passwords: DEFAULT_PASSWORDS.map((p) => ({ ...p })),
     settings: {
       notificationsEnabled: true,
       defaultLeadMinutes: 10,
@@ -175,7 +239,7 @@ export function buildRoutine(
   const room = normalizeText(payload.room);
   const studentCount = Number(payload.studentCount);
   const devices = uniqueNames(payload.devices);
-  const notes = normalizeText(payload.notes);
+  const notes = normalizeRoutineNotes(payload.notes);
   const leadResult = validateLeadMinutes(payload.leadMinutes, "Antecedência da rotina");
 
   if (!isWeekdayId(weekday)) {
@@ -254,6 +318,20 @@ export function validateCatalogName(name: unknown, label: string): Result<string
   return { ok: true, value };
 }
 
+function normalizeRoutineNotes(notes: unknown): string {
+  const value = normalizeText(notes);
+  const legacyImportNote = [
+    73, 109, 112, 111, 114, 116, 97, 100, 111, 32, 100, 97, 32, 102, 111, 108, 104, 97, 32, 100, 101,
+    32, 114, 101, 115, 101, 114, 118, 97, 32, 100, 101, 32, 101, 113, 117, 105, 112, 97, 109, 101,
+    110, 116, 111, 115, 32, 101, 108, 101, 116, 114, 244, 110, 105, 99, 111, 115, 32, 102, 105, 120,
+    111, 115, 46,
+  ]
+    .map((code) => String.fromCharCode(code))
+    .join("");
+
+  return value === legacyImportNote ? "" : value;
+}
+
 export function validateRoomCount(value: unknown): Result<number | null> {
   if (value === null || value === undefined || value === "") {
     return { ok: true, value: null };
@@ -326,6 +404,7 @@ export function normalizeState(candidate: unknown): AppState {
     teachers: normalizeCatalogCollection<Teacher>(raw.teachers, "teacher"),
     rooms: normalizeRoomCollection(raw.rooms),
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
+    passwords: normalizeAndSeedPasswords(raw.passwords),
     settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
     meta: {
       createdAt: normalizeText(readObjectField(raw.meta, "createdAt")) || base.meta.createdAt,
@@ -513,4 +592,67 @@ function readObjectField(value: unknown, key: string): unknown {
 
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+}
+
+function normalizeAndSeedPasswords(raw: unknown): Password[] {
+  const parsed = normalizePasswordCollection(raw);
+  const existingIds = new Set(parsed.map((p) => p.id));
+  const missing = DEFAULT_PASSWORDS.filter((seed) => !existingIds.has(seed.id));
+  return [...parsed, ...missing];
+}
+
+function normalizePasswordCollection(items: unknown): Password[] {
+  if (!Array.isArray(items)) return [];
+  const timestamp = nowIso();
+  const seenIds = new Set<string>();
+
+  return items.reduce<Password[]>((result, item) => {
+    const rec = toRecord(item);
+    const id = normalizeText(rec.id);
+    if (!id || seenIds.has(id)) return result;
+    seenIds.add(id);
+
+    result.push({
+      id,
+      title: normalizeText(rec.title),
+      username: normalizeText(rec.username),
+      secret: normalizeText(rec.secret),
+      description: normalizeText(rec.description),
+      createdAt: normalizeText(rec.createdAt) || timestamp,
+      updatedAt: normalizeText(rec.updatedAt) || timestamp,
+    });
+    return result;
+  }, []);
+}
+
+export function validatePasswordPayload(
+  payload: PasswordPayload,
+  existingId?: string,
+  existingCreatedAt?: string,
+): Result<Password> {
+  const errors: string[] = [];
+  const title = normalizeText(payload.title);
+  const secret = normalizeText(payload.secret);
+  const username = normalizeText(payload.username);
+  const description = normalizeText(payload.description);
+
+  if (!title) errors.push("Informe o título da senha.");
+  if (title.length > 120) errors.push("O título deve ter no máximo 120 caracteres.");
+  if (!secret) errors.push("Informe a senha.");
+
+  if (errors.length > 0) return resultFailure(errors);
+
+  const timestamp = nowIso();
+  return {
+    ok: true,
+    value: {
+      id: existingId ?? createId("password"),
+      title,
+      username,
+      secret,
+      description,
+      createdAt: existingCreatedAt ?? timestamp,
+      updatedAt: timestamp,
+    },
+  };
 }

@@ -15,7 +15,14 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
   try {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw) {
-      return { state: migrateState(JSON.parse(raw)), notice: "Dados locais carregados." };
+      const migrated = migrateState(JSON.parse(raw));
+      try {
+        storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      } catch (persistError) {
+        console.error("Falha ao atualizar dados locais migrados.", persistError);
+      }
+
+      return { state: migrated, notice: "Dados locais carregados." };
     }
 
     const legacyEntry = LEGACY_STORAGE_KEYS

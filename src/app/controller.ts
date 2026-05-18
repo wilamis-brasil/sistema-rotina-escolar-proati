@@ -9,12 +9,14 @@ import {
   nowIso,
   singularKind,
   validateLeadMinutes,
+  validatePasswordPayload,
 } from "../domain/model";
 import type {
   AppState,
   CatalogKind,
   CatalogPayload,
   EmptyResult,
+  PasswordPayload,
   Routine,
   RoutinePayload,
   SortOption,
@@ -41,6 +43,9 @@ export interface AppActions {
   addCatalogItem(kind: CatalogKind, payload: CatalogPayload): EmptyResult;
   updateCatalogItem(kind: CatalogKind, id: string, payload: CatalogPayload): EmptyResult;
   deleteCatalogItem(kind: CatalogKind, id: string): EmptyResult;
+  addPassword(payload: PasswordPayload): EmptyResult;
+  updatePassword(id: string, payload: PasswordPayload): EmptyResult;
+  deletePassword(id: string): EmptyResult;
   updateSettings(payload: {
     notificationsEnabled: unknown;
     defaultLeadMinutes: unknown;
@@ -102,7 +107,6 @@ export function createAppController({
       const duplicated = {
         ...routine,
         id: undefined,
-        notes: routine.notes ? `${routine.notes} (cópia)` : "Cópia",
       };
       const result = buildRoutine(duplicated);
       if (!result.ok) return result;
@@ -173,6 +177,30 @@ export function createAppController({
       if (index === -1) return failure("Cadastro não encontrado.");
 
       collection.splice(index, 1);
+      return persist();
+    },
+
+    addPassword(payload) {
+      const result = validatePasswordPayload(payload);
+      if (!result.ok) return result;
+      state.passwords.push(result.value);
+      return persist();
+    },
+
+    updatePassword(id, payload) {
+      const index = state.passwords.findIndex((p) => p.id === id);
+      if (index === -1) return failure("Senha não encontrada.");
+      const existing = state.passwords[index]!;
+      const result = validatePasswordPayload(payload, existing.id, existing.createdAt);
+      if (!result.ok) return result;
+      state.passwords[index] = result.value;
+      return persist();
+    },
+
+    deletePassword(id) {
+      const index = state.passwords.findIndex((p) => p.id === id);
+      if (index === -1) return failure("Senha não encontrada.");
+      state.passwords.splice(index, 1);
       return persist();
     },
 

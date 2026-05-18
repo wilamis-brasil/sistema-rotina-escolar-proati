@@ -15,6 +15,8 @@ import {
   type AppState,
   type CatalogKind,
   type EmptyResult,
+  type Password,
+  type PasswordPayload,
   type Routine,
   type RoutinePayload,
 } from "../domain/types";
@@ -31,10 +33,10 @@ const NAVIGATION_LABELS: Record<string, string> = {
   teachers: "Professores",
   rooms: "Salas",
   devices: "Dispositivos",
+  passwords: "Senhas",
   settings: "Configurações",
 };
 
-const IMPORTED_FIXED_EQUIPMENT_NOTE = "Importado da folha de reserva de equipamentos eletr\u00f4nicos fixos.";
 export const TODAY_VISIBLE_ROUTINE_LIMIT = 3;
 export const TODAY_LOOKAHEAD_MINUTES = 120;
 
@@ -95,15 +97,6 @@ export function normalizeRoutineDevices(devices: string[]): string[] {
   );
 }
 
-function normalizeRoutineGroupNote(note: string): string {
-  return normalizeText(note).replace(/\s*\(cópia\)$/iu, "");
-}
-
-function hasCopyNoteMarker(note: string): boolean {
-  const normalized = normalizeText(note);
-  return normalized === "Cópia" || /\s*\(cópia\)$/iu.test(normalized);
-}
-
 export function createRoutineGroupKey(routine: Routine): string {
   return JSON.stringify([
     normalizeText(routine.teacher),
@@ -111,7 +104,7 @@ export function createRoutineGroupKey(routine: Routine): string {
     normalizeText(routine.room),
     routine.studentCount,
     normalizeRoutineDevices(routine.devices).join("\u0000"),
-    normalizeRoutineGroupNote(routine.notes),
+    normalizeText(routine.notes),
     routine.notificationEnabled,
     routine.leadMinutes ?? null,
   ]);
@@ -168,40 +161,7 @@ export function getVisibleSmartTodayRoutineGroups(
   });
   const candidates = visibleRoutines.length ? visibleRoutines : [pendingRoutines[0]!];
 
-  return groupEquivalentRoutines(removeCopiedRoutineCardDuplicates(candidates), currentMinutes).slice(0, limit);
-}
-
-function removeCopiedRoutineCardDuplicates(routines: Routine[]): Routine[] {
-  const selectedByKey = new Map<string, Routine>();
-  const passthrough: Routine[] = [];
-
-  sortRoutines(routines, "time").forEach((routine) => {
-    const key = JSON.stringify([
-      routine.weekday,
-      routine.startTime,
-      routine.endTime,
-      createRoutineGroupKey(routine),
-    ]);
-    const existing = selectedByKey.get(key);
-
-    if (!existing) {
-      selectedByKey.set(key, routine);
-      return;
-    }
-
-    const existingIsCopy = hasCopyNoteMarker(existing.notes);
-    const routineIsCopy = hasCopyNoteMarker(routine.notes);
-    if (existingIsCopy || routineIsCopy) {
-      if (existingIsCopy && !routineIsCopy) {
-        selectedByKey.set(key, routine);
-      }
-      return;
-    }
-
-    passthrough.push(routine);
-  });
-
-  return sortRoutines([...selectedByKey.values(), ...passthrough], "time");
+  return groupEquivalentRoutines(candidates, currentMinutes).slice(0, limit);
 }
 
 function createSmartRoutineGroup(routines: Routine[], currentMinutes: number): SmartRoutineGroup {
@@ -339,6 +299,15 @@ interface UIRefs {
   deviceName: HTMLInputElement;
   deviceFeedback: HTMLElement;
   devicesListPanel: HTMLElement;
+  passwordForm: HTMLFormElement;
+  passwordId: HTMLInputElement;
+  passwordTitle: HTMLInputElement;
+  passwordUsername: HTMLInputElement;
+  passwordSecret: HTMLInputElement;
+  passwordSecretToggle: HTMLButtonElement;
+  passwordDescription: HTMLInputElement;
+  passwordFeedback: HTMLElement;
+  passwordsListPanel: HTMLElement;
   settingsForm: HTMLFormElement;
   settingsNotificationsEnabled: HTMLInputElement;
   settingsDefaultLead: HTMLSelectElement;
@@ -462,6 +431,15 @@ export function createUI({
       deviceName: qs("#device-name"),
       deviceFeedback: qs("#device-feedback"),
       devicesListPanel: qs("#devices-list-panel"),
+      passwordForm: qs("#password-form"),
+      passwordId: qs("#password-id"),
+      passwordTitle: qs("#password-title"),
+      passwordUsername: qs("#password-username"),
+      passwordSecret: qs("#password-secret"),
+      passwordSecretToggle: qs("#password-secret-toggle"),
+      passwordDescription: qs("#password-description"),
+      passwordFeedback: qs("#password-feedback"),
+      passwordsListPanel: qs("#passwords-list-panel"),
       settingsForm: qs("#settings-form"),
       settingsNotificationsEnabled: qs("#settings-notifications-enabled"),
       settingsDefaultLead: qs("#settings-default-lead"),
@@ -525,6 +503,8 @@ export function createUI({
     refs.teacherForm.addEventListener("submit", handleTeacherSubmit);
     refs.roomForm.addEventListener("submit", handleRoomSubmit);
     refs.deviceForm.addEventListener("submit", handleDeviceSubmit);
+    refs.passwordForm.addEventListener("submit", handlePasswordSubmit);
+    refs.passwordSecretToggle.addEventListener("click", togglePasswordSecretVisibility);
 
     refs.settingsForm.addEventListener("submit", handleSettingsSubmit);
     refs.settingsDefaultLead.addEventListener("change", renderSettingsLeadMode);
@@ -570,6 +550,7 @@ export function createUI({
     renderToday();
     renderWeek();
     renderCatalogs();
+    renderPasswords();
     renderSettings();
     renderNotificationStatus();
     renderAlerts();
@@ -1144,12 +1125,11 @@ export function createUI({
 
   function renderTeacherEntry(entry: WeekScheduleEntry, routineById: Map<string, Routine>): HTMLElement {
     const routine = routineById.get(entry.routineId);
-    const notes = entry.notes === IMPORTED_FIXED_EQUIPMENT_NOTE ? "" : entry.notes;
 
     return el("div", { className: "schedule-cell-entry schedule-teacher-entry" }, [
       el("strong", { text: entry.teacher }),
       entry.subject ? el("small", { text: `Aula: ${entry.subject}` }) : null,
-      notes ? el("small", { text: notes }) : null,
+      entry.notes ? el("small", { text: entry.notes }) : null,
       routine ? scheduleEntryActions(routine) : null,
     ]);
   }
@@ -1417,6 +1397,164 @@ export function createUI({
     showResult(result, feedback, successMessage);
   }
 
+  function togglePasswordSecretVisibility(): void {
+    const isPassword = refs.passwordSecret.type === "password";
+    refs.passwordSecret.type = isPassword ? "text" : "password";
+    refs.passwordSecretToggle.setAttribute("aria-pressed", String(isPassword));
+    refs.passwordSecretToggle.setAttribute("aria-label", isPassword ? "Ocultar senha" : "Mostrar senha");
+    refs.passwordSecretToggle.title = isPassword ? "Ocultar senha" : "Mostrar/ocultar senha";
+    refs.passwordSecretToggle.innerHTML = "";
+    refs.passwordSecretToggle.appendChild(icon(isPassword ? "eye-off" : "eye"));
+    refreshIcons(refs.passwordSecretToggle);
+  }
+
+  function handlePasswordSubmit(event: SubmitEvent): void {
+    event.preventDefault();
+    const payload: PasswordPayload = {
+      title: refs.passwordTitle.value,
+      username: refs.passwordUsername.value,
+      secret: refs.passwordSecret.value,
+      description: refs.passwordDescription.value,
+    };
+    const result = refs.passwordId.value
+      ? actions.updatePassword(refs.passwordId.value, payload)
+      : actions.addPassword(payload);
+
+    if (result.ok) {
+      refs.passwordForm.reset();
+      refs.passwordSecret.type = "password";
+      refs.passwordSecretToggle.setAttribute("aria-pressed", "false");
+      refs.passwordSecretToggle.setAttribute("aria-label", "Mostrar senha");
+      refs.passwordSecretToggle.title = "Mostrar/ocultar senha";
+      refs.passwordSecretToggle.innerHTML = "";
+      refs.passwordSecretToggle.appendChild(icon("eye"));
+      refreshIcons(refs.passwordSecretToggle);
+    }
+
+    showResult(result, refs.passwordFeedback, "Senha salva.");
+    render();
+  }
+
+  function startPasswordEdit(password: Password): void {
+    refs.passwordId.value = password.id;
+    refs.passwordTitle.value = password.title;
+    refs.passwordUsername.value = password.username;
+    refs.passwordSecret.value = password.secret;
+    refs.passwordDescription.value = password.description;
+    refs.passwordSecret.type = "password";
+    refs.passwordSecretToggle.setAttribute("aria-pressed", "false");
+    refs.passwordSecretToggle.setAttribute("aria-label", "Mostrar senha");
+    refs.passwordSecretToggle.title = "Mostrar/ocultar senha";
+    refs.passwordSecretToggle.innerHTML = "";
+    refs.passwordSecretToggle.appendChild(icon("eye"));
+    refreshIcons(refs.passwordSecretToggle);
+    refs.passwordTitle.focus();
+  }
+
+  function renderPasswords(): void {
+    const passwords = getState().passwords;
+
+    if (!passwords.length) {
+      replaceChildren(refs.passwordsListPanel, [emptyState("Nenhuma senha cadastrada.")]);
+      return;
+    }
+
+    replaceChildren(refs.passwordsListPanel, passwords.map(passwordListItem));
+  }
+
+  function passwordListItem(password: Password): HTMLElement {
+    const dots = "•".repeat(9);
+    let revealed = false;
+
+    const secretSpan = el("span", { text: dots });
+    const copyBtn = el(
+      "button",
+      {
+        className: "icon-button",
+        attrs: {
+          type: "button",
+          "aria-label": "Copiar senha",
+          title: "Copiar senha",
+        },
+      },
+      [icon("copy")],
+    ) as HTMLButtonElement;
+    const revealBtn = el(
+      "button",
+      {
+        className: "icon-button",
+        attrs: {
+          type: "button",
+          "aria-label": "Mostrar senha",
+          "aria-pressed": "false",
+          title: "Mostrar/ocultar senha",
+        },
+      },
+      [icon("eye")],
+    ) as HTMLButtonElement;
+
+    copyBtn.addEventListener("click", async () => {
+      try {
+        await copyText(password.secret);
+        toasts.show({
+          type: "success",
+          title: "Senha copiada",
+          message: "A senha foi copiada para a área de transferência.",
+        });
+      } catch {
+        toasts.show({
+          type: "error",
+          title: "Não foi possível copiar",
+          message: "Copie a senha manualmente após exibi-la.",
+        });
+      }
+    });
+
+    revealBtn.addEventListener("click", () => {
+      revealed = !revealed;
+      secretSpan.textContent = revealed ? password.secret : dots;
+      revealBtn.setAttribute("aria-pressed", String(revealed));
+      revealBtn.setAttribute("aria-label", revealed ? "Ocultar senha" : "Mostrar senha");
+      revealBtn.title = revealed ? "Ocultar senha" : "Mostrar/ocultar senha";
+      revealBtn.innerHTML = "";
+      revealBtn.appendChild(icon(revealed ? "eye-off" : "eye"));
+      refreshIcons(revealBtn);
+    });
+
+    const secondaryEl = document.createElement("span");
+    if (password.username) {
+      secondaryEl.append(`Usuário: ${password.username} · `);
+    }
+    secondaryEl.append(secretSpan, " ", copyBtn, " ", revealBtn);
+    if (password.description) {
+      secondaryEl.append(` · ${password.description}`);
+    }
+
+    return el("article", { className: "catalog-item" }, [
+      el("div", {}, [el("strong", { text: password.title }), secondaryEl]),
+      el("div", { className: "routine-actions" }, [
+        iconButton("pencil", "Editar", () => startPasswordEdit(password)),
+        iconButton(
+          "trash-2",
+          "Excluir",
+          async () => {
+            const confirmed = await dialogs.dangerConfirm({
+              title: "Excluir senha?",
+              message: "A senha será removida permanentemente do catálogo.",
+              confirmLabel: "Excluir",
+            });
+            if (!confirmed) return;
+
+            const result = actions.deletePassword(password.id);
+            showResult(result, refs.passwordFeedback, "Senha excluída.");
+            render();
+          },
+          "danger",
+        ),
+      ]),
+    ]);
+  }
+
   function renderSettings(): void {
     const settings = getState().settings;
     refs.settingsNotificationsEnabled.checked = settings.notificationsEnabled;
@@ -1649,6 +1787,29 @@ export function createUI({
   function setFeedback(node: HTMLElement, message: string, type: string): void {
     node.textContent = message;
     node.dataset.type = type;
+  }
+
+  async function copyText(text: string): Promise<void> {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+
+    try {
+      if (!document.execCommand("copy")) {
+        throw new Error("Copy command failed.");
+      }
+    } finally {
+      textarea.remove();
+    }
   }
 
   function detailLine(iconName: string, text: string): HTMLElement {

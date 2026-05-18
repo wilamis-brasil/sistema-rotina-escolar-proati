@@ -15,6 +15,15 @@ const validRoutinePayload = {
   leadMinutes: "10",
 };
 
+const legacyFixedEquipmentImportNote = [
+  73, 109, 112, 111, 114, 116, 97, 100, 111, 32, 100, 97, 32, 102, 111, 108, 104, 97, 32, 100, 101,
+  32, 114, 101, 115, 101, 114, 118, 97, 32, 100, 101, 32, 101, 113, 117, 105, 112, 97, 109, 101,
+  110, 116, 111, 115, 32, 101, 108, 101, 116, 114, 244, 110, 105, 99, 111, 115, 32, 102, 105, 120,
+  111, 115, 46,
+]
+  .map((code) => String.fromCharCode(code))
+  .join("");
+
 describe("buildRoutine", () => {
   it("normalizes the class subject as part of the routine", () => {
     const result = buildRoutine({
@@ -126,6 +135,24 @@ describe("settings defaults", () => {
     });
 
     expect(state.routines[0]?.subject).toBe("");
+  });
+
+  it("removes the legacy fixed-equipment import note from existing routines", () => {
+    const state = normalizeState({
+      schemaVersion: 2,
+      routines: [
+        {
+          ...validRoutinePayload,
+          notes: legacyFixedEquipmentImportNote,
+        },
+      ],
+      teachers: [],
+      rooms: [],
+      devices: [],
+      settings: {},
+    });
+
+    expect(state.routines[0]?.notes).toBe("");
   });
 });
 

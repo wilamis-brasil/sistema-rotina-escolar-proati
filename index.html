@@ -49,7 +49,7 @@
         </button>
         <div class="menu-panel" id="main-menu-panel" hidden>
           <button class="nav-button is-active" type="button" data-view="today" aria-current="page">
-            <i data-lucide="clock-3" aria-hidden="true"></i>
+            <i data-lucide="house" aria-hidden="true"></i>
             <span class="nav-button-copy">
               <span>Home</span>
               <small>Painel do dia</small>
@@ -81,6 +81,13 @@
             <span class="nav-button-copy">
               <span>Dispositivos</span>
               <small>Equipamentos usados</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="passwords">
+            <i data-lucide="key-round" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Senhas</span>
+              <small>Credenciais técnicas</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="settings">
@@ -399,6 +406,47 @@
           </form>
           <p id="device-feedback" class="form-feedback" role="alert"></p>
           <div id="devices-list-panel" class="catalog-list"></div>
+        </section>
+      </section>
+
+      <section class="view" id="view-passwords" aria-labelledby="passwords-heading">
+        <section class="panel catalog-panel">
+          <div class="panel-heading">
+            <div>
+              <h2 id="passwords-heading">Senhas</h2>
+              <p>Credenciais técnicas utilizadas pelo PROATI.</p>
+            </div>
+          </div>
+          <form id="password-form" class="catalog-form" novalidate>
+            <input type="hidden" id="password-id">
+            <label>
+              <span>Título</span>
+              <input id="password-title" type="text" autocomplete="off" placeholder="Ex.: Windows 10 – Sala Informática" required>
+            </label>
+            <label>
+              <span>Usuário/login</span>
+              <input id="password-username" type="text" autocomplete="off" placeholder="Ex.: .\administrador">
+            </label>
+            <label>
+              <span>Senha</span>
+              <div class="inline-add">
+                <input id="password-secret" type="password" autocomplete="off" placeholder="..." required>
+                <button type="button" class="icon-button" id="password-secret-toggle" aria-label="Mostrar senha" aria-pressed="false" title="Mostrar/ocultar senha">
+                  <i data-lucide="eye" aria-hidden="true"></i>
+                </button>
+              </div>
+            </label>
+            <label>
+              <span>Descrição</span>
+              <input id="password-description" type="text" autocomplete="off" placeholder="Ex.: Credencial de acesso ao sistema de gestão">
+            </label>
+            <button class="button button-primary" type="submit">
+              <i data-lucide="save" aria-hidden="true"></i>
+              <span>Salvar senha</span>
+            </button>
+          </form>
+          <p id="password-feedback" class="form-feedback" role="alert"></p>
+          <div id="passwords-list-panel" class="catalog-list"></div>
         </section>
       </section>
 
