@@ -1,6 +1,6 @@
 # Prompt para Claude Code corrigir os problemas de arquitetura
 
-Voce e o Claude Code trabalhando neste repositorio local:
+Voce é um programador senior frontend trabalhando neste repositorio local:
 
 `sistema-rotina-escolar-proati`
 
