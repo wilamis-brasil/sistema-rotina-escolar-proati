@@ -335,6 +335,119 @@
     resize: vertical;
   }
 
+  .maintenance-bulk-dialog {
+    width: min(960px, 100%);
+  }
+
+  .maintenance-bulk-section {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    background: var(--surface-soft);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .maintenance-bulk-section-header {
+    display: grid;
+    gap: 2px;
+  }
+
+  .maintenance-bulk-section-title {
+    margin: 0;
+    color: var(--text);
+    font-size: 0.92rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .maintenance-bulk-section-hint {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+  }
+
+  .maintenance-bulk-devices {
+    display: grid;
+    gap: 10px;
+  }
+
+  .maintenance-bulk-device-row {
+    display: grid;
+    gap: 8px;
+    padding: 12px;
+    background: #ffffff;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius);
+  }
+
+  .maintenance-bulk-device-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .maintenance-bulk-device-index {
+    color: var(--muted);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .maintenance-bulk-device-remove {
+    width: 32px;
+    height: 32px;
+  }
+
+  .maintenance-bulk-device-remove svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  .maintenance-bulk-device-remove:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .maintenance-bulk-device-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .maintenance-bulk-add-device {
+    justify-self: start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .maintenance-bulk-add-device svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  @media (max-width: 880px) {
+    .maintenance-bulk-device-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+
+  @media (max-width: 520px) {
+    .maintenance-bulk-device-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .maintenance-bulk-add-device {
+      justify-self: stretch;
+      justify-content: center;
+    }
+  }
+
   @media (max-width: 720px) {
     .maintenance-table {
       min-width: 1000px;

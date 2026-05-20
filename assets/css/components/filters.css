@@ -70,8 +70,8 @@
     color: #1f2937;
     font-size: 0.875rem;
     font-weight: 500;
-    appearance: none;
     -webkit-appearance: none;
+    appearance: none;
     outline: none;
   }
 
@@ -162,6 +162,7 @@
     background: #ffffff;
     color: #374151;
     cursor: pointer;
+    -webkit-user-select: none;
     user-select: none;
     transition: border-color 100ms, background 100ms, color 100ms;
     white-space: nowrap;
@@ -209,8 +210,8 @@
     background-size: 14px;
     color: #1f2937;
     font-size: 0.875rem;
-    appearance: none;
     -webkit-appearance: none;
+    appearance: none;
     outline: none;
     cursor: pointer;
   }

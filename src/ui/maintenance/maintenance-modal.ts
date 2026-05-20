@@ -176,19 +176,27 @@ interface MaintenanceBulkOptions {
   onSubmit(entries: MaintenancePayload[]): boolean;
 }
 
+interface BulkDeviceDefaults {
+  equipmentId?: string;
+  type?: string;
+  brandModel?: string;
+  location?: string;
+}
+
+interface BulkDeviceRow {
+  wrap: HTMLElement;
+  equipmentId: HTMLInputElement;
+  type: HTMLInputElement;
+  brandModel: HTMLInputElement;
+  location: HTMLInputElement;
+}
+
 export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void {
   const backdrop = el("div", { className: "dialog-backdrop" });
   const container = ensureRoot();
   container.appendChild(backdrop);
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  const typeInput = textInput("Tipo", "Ex.: Tablet", true);
-  const prefixInput = textInput("Prefixo", "Ex.: TAB-", true);
-  const startInput = numberInput("Numeração inicial", "1", 1);
-  const countInput = numberInput("Quantidade", "10", 1);
-  const padInput = numberInput("Dígitos do número", "3", 1);
-  const brandInput = textInput("Marca / Modelo", "Ex.: Positivo T1060", false);
-  const locationInput = textInput("Local", "Ex.: Sala 12", false);
   const problemInput = textInput("Problema principal", "Ex.: Não liga", true);
   const prioritySelect = selectInput(
     "Prioridade",
@@ -204,6 +212,75 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   const actionsArea = textArea("Ações realizadas (opcional)", "");
   const notesArea = textArea("Observações (opcional)", "");
 
+  const devicesContainer = el("div", { className: "maintenance-bulk-devices" });
+  const addDeviceBtn = el(
+    "button",
+    { className: "button button-secondary maintenance-bulk-add-device", attrs: { type: "button" } },
+    [icon("plus"), el("span", { text: "Adicionar equipamento" })],
+  ) as HTMLButtonElement;
+
+  const rows: BulkDeviceRow[] = [];
+
+  function updateRowIndexes(): void {
+    rows.forEach((row, idx) => {
+      const badge = row.wrap.querySelector<HTMLElement>(".maintenance-bulk-device-index");
+      if (badge) badge.textContent = `#${idx + 1}`;
+      const removeBtn = row.wrap.querySelector<HTMLButtonElement>(".maintenance-bulk-device-remove");
+      if (removeBtn) removeBtn.disabled = rows.length <= 1;
+    });
+  }
+
+  function addDeviceRow(defaults: BulkDeviceDefaults = {}): BulkDeviceRow {
+    const equipmentId = textInput("Identificador / Número", "Ex.: TAB-003", true, defaults.equipmentId);
+    const type = textInput("Tipo", "Ex.: Tablet", true, defaults.type);
+    const brandModel = textInput("Marca / Modelo", "Ex.: Positivo T1060", false, defaults.brandModel);
+    const location = textInput("Local", "Ex.: Sala 12", false, defaults.location);
+
+    const removeBtn = el(
+      "button",
+      {
+        className: "icon-button is-danger maintenance-bulk-device-remove",
+        attrs: { type: "button", "aria-label": "Remover equipamento", title: "Remover equipamento" },
+      },
+      [icon("trash-2")],
+    ) as HTMLButtonElement;
+
+    const indexBadge = el("span", { className: "maintenance-bulk-device-index", text: "#" });
+
+    const rowEl = el("div", { className: "maintenance-bulk-device-row" }, [
+      el("div", { className: "maintenance-bulk-device-header" }, [indexBadge, removeBtn]),
+      el("div", { className: "maintenance-bulk-device-grid" }, [
+        equipmentId.wrap,
+        type.wrap,
+        brandModel.wrap,
+        location.wrap,
+      ]),
+    ]);
+
+    const row: BulkDeviceRow = {
+      wrap: rowEl,
+      equipmentId: equipmentId.input,
+      type: type.input,
+      brandModel: brandModel.input,
+      location: location.input,
+    };
+
+    removeBtn.addEventListener("click", () => {
+      if (rows.length <= 1) return;
+      const idx = rows.indexOf(row);
+      if (idx === -1) return;
+      rows.splice(idx, 1);
+      rowEl.remove();
+      updateRowIndexes();
+    });
+
+    rows.push(row);
+    devicesContainer.appendChild(rowEl);
+    refreshIcons(rowEl);
+    updateRowIndexes();
+    return row;
+  }
+
   const feedback = el("p", { className: "form-feedback", attrs: { role: "alert" } });
 
   const cancelBtn = secondaryButton("Cancelar");
@@ -212,7 +289,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   const dialog = el(
     "section",
     {
-      className: "dialog maintenance-form-dialog",
+      className: "dialog maintenance-form-dialog maintenance-bulk-dialog",
       attrs: { role: "dialog", "aria-modal": "true", "aria-labelledby": "maintenance-bulk-title" },
     },
     [
@@ -224,21 +301,34 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
         ]),
       ]),
       el("form", { className: "maintenance-form" }, [
-        el("div", { className: "maintenance-form-grid" }, [
-          typeInput.wrap,
-          prefixInput.wrap,
-          startInput.wrap,
-          countInput.wrap,
-          padInput.wrap,
-          brandInput.wrap,
-          locationInput.wrap,
-          problemInput.wrap,
-          prioritySelect.wrap,
-          statusSelect.wrap,
+        el("section", { className: "maintenance-bulk-section" }, [
+          el("header", { className: "maintenance-bulk-section-header" }, [
+            el("h3", { className: "maintenance-bulk-section-title", text: "Dados comuns do lote" }),
+            el("p", {
+              className: "maintenance-bulk-section-hint",
+              text: "Aplicado a todos os equipamentos abaixo.",
+            }),
+          ]),
+          el("div", { className: "maintenance-form-grid" }, [
+            problemInput.wrap,
+            prioritySelect.wrap,
+            statusSelect.wrap,
+          ]),
+          techArea.wrap,
+          actionsArea.wrap,
+          notesArea.wrap,
         ]),
-        techArea.wrap,
-        actionsArea.wrap,
-        notesArea.wrap,
+        el("section", { className: "maintenance-bulk-section" }, [
+          el("header", { className: "maintenance-bulk-section-header" }, [
+            el("h3", { className: "maintenance-bulk-section-title", text: "Equipamentos" }),
+            el("p", {
+              className: "maintenance-bulk-section-hint",
+              text: "Adicione quantos equipamentos forem necessários — eles podem ser de tipos e numerações diferentes.",
+            }),
+          ]),
+          devicesContainer,
+          addDeviceBtn,
+        ]),
         feedback,
         el("div", { className: "dialog-actions" }, [cancelBtn, submitBtn]),
       ]),
@@ -247,6 +337,8 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
 
   backdrop.appendChild(dialog);
   refreshIcons(backdrop);
+
+  addDeviceRow();
 
   function close(): void {
     document.removeEventListener("keydown", onKey);
@@ -262,18 +354,35 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   }
 
   function handleSubmit(): void {
-    const type = typeInput.input.value.trim();
-    const prefix = prefixInput.input.value.trim();
-    const start = Number(startInput.input.value);
-    const count = Number(countInput.input.value);
-    const pad = Math.max(1, Number(padInput.input.value) || 0);
-
+    const mainProblem = problemInput.input.value.trim();
     const errors: string[] = [];
-    if (!type) errors.push("Informe o tipo do equipamento.");
-    if (!prefix) errors.push("Informe o prefixo.");
-    if (!Number.isInteger(start) || start < 0) errors.push("Numeração inicial inválida.");
-    if (!Number.isInteger(count) || count < 1) errors.push("Quantidade inválida.");
-    if (!problemInput.input.value.trim()) errors.push("Informe o problema principal.");
+
+    if (!mainProblem) errors.push("Informe o problema principal.");
+    if (rows.length === 0) errors.push("Adicione ao menos um equipamento.");
+
+    const entries: MaintenancePayload[] = [];
+    rows.forEach((row, idx) => {
+      const equipmentId = row.equipmentId.value.trim();
+      const type = row.type.value.trim();
+      if (!equipmentId) errors.push(`Equipamento #${idx + 1}: informe o identificador.`);
+      if (!type) errors.push(`Equipamento #${idx + 1}: informe o tipo.`);
+      if (equipmentId && type) {
+        entries.push({
+          equipmentId,
+          type,
+          brandModel: row.brandModel.value,
+          location: row.location.value,
+          mainProblem,
+          technicalDescription: techArea.input.value,
+          priority: prioritySelect.input.value,
+          status: statusSelect.input.value,
+          ticketNumber: "",
+          responsibleContact: "",
+          actionsTaken: actionsArea.input.value,
+          notes: notesArea.input.value,
+        });
+      }
+    });
 
     if (errors.length) {
       feedback.textContent = errors.join(" ");
@@ -281,29 +390,17 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
       return;
     }
 
-    const entries: MaintenancePayload[] = [];
-    for (let i = 0; i < count; i++) {
-      const number = String(start + i).padStart(pad, "0");
-      entries.push({
-        equipmentId: `${prefix}${number}`,
-        type,
-        brandModel: brandInput.input.value,
-        location: locationInput.input.value,
-        mainProblem: problemInput.input.value,
-        technicalDescription: techArea.input.value,
-        priority: prioritySelect.input.value,
-        status: statusSelect.input.value,
-        ticketNumber: "",
-        responsibleContact: "",
-        actionsTaken: actionsArea.input.value,
-        notes: notesArea.input.value,
-      });
-    }
+    feedback.textContent = "";
+    delete feedback.dataset.type;
 
     const shouldClose = options.onSubmit(entries);
     if (shouldClose) close();
   }
 
+  addDeviceBtn.addEventListener("click", () => {
+    const row = addDeviceRow();
+    row.equipmentId.focus();
+  });
   cancelBtn.addEventListener("click", close);
   submitBtn.addEventListener("click", handleSubmit);
   backdrop.addEventListener("click", (event) => {
@@ -311,7 +408,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   });
   document.addEventListener("keydown", onKey);
 
-  window.setTimeout(() => typeInput.input.focus(), 0);
+  window.setTimeout(() => problemInput.input.focus(), 0);
 }
 
 interface Field<T extends HTMLElement> {
@@ -332,23 +429,6 @@ function textInput(label: string, placeholder: string, required: boolean, value?
   if (value) input.value = value;
   const wrap = el("label", { className: "maintenance-field" }, [
     el("span", { className: "form-label", text: required ? `${label} *` : label }),
-    input,
-  ]) as HTMLLabelElement;
-  return { wrap, input };
-}
-
-function numberInput(label: string, placeholder: string, min: number): Field<HTMLInputElement> {
-  const input = el("input", {
-    className: "form-input",
-    attrs: {
-      type: "number",
-      placeholder,
-      min: String(min),
-      step: "1",
-    },
-  }) as HTMLInputElement;
-  const wrap = el("label", { className: "maintenance-field" }, [
-    el("span", { className: "form-label", text: label }),
     input,
   ]) as HTMLLabelElement;
   return { wrap, input };
