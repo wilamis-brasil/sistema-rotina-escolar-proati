@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 5;
+export const SCHEMA_VERSION = 6;
 export const STORAGE_KEY = "sistema-rotina-escolar-proati-state-v1";
 export const LEGACY_STORAGE_KEYS = ["kickoff-proati-state-v1"] as const;
 
@@ -80,6 +80,11 @@ export interface Password {
   updatedAt: string;
 }
 
+export interface RoutineNotificationOverride {
+  enabled?: boolean;
+  leadMinutes?: number | null;
+}
+
 export interface Routine {
   id: string;
   weekday: WeekdayId;
@@ -91,6 +96,7 @@ export interface Routine {
   studentCount: number;
   devices: string[];
   notes: string;
+  notification?: RoutineNotificationOverride;
   createdAt: string;
   updatedAt: string;
 }
@@ -120,10 +126,69 @@ export interface MaintenanceRecord {
   updatedAt: string;
 }
 
+export const NOTIFICATION_SOUNDS = [
+  { value: "default", label: "Padrão" },
+  { value: "soft", label: "Suave" },
+  { value: "alert", label: "Alerta curto" },
+  { value: "bell", label: "Sino" },
+  { value: "none", label: "Nenhum" },
+] as const;
+
+export type NotificationSoundId = (typeof NOTIFICATION_SOUNDS)[number]["value"];
+
+export const NOTIFICATION_LEAD_PRESETS = [5, 10, 15, 20, 30] as const;
+
+export const NOTIFICATION_TYPES = ["aviso_antecipado", "inicio", "termino"] as const;
+export type NotificationType = (typeof NOTIFICATION_TYPES)[number];
+
+export const NOTIFICATION_STATUSES = [
+  "pendente",
+  "exibida",
+  "vista",
+  "adiada",
+  "ignorada",
+  "desativada",
+] as const;
+export type NotificationStatus = (typeof NOTIFICATION_STATUSES)[number];
+
+export interface NotificationSettings {
+  enabled: boolean;
+  defaultLeadMinutes: number;
+  soundEnabled: boolean;
+  soundName: NotificationSoundId;
+  groupingEnabled: boolean;
+  groupingWindowMinutes: number;
+  allowSnooze: boolean;
+  defaultSnoozeMinutes: number;
+}
+
+export interface NotificationLogEntry {
+  id: string;
+  status: NotificationStatus;
+  date: string;
+  type: NotificationType;
+  time: string;
+  routineIds: string[];
+  updatedAt: string;
+  snoozedUntil?: string;
+}
+
 export interface Settings {
   sortBy: SortOption;
   filterText: string;
+  notifications: NotificationSettings;
 }
+
+export const DEFAULT_NOTIFICATION_SETTINGS: NotificationSettings = {
+  enabled: true,
+  defaultLeadMinutes: 10,
+  soundEnabled: false,
+  soundName: "default",
+  groupingEnabled: true,
+  groupingWindowMinutes: 5,
+  allowSnooze: true,
+  defaultSnoozeMinutes: 5,
+};
 
 export interface AppState {
   schemaVersion: typeof SCHEMA_VERSION;
@@ -133,6 +198,7 @@ export interface AppState {
   devices: Device[];
   passwords: Password[];
   maintenanceRecords: MaintenanceRecord[];
+  notificationLog: NotificationLogEntry[];
   settings: Settings;
   meta: {
     createdAt: string;
@@ -153,6 +219,7 @@ export interface RoutinePayload {
   studentCount: unknown;
   devices: unknown;
   notes?: unknown;
+  notification?: unknown;
 }
 
 export interface CatalogPayload {

@@ -22,6 +22,7 @@
 @import "./features/weekly-schedule.css";
 @import "./features/catalogs-settings.css";
 @import "./features/maintenance.css";
+@import "./features/notifications.css";
 
 @import "./utilities/visibility.css";
 @import "./utilities/motion.css";

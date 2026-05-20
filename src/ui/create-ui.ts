@@ -7,6 +7,7 @@ import { option, replaceChildren } from "./dom";
 import { refreshIcons } from "./icons";
 import { createMaintenanceView } from "./maintenance/maintenance-view";
 import { createNavigation } from "./navigation";
+import { createNotificationsView } from "./notifications/notifications-view";
 import { createPasswordsView } from "./passwords/passwords-view";
 import { createRoutineActions } from "./routines/routine-actions";
 import { createRoutineForm } from "./routines/routine-form";
@@ -44,6 +45,7 @@ export function createUI({
   let catalogsView!: ReturnType<typeof createCatalogsView>;
   let passwordsView!: ReturnType<typeof createPasswordsView>;
   let maintenanceView!: ReturnType<typeof createMaintenanceView>;
+  let notificationsView!: ReturnType<typeof createNotificationsView>;
   let settingsView!: ReturnType<typeof createSettingsView>;
 
   function init(): void {
@@ -122,6 +124,14 @@ export function createUI({
       },
       onImported: render,
     });
+    notificationsView = createNotificationsView({
+      refs,
+      getState,
+      actions,
+      toasts,
+      onEditRoutine: (routine) => routineForm.fill(routine),
+      onNavigateToView: (viewId) => navigation.setView(viewId),
+    });
 
     bindEvents();
     renderStaticOptions();
@@ -131,6 +141,7 @@ export function createUI({
       refs.storageStatus.textContent = initialNotice;
     }
     render();
+    notificationsView.start();
   }
 
   function bindEvents(): void {
@@ -141,6 +152,7 @@ export function createUI({
     passwordsView.bindEvents();
     maintenanceView.bindEvents();
     settingsView.bindEvents();
+    notificationsView.bindEvents();
 
     refs.undoDeleteButton.addEventListener("click", () => {
       const result = actions.undoDeleteRoutine();
@@ -178,6 +190,7 @@ export function createUI({
     catalogsView.render();
     passwordsView.render();
     maintenanceView.render();
+    notificationsView.render();
     refreshIcons();
   }
 

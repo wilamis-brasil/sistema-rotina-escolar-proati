@@ -86,6 +86,16 @@ export interface UIRefs {
   maintenanceExportJson: HTMLButtonElement;
   maintenanceImportFile: HTMLInputElement;
   maintenanceTableWrap: HTMLElement;
+  notificationBellButton: HTMLButtonElement;
+  notificationBellBadge: HTMLElement;
+  notificationsStatus: HTMLElement;
+  notificationsSettings: HTMLElement;
+  notificationsUpcoming: HTMLElement;
+  notificationsRecent: HTMLElement;
+  notificationsCalendar: HTMLElement;
+  notificationsTestSound: HTMLButtonElement;
+  notificationsMarkAll: HTMLButtonElement;
+  notificationPopupRoot: HTMLElement;
 }
 
 export function bindRefs(): UIRefs {
@@ -175,5 +185,15 @@ export function bindRefs(): UIRefs {
     maintenanceExportJson: qs("#maintenance-export-json"),
     maintenanceImportFile: qs("#maintenance-import-file"),
     maintenanceTableWrap: qs("#maintenance-table-wrap"),
+    notificationBellButton: qs("#notification-bell-button"),
+    notificationBellBadge: qs("#notification-bell-badge"),
+    notificationsStatus: qs("#notifications-status"),
+    notificationsSettings: qs("#notifications-settings"),
+    notificationsUpcoming: qs("#notifications-upcoming"),
+    notificationsRecent: qs("#notifications-recent"),
+    notificationsCalendar: qs("#notifications-calendar"),
+    notificationsTestSound: qs("#notifications-test-sound"),
+    notificationsMarkAll: qs("#notifications-mark-all"),
+    notificationPopupRoot: qs("#notification-popup-root"),
   };
 }

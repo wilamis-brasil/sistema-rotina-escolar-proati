@@ -2,8 +2,12 @@ import { z } from "zod";
 import { resultFailure } from "./errors";
 import {
   DEFAULT_DEVICE_NAMES,
+  DEFAULT_NOTIFICATION_SETTINGS,
   MAINTENANCE_PRIORITIES,
   MAINTENANCE_STATUSES,
+  NOTIFICATION_SOUNDS,
+  NOTIFICATION_STATUSES,
+  NOTIFICATION_TYPES,
   SCHEMA_VERSION,
   SORT_OPTIONS,
   WEEKDAYS,
@@ -16,11 +20,17 @@ import {
   type MaintenancePriority,
   type MaintenanceRecord,
   type MaintenanceStatus,
+  type NotificationLogEntry,
+  type NotificationSettings,
+  type NotificationSoundId,
+  type NotificationStatus,
+  type NotificationType,
   type Password,
   type PasswordPayload,
   type Result,
   type Room,
   type Routine,
+  type RoutineNotificationOverride,
   type RoutinePayload,
   type Settings,
   type SingularCatalogKind,
@@ -38,6 +48,7 @@ const RawStateSchema = z
     devices: z.array(z.unknown()).optional(),
     passwords: z.array(z.unknown()).optional(),
     maintenanceRecords: z.array(z.unknown()).optional(),
+    notificationLog: z.array(z.unknown()).optional(),
     settings: z.unknown().optional(),
     meta: z.unknown().optional(),
   })
@@ -202,9 +213,11 @@ export function createEmptyState(): AppState {
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
     passwords: DEFAULT_PASSWORDS.map((p) => ({ ...p })),
     maintenanceRecords: [],
+    notificationLog: [],
     settings: {
       sortBy: "weekday-time",
       filterText: "",
+      notifications: { ...DEFAULT_NOTIFICATION_SETTINGS },
     },
     meta: {
       createdAt: timestamp,
@@ -227,6 +240,7 @@ export function buildRoutine(
   const studentCount = Number(payload.studentCount);
   const devices = uniqueNames(payload.devices);
   const notes = normalizeRoutineNotes(payload.notes);
+  const notification = normalizeRoutineNotification(payload.notification);
 
   if (!isWeekdayId(weekday)) {
     errors.push("Escolha um dia útil entre segunda e sexta-feira.");
@@ -279,10 +293,32 @@ export function buildRoutine(
       studentCount,
       devices,
       notes,
+      ...(notification ? { notification } : {}),
       createdAt: existingRoutine?.createdAt ?? timestamp,
       updatedAt: timestamp,
     },
   };
+}
+
+export function normalizeRoutineNotification(value: unknown): RoutineNotificationOverride | undefined {
+  if (value === null || value === undefined) return undefined;
+  const record = toRecord(value);
+  if (Object.keys(record).length === 0) return undefined;
+
+  const override: RoutineNotificationOverride = {};
+  if (record.enabled === true) override.enabled = true;
+  else if (record.enabled === false) override.enabled = false;
+
+  if (record.leadMinutes === null) {
+    override.leadMinutes = null;
+  } else if (record.leadMinutes !== undefined) {
+    const lead = Number(record.leadMinutes);
+    if (Number.isFinite(lead) && lead >= 0 && lead <= 240) {
+      override.leadMinutes = Math.round(lead);
+    }
+  }
+
+  return Object.keys(override).length > 0 ? override : undefined;
 }
 
 function validateCatalogName(name: unknown, label: string): Result<string> {
@@ -386,6 +422,7 @@ export function normalizeState(candidate: unknown): AppState {
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
     passwords: normalizeAndSeedPasswords(raw.passwords),
     maintenanceRecords: normalizeMaintenanceCollection(raw.maintenanceRecords),
+    notificationLog: normalizeNotificationLog(raw.notificationLog),
     settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
     meta: {
       createdAt: normalizeText(readObjectField(raw.meta, "createdAt")) || base.meta.createdAt,
@@ -418,9 +455,12 @@ export function normalizeState(candidate: unknown): AppState {
       }
       routineIds.add(routineId);
 
+      const restoredNotification = normalizeRoutineNotification(routineRecord.notification);
+
       state.routines.push({
         ...normalized.value,
         id: routineId,
+        ...(restoredNotification ? { notification: restoredNotification } : {}),
         createdAt: normalizeText(routineRecord.createdAt) || normalized.value.createdAt,
         updatedAt: normalizeText(routineRecord.updatedAt) || normalized.value.updatedAt,
       });
@@ -552,7 +592,96 @@ function normalizeSettings(settings: unknown, defaults: Settings, _schemaVersion
   return {
     sortBy,
     filterText: normalizeText(settingsRecord.filterText),
+    notifications: normalizeNotificationSettings(settingsRecord.notifications, defaults.notifications),
   };
+}
+
+export function normalizeNotificationSettings(
+  candidate: unknown,
+  defaults: NotificationSettings = DEFAULT_NOTIFICATION_SETTINGS,
+): NotificationSettings {
+  const record = toRecord(candidate);
+  const sound = NOTIFICATION_SOUNDS.some((option) => option.value === record.soundName)
+    ? (record.soundName as NotificationSoundId)
+    : defaults.soundName;
+
+  return {
+    enabled: typeof record.enabled === "boolean" ? record.enabled : defaults.enabled,
+    defaultLeadMinutes: normalizeLeadMinutes(record.defaultLeadMinutes, defaults.defaultLeadMinutes),
+    soundEnabled: typeof record.soundEnabled === "boolean" ? record.soundEnabled : defaults.soundEnabled,
+    soundName: sound,
+    groupingEnabled:
+      typeof record.groupingEnabled === "boolean" ? record.groupingEnabled : defaults.groupingEnabled,
+    groupingWindowMinutes: normalizeWindowMinutes(record.groupingWindowMinutes, defaults.groupingWindowMinutes),
+    allowSnooze: typeof record.allowSnooze === "boolean" ? record.allowSnooze : defaults.allowSnooze,
+    defaultSnoozeMinutes: normalizeSnoozeMinutes(record.defaultSnoozeMinutes, defaults.defaultSnoozeMinutes),
+  };
+}
+
+function normalizeLeadMinutes(value: unknown, fallback: number): number {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const rounded = Math.round(number);
+  if (rounded < 0 || rounded > 240) return fallback;
+  return rounded;
+}
+
+function normalizeWindowMinutes(value: unknown, fallback: number): number {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const rounded = Math.round(number);
+  if (rounded < 0 || rounded > 60) return fallback;
+  return rounded;
+}
+
+function normalizeSnoozeMinutes(value: unknown, fallback: number): number {
+  const number = Number(value);
+  if (!Number.isFinite(number)) return fallback;
+  const rounded = Math.round(number);
+  if (rounded < 1 || rounded > 120) return fallback;
+  return rounded;
+}
+
+function normalizeNotificationLog(value: unknown): NotificationLogEntry[] {
+  if (!Array.isArray(value)) return [];
+  const seen = new Set<string>();
+  const result: NotificationLogEntry[] = [];
+  const validStatuses = new Set<NotificationStatus>(NOTIFICATION_STATUSES);
+  const validTypes = new Set<NotificationType>(NOTIFICATION_TYPES);
+
+  value.forEach((item) => {
+    const rec = toRecord(item);
+    const id = normalizeText(rec.id);
+    if (!id || seen.has(id)) return;
+    const status = validStatuses.has(rec.status as NotificationStatus)
+      ? (rec.status as NotificationStatus)
+      : null;
+    if (!status) return;
+    const type = validTypes.has(rec.type as NotificationType) ? (rec.type as NotificationType) : null;
+    if (!type) return;
+    const date = normalizeText(rec.date);
+    const time = normalizeText(rec.time);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return;
+    if (!isValidTime(time)) return;
+    const routineIds = Array.isArray(rec.routineIds)
+      ? rec.routineIds.map(normalizeText).filter(Boolean)
+      : [];
+    if (routineIds.length === 0) return;
+    seen.add(id);
+    const entry: NotificationLogEntry = {
+      id,
+      status,
+      date,
+      type,
+      time,
+      routineIds,
+      updatedAt: normalizeText(rec.updatedAt) || nowIso(),
+    };
+    const snoozedUntil = normalizeText(rec.snoozedUntil);
+    if (snoozedUntil) entry.snoozedUntil = snoozedUntil;
+    result.push(entry);
+  });
+  return result;
 }
 
 function readObjectField(value: unknown, key: string): unknown {

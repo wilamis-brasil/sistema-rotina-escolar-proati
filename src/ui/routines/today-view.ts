@@ -3,6 +3,7 @@ import {
   getTodayWeekdayId,
   getWeekdayLabel,
   sortRoutines,
+  timeToMinutes,
 } from "../../domain/model";
 import type { AppState, Routine } from "../../domain/types";
 import { el, icon, replaceChildren, span } from "../dom";
@@ -137,6 +138,7 @@ export function createTodayView({
 
   function routineCard(routine: Routine): HTMLElement {
     const title = `${routine.startTime}${routine.endTime ? `-${routine.endTime}` : ""}`;
+    const notificationBadge = buildNotificationBadge(routine, getState().settings.notifications.enabled, getState().settings.notifications.defaultLeadMinutes);
 
     return el(
       "article",
@@ -153,6 +155,7 @@ export function createTodayView({
             actionButton("trash-2", "Excluir", "Excluir rotina", () => callbacks.onDelete(routine.id), "danger"),
           ]),
         ]),
+        notificationBadge,
         detailLine("user", routine.teacher),
         routine.subject ? detailLine("book-open-check", `Aula: ${routine.subject}`) : null,
         detailLine("map-pin", routine.room),
@@ -225,4 +228,28 @@ function latestRoutineUpdatedAt(routines: Routine[]): string {
     (latest, routine) => (routine.updatedAt > latest ? routine.updatedAt : latest),
     routines[0]?.updatedAt ?? "",
   );
+}
+
+function buildNotificationBadge(routine: Routine, globalEnabled: boolean, defaultLead: number): HTMLElement | null {
+  if (!globalEnabled) return null;
+  if (routine.notification?.enabled === false) return null;
+  const lead =
+    typeof routine.notification?.leadMinutes === "number"
+      ? routine.notification.leadMinutes
+      : defaultLead;
+  const startMinutes = timeToMinutes(routine.startTime);
+  const now = new Date();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+  let label = `Notificação ${lead > 0 ? `${lead} min antes` : "no início"}`;
+  if (startMinutes !== null) {
+    const fireMinutes = startMinutes - (lead > 0 ? lead : 0);
+    if (currentMinutes >= startMinutes && (!routine.endTime || (timeToMinutes(routine.endTime) ?? startMinutes) > currentMinutes)) {
+      label = "Agora";
+    } else if (currentMinutes >= fireMinutes && currentMinutes < startMinutes) {
+      label = "Aviso ativo";
+    }
+  }
+
+  return el("p", { className: "routine-notification-pill" }, [icon("bell-ring"), span(label)]);
 }

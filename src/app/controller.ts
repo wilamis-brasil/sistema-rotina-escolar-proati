@@ -9,6 +9,7 @@ import {
   getMaintenanceStatusLabel,
   normalizeCatalogPayload,
   normalizeCase,
+  normalizeNotificationSettings,
   normalizeText,
   nowIso,
   singularKind,
@@ -20,6 +21,10 @@ import type {
   CatalogPayload,
   EmptyResult,
   MaintenancePayload,
+  NotificationLogEntry,
+  NotificationSettings,
+  NotificationStatus,
+  NotificationType,
   PasswordPayload,
   Routine,
   RoutinePayload,
@@ -61,6 +66,18 @@ export interface AppActions {
   deleteMaintenanceRecord(id: string): EmptyResult;
   exportMaintenanceData(): string;
   importMaintenanceData(rawText: string): EmptyResult;
+  updateNotificationSettings(patch: Partial<NotificationSettings>): EmptyResult;
+  recordNotificationStatus(input: {
+    id: string;
+    status: NotificationStatus;
+    date: string;
+    type: NotificationType;
+    time: string;
+    routineIds: string[];
+    snoozedUntil?: string;
+  }): EmptyResult;
+  markAllNotificationsAsSeen(ids: string[]): EmptyResult;
+  clearOldNotificationLog(beforeDate: string): EmptyResult;
 }
 
 export function createAppController({
@@ -292,6 +309,66 @@ export function createAppController({
       if (!result.ok) return result;
 
       state.maintenanceRecords = result.value;
+      return persist();
+    },
+
+    updateNotificationSettings(patch) {
+      const merged = normalizeNotificationSettings({
+        ...state.settings.notifications,
+        ...patch,
+      });
+      state.settings = {
+        ...state.settings,
+        notifications: merged,
+      };
+      return persist();
+    },
+
+    recordNotificationStatus(input) {
+      if (!input?.id) return failure("Identificador da notificação ausente.");
+      const log = state.notificationLog ?? [];
+      const index = log.findIndex((entry) => entry.id === input.id);
+      const entry: NotificationLogEntry = {
+        id: input.id,
+        status: input.status,
+        date: input.date,
+        type: input.type,
+        time: input.time,
+        routineIds: input.routineIds,
+        updatedAt: nowIso(),
+        ...(input.snoozedUntil ? { snoozedUntil: input.snoozedUntil } : {}),
+      };
+      if (index === -1) {
+        log.push(entry);
+      } else {
+        log[index] = entry;
+      }
+      state.notificationLog = log;
+      return persist();
+    },
+
+    markAllNotificationsAsSeen(ids) {
+      if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+      const log = state.notificationLog ?? [];
+      const known = new Set(log.map((entry) => entry.id));
+      ids.forEach((id) => {
+        const found = log.find((entry) => entry.id === id);
+        if (found) {
+          found.status = "vista";
+          found.updatedAt = nowIso();
+          delete found.snoozedUntil;
+        } else if (!known.has(id)) {
+          known.add(id);
+        }
+      });
+      state.notificationLog = log;
+      return persist();
+    },
+
+    clearOldNotificationLog(beforeDate) {
+      if (!beforeDate) return { ok: true };
+      const log = (state.notificationLog ?? []).filter((entry) => entry.date >= beforeDate);
+      state.notificationLog = log;
       return persist();
     },
   };

@@ -20,6 +20,16 @@
       </a>
       <nav class="main-nav" aria-label="Navegação principal">
         <button
+          class="notification-bell-button"
+          type="button"
+          id="notification-bell-button"
+          aria-label="Abrir Central de Notificações"
+          title="Central de Notificações"
+        >
+          <i data-lucide="bell-ring" aria-hidden="true"></i>
+          <span class="notification-bell-badge" id="notification-bell-badge" hidden>0</span>
+        </button>
+        <button
           class="menu-button"
           type="button"
           id="main-menu-button"
@@ -82,6 +92,13 @@
             <span class="nav-button-copy">
               <span>Senhas</span>
               <small>Credenciais técnicas</small>
+            </span>
+          </button>
+          <button class="nav-button" type="button" data-view="notifications">
+            <i data-lucide="bell-ring" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Notificações</span>
+              <small>Avisos internos</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="settings">
@@ -493,6 +510,43 @@
         </section>
       </section>
 
+      <section class="view" id="view-notifications" aria-labelledby="notifications-heading">
+        <section class="panel notifications-panel" aria-labelledby="notifications-heading">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">Central</span>
+              <h2 id="notifications-heading">Notificações internas</h2>
+              <p>Avisos por popup enquanto o site estiver aberto. Não há notificações nativas, e nada é enviado quando o sistema está fechado.</p>
+            </div>
+          </div>
+          <div id="notifications-status" class="notifications-status" aria-live="polite"></div>
+          <div id="notifications-settings" class="notifications-settings"></div>
+          <div class="notifications-actions-row">
+            <button class="button button-secondary button-small" type="button" id="notifications-test-sound">
+              <i data-lucide="bell-ring" aria-hidden="true"></i>
+              <span>Testar som</span>
+            </button>
+            <button class="button button-secondary button-small" type="button" id="notifications-mark-all">
+              <i data-lucide="check-circle-2" aria-hidden="true"></i>
+              <span>Marcar todas como vistas</span>
+            </button>
+          </div>
+          <div class="notifications-section">
+            <h3>Próximas notificações</h3>
+            <div id="notifications-upcoming" class="notifications-list" aria-live="polite"></div>
+          </div>
+          <div class="notifications-section">
+            <h3>Histórico do dia</h3>
+            <div id="notifications-recent" class="notifications-list"></div>
+          </div>
+          <div class="notifications-section">
+            <h3>Exportar para calendário</h3>
+            <p class="notice-text">Adicione a próxima retirada ao Google Calendar ou baixe um arquivo .ics — sem login, sem backend.</p>
+            <div id="notifications-calendar" class="notifications-calendar"></div>
+          </div>
+        </section>
+      </section>
+
       <section class="view" id="view-settings" aria-labelledby="settings-heading">
         <section class="panel settings-panel">
           <div class="panel-heading">
@@ -535,5 +589,6 @@
 
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="false"></div>
     <div id="dialog-root" class="dialog-root"></div>
+    <div id="notification-popup-root" class="notification-popup-root" aria-live="assertive" aria-atomic="false"></div>
   </body>
 </html>

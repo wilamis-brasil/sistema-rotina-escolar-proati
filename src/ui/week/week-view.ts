@@ -209,11 +209,14 @@ export function createWeekView({
 
   function renderTeacherEntry(entry: WeekScheduleEntry, routineById: Map<string, Routine>): HTMLElement {
     const routine = routineById.get(entry.routineId);
+    const state = getState();
+    const notificationLabel = routine ? buildNotificationHint(routine, state.settings.notifications.enabled, state.settings.notifications.defaultLeadMinutes) : null;
 
     return el("div", { className: "schedule-cell-entry schedule-teacher-entry" }, [
       el("strong", { text: entry.teacher }),
       entry.subject ? el("small", { text: `Aula: ${entry.subject}` }) : null,
       entry.notes ? el("small", { text: entry.notes }) : null,
+      notificationLabel,
       routine ? scheduleEntryActions(routine) : null,
     ]);
   }
@@ -270,6 +273,20 @@ function renderRoomEntry(entry: WeekScheduleEntry): HTMLElement {
   return el("div", { className: "schedule-cell-entry" }, [
     el("strong", { text: entry.room }),
     el("small", { text: `${entry.studentCount} aluno(s)` }),
+  ]);
+}
+
+function buildNotificationHint(routine: Routine, globalEnabled: boolean, defaultLead: number): HTMLElement | null {
+  if (!globalEnabled) return null;
+  if (routine.notification?.enabled === false) return null;
+  const lead =
+    typeof routine.notification?.leadMinutes === "number"
+      ? routine.notification.leadMinutes
+      : defaultLead;
+  const label = lead > 0 ? `${lead} min antes` : "Avisar no início";
+  return el("small", { className: "schedule-notification-hint" }, [
+    el("i", { attrs: { "data-lucide": "bell-ring", "aria-hidden": "true" } }),
+    el("span", { text: label }),
   ]);
 }
 
