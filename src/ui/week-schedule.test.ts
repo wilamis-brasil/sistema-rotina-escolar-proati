@@ -13,8 +13,6 @@ const baseRoutine: Routine = {
   studentCount: 28,
   devices: ["Notebook"],
   notes: "",
-  notificationEnabled: true,
-  leadMinutes: null,
   createdAt: "2026-05-13T10:00:00.000Z",
   updatedAt: "2026-05-13T10:00:00.000Z",
 };

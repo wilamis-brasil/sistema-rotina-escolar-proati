@@ -1,10 +1,16 @@
 import { failure } from "../domain/errors";
 import { createEmptyState, migrateState, nowIso } from "../domain/model";
-import { LEGACY_STORAGE_KEYS, STORAGE_KEY, type AppState, type EmptyResult, type Result, type StorageAdapter } from "../domain/types";
+import {
+  LEGACY_STORAGE_KEYS,
+  STORAGE_KEY,
+  type AppState,
+  type EmptyResult,
+  type MaintenanceRecord,
+  type Result,
+  type StorageAdapter,
+} from "../domain/types";
 
-const ALERT_STORAGE_KEY = "sistema-rotina-escolar-proati-alerts-v1";
-
-export function browserStorage(): StorageAdapter {
+function browserStorage(): StorageAdapter {
   return window.localStorage;
 }
 
@@ -97,10 +103,33 @@ export function importStateFromText(rawText: string): Result<AppState> {
   }
 }
 
+export function importMaintenanceFromText(rawText: string): Result<MaintenanceRecord[]> {
+  try {
+    const parsed = JSON.parse(rawText) as { maintenanceRecords?: unknown };
+    const candidate = parsed && typeof parsed === "object" && Array.isArray(parsed.maintenanceRecords)
+      ? { maintenanceRecords: parsed.maintenanceRecords }
+      : Array.isArray(parsed)
+        ? { maintenanceRecords: parsed }
+        : null;
+    if (!candidate) {
+      return {
+        ok: false,
+        errors: ["Arquivo JSON inválido: nenhum registro de manutenção encontrado."],
+      };
+    }
+    const migrated = migrateState({ maintenanceRecords: candidate.maintenanceRecords });
+    return { ok: true, value: migrated.maintenanceRecords };
+  } catch (error) {
+    return {
+      ok: false,
+      errors: [`Arquivo JSON inválido ou incompatível: ${error instanceof Error ? error.message : String(error)}`],
+    };
+  }
+}
+
 export function clearStoredState(storage: StorageAdapter = browserStorage()): EmptyResult {
   try {
     storage.removeItem(STORAGE_KEY);
-    storage.removeItem(ALERT_STORAGE_KEY);
     for (const key of LEGACY_STORAGE_KEYS) {
       storage.removeItem(key);
     }

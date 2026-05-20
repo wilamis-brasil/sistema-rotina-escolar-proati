@@ -1,0 +1,28 @@
+@layer settings, base, layout, components, features, utilities;
+
+@import "./settings/fonts.css";
+@import "./settings/tokens.css";
+
+@import "./base/reset.css";
+@import "./base/elements.css";
+
+@import "./layout/header-nav.css";
+@import "./layout/shell.css";
+@import "./layout/panels.css";
+
+@import "./components/buttons.css";
+@import "./components/forms.css";
+@import "./components/filters.css";
+@import "./components/cards.css";
+@import "./components/empty-state.css";
+@import "./components/dialogs.css";
+@import "./components/toasts.css";
+
+@import "./features/routines.css";
+@import "./features/weekly-schedule.css";
+@import "./features/catalogs-settings.css";
+@import "./features/maintenance.css";
+
+@import "./utilities/visibility.css";
+@import "./utilities/motion.css";
+@import "./utilities/responsive.css";

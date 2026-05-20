@@ -14,8 +14,6 @@ const validRoutinePayload = {
   studentCount: "30",
   devices: ["Notebook"],
   notes: "",
-  notificationEnabled: true,
-  leadMinutes: "10",
 };
 
 describe("importStateFromText", () => {

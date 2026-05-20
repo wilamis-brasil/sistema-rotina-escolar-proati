@@ -15,7 +15,6 @@ const TONE_ICONS: Record<string, string> = {
   danger: "trash-2",
   warning: "triangle-alert",
   success: "check-circle-2",
-  alarm: "alarm-clock",
 };
 
 export interface DialogDetail {
@@ -24,7 +23,7 @@ export interface DialogDetail {
 }
 
 export interface DialogOptions {
-  tone?: "neutral" | "danger" | "warning" | "success" | "alarm";
+  tone?: "neutral" | "danger" | "warning" | "success";
   title?: string;
   message?: string;
   kicker?: string;
@@ -39,7 +38,6 @@ export interface DialogOptions {
 
 export interface DialogManager {
   alert(options?: DialogOptions): Promise<boolean>;
-  alarm(options?: DialogOptions): Promise<boolean>;
   closeActive(value?: boolean): void;
   confirm(options?: DialogOptions): Promise<boolean>;
   dangerConfirm(options?: DialogOptions): Promise<boolean>;
@@ -90,18 +88,6 @@ export function createDialogManager({
       confirmLabel: "Entendi",
       cancelLabel: null,
       role: "alertdialog",
-      ...options,
-    });
-  }
-
-  function alarm(options: DialogOptions = {}): Promise<boolean> {
-    return openDialog({
-      tone: "alarm",
-      title: "Retirada agora",
-      confirmLabel: "Entendi",
-      cancelLabel: "Silenciar",
-      role: "alertdialog",
-      closeOnBackdrop: false,
       ...options,
     });
   }
@@ -228,7 +214,6 @@ export function createDialogManager({
 
   return {
     alert,
-    alarm,
     closeActive,
     confirm,
     dangerConfirm,

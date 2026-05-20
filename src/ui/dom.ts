@@ -1,6 +1,6 @@
-export type Child = Node | string | number | null | undefined | false;
+type Child = Node | string | number | null | undefined | false;
 
-export interface ElementOptions {
+interface ElementOptions {
   className?: string;
   text?: string;
   attrs?: Record<string, string>;

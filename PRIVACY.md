@@ -23,8 +23,7 @@ Dependendo do uso, o sistema pode armazenar:
 - quantidade de alunos;
 - horarios de retirada;
 - dispositivos usados;
-- observacoes digitadas pelo usuario;
-- configuracoes de alerta.
+- observacoes digitadas pelo usuario.
 
 ## O que evitar
 

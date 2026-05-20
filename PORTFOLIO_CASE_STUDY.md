@@ -24,8 +24,7 @@ A rotina antes do sistema podia depender de:
 - memória;
 - mensagens soltas;
 - planilhas improvisadas;
-- combinados verbais;
-- alarmes configurados manualmente.
+- combinados verbais.
 
 Isso gera risco de atraso, esquecimento e retrabalho.
 
@@ -67,7 +66,7 @@ Zod entra no limite de validação e normalização de dados, especialmente para
 | --- | --- |
 | Produto | O projeto resolve uma dor real do ambiente escolar. |
 | Frontend | Interface funcional com HTML, CSS, TypeScript e DOM API. |
-| Arquitetura | Separação clara entre domínio, persistência, UI e notificações. |
+| Arquitetura | Separação clara entre domínio, persistência e UI. |
 | Dados | Compatibilidade com storage key legada e importação/exportação JSON. |
 | Segurança | Sem backend desnecessário, sem segredos e com validação antes de persistir. |
 | Deploy | Compatível com GitHub Pages e build estático. |
@@ -86,7 +85,7 @@ O resultado é uma ferramenta prática para o dia a dia de um PROATI e, ao mesmo
 
 ## Como Eu Explicaria Em Uma Entrevista
 
-> Eu criei um sistema para organizar a rotina de retirada de equipamentos na escola onde atuo como PROATI. Em vez de depender de papel ou memória, o app permite cadastrar professores, salas, dispositivos e horários, com alertas no navegador. Escolhi uma arquitetura estática com Vite e TypeScript para publicar facilmente no GitHub Pages, sem backend. Também me preocupei com persistência local, importação/exportação JSON, validação de dados e privacidade.
+> Eu criei um sistema para organizar a rotina de retirada de equipamentos na escola onde atuo como PROATI. Em vez de depender de papel ou memória, o app permite cadastrar professores, salas, dispositivos e horários. Escolhi uma arquitetura estática com Vite e TypeScript para publicar facilmente no GitHub Pages, sem backend. Também me preocupei com persistência local, importação/exportação JSON, validação de dados e privacidade.
 
 ## Pontos de Evolução
 

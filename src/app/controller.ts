@@ -1,14 +1,17 @@
 import { failure } from "../domain/errors";
 import {
+  appendMaintenanceHistory,
+  buildMaintenanceRecord,
   buildRoutine,
   createCatalogItem,
   createEmptyState,
+  describeMaintenanceChanges,
+  getMaintenanceStatusLabel,
   normalizeCatalogPayload,
   normalizeCase,
   normalizeText,
   nowIso,
   singularKind,
-  validateLeadMinutes,
   validatePasswordPayload,
 } from "../domain/model";
 import type {
@@ -16,19 +19,22 @@ import type {
   CatalogKind,
   CatalogPayload,
   EmptyResult,
+  MaintenancePayload,
   PasswordPayload,
   Routine,
   RoutinePayload,
   SortOption,
   StorageAdapter,
 } from "../domain/types";
-import { clearStoredState, exportState, importStateFromText, saveState } from "../persistence/store";
+import {
+  clearStoredState,
+  exportState,
+  importMaintenanceFromText,
+  importStateFromText,
+  saveState,
+} from "../persistence/store";
 
-export interface PersistOptions {
-  reschedule?: boolean;
-}
-
-export interface AppController {
+interface AppController {
   getState(): AppState;
   actions: AppActions;
 }
@@ -46,15 +52,15 @@ export interface AppActions {
   addPassword(payload: PasswordPayload): EmptyResult;
   updatePassword(id: string, payload: PasswordPayload): EmptyResult;
   deletePassword(id: string): EmptyResult;
-  updateSettings(payload: {
-    notificationsEnabled: unknown;
-    defaultLeadMinutes: unknown;
-    soundEnabled: unknown;
-  }): EmptyResult;
   updateUiFilters(payload: { filterText?: unknown; sortBy?: SortOption }): EmptyResult;
   exportData(): string;
   importData(rawText: string): EmptyResult;
   resetData(): EmptyResult;
+  addMaintenanceRecord(payload: MaintenancePayload): EmptyResult;
+  updateMaintenanceRecord(id: string, payload: MaintenancePayload): EmptyResult;
+  deleteMaintenanceRecord(id: string): EmptyResult;
+  exportMaintenanceData(): string;
+  importMaintenanceData(rawText: string): EmptyResult;
 }
 
 export function createAppController({
@@ -64,7 +70,7 @@ export function createAppController({
 }: {
   initialState: AppState;
   storage?: StorageAdapter;
-  onStateChange?: (options: PersistOptions) => void;
+  onStateChange?: () => void;
 }): AppController {
   let state = initialState;
   let lastDeletedRoutine: Routine | null = null;
@@ -204,26 +210,13 @@ export function createAppController({
       return persist();
     },
 
-    updateSettings(payload) {
-      const lead = validateLeadMinutes(payload.defaultLeadMinutes, "Antecedência Padrão");
-      if (lead.error) return failure(lead.error);
-
-      state.settings = {
-        ...state.settings,
-        notificationsEnabled: Boolean(payload.notificationsEnabled),
-        defaultLeadMinutes: lead.value ?? state.settings.defaultLeadMinutes,
-        soundEnabled: Boolean(payload.soundEnabled),
-      };
-      return persist();
-    },
-
     updateUiFilters(payload) {
       state.settings = {
         ...state.settings,
         filterText: normalizeText(payload.filterText ?? state.settings.filterText),
         sortBy: payload.sortBy ?? state.settings.sortBy,
       };
-      return persist({ reschedule: false });
+      return persist();
     },
 
     exportData() {
@@ -245,18 +238,74 @@ export function createAppController({
       lastDeletedRoutine = null;
       return persist();
     },
+
+    addMaintenanceRecord(payload) {
+      const result = buildMaintenanceRecord(payload, state.maintenanceRecords);
+      if (!result.ok) return result;
+
+      const created = appendMaintenanceHistory(
+        result.value,
+        `Registro criado com status "${getMaintenanceStatusLabel(result.value.status)}".`,
+      );
+      state.maintenanceRecords.push(created);
+      return persist();
+    },
+
+    updateMaintenanceRecord(id, payload) {
+      const index = state.maintenanceRecords.findIndex((record) => record.id === id);
+      if (index === -1) return failure("Registro de manutenção não encontrado.");
+
+      const previous = state.maintenanceRecords[index]!;
+      const result = buildMaintenanceRecord(payload, state.maintenanceRecords, previous);
+      if (!result.ok) return result;
+
+      let updated = result.value;
+      describeMaintenanceChanges(previous, updated).forEach((message) => {
+        updated = appendMaintenanceHistory(updated, message);
+      });
+
+      state.maintenanceRecords[index] = updated;
+      return persist();
+    },
+
+    deleteMaintenanceRecord(id) {
+      const index = state.maintenanceRecords.findIndex((record) => record.id === id);
+      if (index === -1) return failure("Registro de manutenção não encontrado.");
+      state.maintenanceRecords.splice(index, 1);
+      return persist();
+    },
+
+    exportMaintenanceData() {
+      return JSON.stringify(
+        {
+          schemaVersion: state.schemaVersion,
+          maintenanceRecords: state.maintenanceRecords,
+          exportedAt: nowIso(),
+        },
+        null,
+        2,
+      );
+    },
+
+    importMaintenanceData(rawText) {
+      const result = importMaintenanceFromText(rawText);
+      if (!result.ok) return result;
+
+      state.maintenanceRecords = result.value;
+      return persist();
+    },
   };
 
   function getState(): AppState {
     return state;
   }
 
-  function persist(options: PersistOptions = {}): EmptyResult {
+  function persist(): EmptyResult {
     const result = saveState(state, storage);
     if (!result.ok) return result;
 
     state = result.state!;
-    onStateChange?.(options);
+    onStateChange?.();
     return { ok: true };
   }
 

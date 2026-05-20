@@ -20,8 +20,6 @@ As principais superficies sao:
 - importacao de JSON;
 - exportacao de JSON;
 - renderizacao de dados digitados pelo usuario;
-- notificacoes do navegador;
-- audio local de alarme;
 - supply chain npm.
 
 ## Regras de seguranca do projeto

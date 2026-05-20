@@ -16,7 +16,7 @@ Este projeto foi criado a partir de uma dor real de trabalho: controlar horário
 
 ## Visão Geral
 
-O Sistema de Rotina Escolar PROATI é um site local-first, compatível com GitHub Pages, que permite registrar rotinas semanais de uso de equipamentos escolares e receber alertas no navegador.
+O Sistema de Rotina Escolar PROATI é um site local-first, compatível com GitHub Pages, que permite registrar e consultar rotinas semanais de uso de equipamentos escolares.
 
 Ele foi pensado para o cotidiano de um PROATI: uma pessoa que precisa atender chamados, apoiar professores, organizar dispositivos, lidar com salas diferentes e ainda manter a rotina funcionando sem perder horário.
 
@@ -67,13 +67,6 @@ Este projeto resolve esse problema com uma ferramenta simples, visual e feita pa
 - Quantidade padrão de alunos por sala.
 - Dispositivos disponíveis.
 
-### Alertas
-
-- Notificações do navegador.
-- Alarme sonoro local.
-- Antecedência global ou personalizada por rotina.
-- Lista de alertas recentes.
-
 ### Dados
 
 - Persistência em `localStorage`.
@@ -94,7 +87,7 @@ Este projeto demonstra mais do que uma interface bonita. Ele mostra decisões pr
 | --- | --- |
 | Entendimento de negócio | A aplicação foi desenhada a partir da rotina real de um PROATI em escola pública. |
 | Frontend moderno | Vite, TypeScript estrito, módulos separados e build estático. |
-| Arquitetura simples | Separação entre domínio, persistência, controller, notificações e UI. |
+| Arquitetura simples | Separação entre domínio, persistência, controller e UI. |
 | Preservação de dados | Migração de dados e normalização do estado local. |
 | Segurança básica | Sem backend, sem segredo no código, validação de JSON e renderização segura via DOM API. |
 | Deploy barato | Compatível com GitHub Pages, sem servidor próprio e sem banco remoto. |
@@ -120,7 +113,6 @@ O projeto não usa backend, autenticação, banco remoto ou servidor próprio.
 src/
 +-- app/             coordenação do estado e ações da aplicação
 +-- domain/          regras de negócio, tipos e normalização de dados
-+-- notifications/   notificações do navegador e alarme sonoro
 +-- persistence/     localStorage, importação e exportação
 +-- ui/              renderização e eventos de interface
 ```
@@ -143,11 +135,9 @@ Documentação complementar:
 +-- assets/
 |   +-- css/
 |   +-- img/
-|   +-- sounds/
 +-- src/
 |   +-- app/
 |   +-- domain/
-|   +-- notifications/
 |   +-- persistence/
 |   +-- ui/
 +-- public/

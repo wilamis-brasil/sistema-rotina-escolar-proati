@@ -9,7 +9,7 @@ export function resultFailure<T = never>(messages: unknown | unknown[]): Result<
   return { ok: false, errors: errors.map(normalizeMessage).filter(Boolean) };
 }
 
-export function errorMessages(
+function errorMessages(
   result: { errors?: unknown[]; message?: unknown } | null | undefined,
   fallbackMessage = "Não foi possível concluir a ação.",
 ): string[] {

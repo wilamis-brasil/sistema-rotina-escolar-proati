@@ -37,7 +37,7 @@ Publique o conteudo de:
 dist/
 ```
 
-Essa pasta contem JavaScript compilado, CSS, imagens e audio prontos para navegador.
+Essa pasta contem JavaScript compilado, CSS e imagens prontos para navegador.
 
 ## Configuracao do Vite
 
@@ -76,7 +76,7 @@ Tambem e possivel subir os arquivos de `dist/` manualmente, mas essa opcao e mai
 - Rodar `npm run typecheck`.
 - Rodar `npm run build`.
 - Testar com `npm run preview`.
-- Confirmar que logo e alarme carregam.
+- Confirmar que logo e estilos carregam.
 - Confirmar que importacao/exportacao JSON funciona.
 - Confirmar que os dados continuam salvos em `localStorage`.
 

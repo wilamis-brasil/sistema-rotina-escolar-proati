@@ -1,0 +1,31 @@
+@layer settings {
+  :root {
+    --bg: #f7f7f6;
+    --surface: #ffffff;
+    --surface-soft: #f1f1f0;
+    --surface-hover: #e9e9e8;
+    --text: #000000;
+    --muted: #5f5f5f;
+    --subtle: #8b8b8b;
+    --border: rgba(0, 0, 0, 0.08);
+    --border-strong: rgba(0, 0, 0, 0.18);
+    --accent: #ff161f;
+    --danger: #ff161f;
+    --danger-soft: #fff1f2;
+    --success: #0f7a45;
+    --success-soft: #ecf8f1;
+    --warning: #9b6400;
+    --warning-soft: #fff7df;
+    --info: #155f8a;
+    --info-soft: #eef7ff;
+    --focus: #ff161f;
+    --radius: 6px;
+    --control-height: 42px;
+    --content-width: 1240px;
+    --site-logo-width: 148px;
+    --main-menu-button-width: 168px;
+    --main-menu-panel-width: 320px;
+    --main-menu-item-height: 58px;
+    font-family: "Rawline", sans-serif;
+  }
+}

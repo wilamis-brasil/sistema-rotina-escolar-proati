@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 3;
+export const SCHEMA_VERSION = 5;
 export const STORAGE_KEY = "sistema-rotina-escolar-proati-state-v1";
 export const LEGACY_STORAGE_KEYS = ["kickoff-proati-state-v1"] as const;
 
@@ -30,6 +30,30 @@ export const DEFAULT_DEVICE_NAMES = [
   "Tablet",
   "Headset",
 ] as const;
+
+export const MAINTENANCE_PRIORITIES = [
+  { value: "baixa", label: "Baixa" },
+  { value: "media", label: "Média" },
+  { value: "alta", label: "Alta" },
+  { value: "urgente", label: "Urgente" },
+] as const;
+
+export type MaintenancePriority = (typeof MAINTENANCE_PRIORITIES)[number]["value"];
+
+export const MAINTENANCE_STATUSES = [
+  { value: "com-problema", label: "Com problema", tone: "warning" },
+  { value: "em-analise", label: "Em análise", tone: "info" },
+  { value: "aguardando-chamado", label: "Aguardando chamado", tone: "warning" },
+  { value: "chamado-aberto", label: "Chamado aberto", tone: "info" },
+  { value: "aguardando-atendimento", label: "Aguardando atendimento técnico", tone: "info" },
+  { value: "em-manutencao", label: "Em manutenção", tone: "info" },
+  { value: "aguardando-peca", label: "Aguardando peça/carregador/bateria", tone: "warning" },
+  { value: "resolvido", label: "Resolvido", tone: "success" },
+  { value: "sem-conserto", label: "Sem conserto", tone: "danger" },
+  { value: "descartado", label: "Descartado/baixado", tone: "neutral" },
+] as const;
+
+export type MaintenanceStatus = (typeof MAINTENANCE_STATUSES)[number]["value"];
 
 export interface CatalogItem {
   id: string;
@@ -67,16 +91,36 @@ export interface Routine {
   studentCount: number;
   devices: string[];
   notes: string;
-  notificationEnabled: boolean;
-  leadMinutes: number | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface MaintenanceHistoryEntry {
+  id: string;
+  at: string;
+  message: string;
+}
+
+export interface MaintenanceRecord {
+  id: string;
+  equipmentId: string;
+  type: string;
+  brandModel: string;
+  location: string;
+  mainProblem: string;
+  technicalDescription: string;
+  priority: MaintenancePriority;
+  status: MaintenanceStatus;
+  ticketNumber: string;
+  responsibleContact: string;
+  actionsTaken: string;
+  notes: string;
+  history: MaintenanceHistoryEntry[];
   createdAt: string;
   updatedAt: string;
 }
 
 export interface Settings {
-  notificationsEnabled: boolean;
-  defaultLeadMinutes: number;
-  soundEnabled: boolean;
   sortBy: SortOption;
   filterText: string;
 }
@@ -88,6 +132,7 @@ export interface AppState {
   rooms: Room[];
   devices: Device[];
   passwords: Password[];
+  maintenanceRecords: MaintenanceRecord[];
   settings: Settings;
   meta: {
     createdAt: string;
@@ -108,8 +153,6 @@ export interface RoutinePayload {
   studentCount: unknown;
   devices: unknown;
   notes?: unknown;
-  notificationEnabled?: unknown;
-  leadMinutes?: unknown;
 }
 
 export interface CatalogPayload {
@@ -124,28 +167,27 @@ export interface PasswordPayload {
   description?: unknown;
 }
 
+export interface MaintenancePayload {
+  equipmentId: unknown;
+  type: unknown;
+  brandModel?: unknown;
+  location?: unknown;
+  mainProblem: unknown;
+  technicalDescription?: unknown;
+  priority: unknown;
+  status: unknown;
+  ticketNumber?: unknown;
+  responsibleContact?: unknown;
+  actionsTaken?: unknown;
+  notes?: unknown;
+}
+
 export type Result<T = void> = { ok: true; value: T } | { ok: false; errors: string[] };
 
 export type EmptyResult = { ok: true } | { ok: false; errors: string[] };
-
-export interface ImportExportResult {
-  ok: boolean;
-  errors?: string[];
-  state?: AppState;
-}
 
 export interface StorageAdapter {
   getItem(key: string): string | null;
   setItem(key: string, value: string): void;
   removeItem(key: string): void;
-}
-
-export interface NotificationAdapter {
-  permission(): NotificationPermission | "unsupported";
-  requestPermission(): Promise<NotificationPermission | "unsupported">;
-  show(title: string, options: NotificationOptions): void;
-}
-
-export interface AudioAdapter {
-  play(url: string): Promise<{ stop(): void }>;
 }

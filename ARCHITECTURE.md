@@ -14,7 +14,6 @@ index.html
         +-- app/controller.ts
         +-- domain/model.ts
         +-- persistence/store.ts
-        +-- notifications/notification-manager.ts
         +-- ui/create-ui.ts
 ```
 
@@ -56,20 +55,7 @@ Responsabilidades:
 - adicionar, editar, duplicar e excluir rotina;
 - desfazer exclusão;
 - atualizar cadastros;
-- atualizar configurações;
 - disparar persistência.
-
-### `src/notifications`
-
-Contém alertas e alarme.
-
-Responsabilidades:
-
-- pedir permissão de notificação;
-- agendar alertas;
-- emitir notificação do navegador;
-- tocar o alarme local;
-- lidar com bloqueio de autoplay.
 
 ### `src/ui`
 
@@ -134,8 +120,6 @@ Formulário / Importação JSON
 ## Riscos Conhecidos
 
 - `localStorage` não é cofre seguro.
-- Notificações não funcionam com a página fechada.
-- Alarme pode ser bloqueado por autoplay.
 - GitHub Pages precisa publicar `dist/`, não os arquivos fonte.
 
 ## Por Que Essa Arquitetura Faz Sentido

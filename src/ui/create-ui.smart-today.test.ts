@@ -7,7 +7,7 @@ import {
   isRoutineActiveNow,
   isRoutinePendingOrActive,
   mergeRoutineGroupTimes,
-} from "./create-ui";
+} from "./routines/smart-today";
 
 const baseRoutine: Routine = {
   id: "routine-1",
@@ -20,8 +20,6 @@ const baseRoutine: Routine = {
   studentCount: 30,
   devices: ["Notebook"],
   notes: "",
-  notificationEnabled: true,
-  leadMinutes: null,
   createdAt: "2026-05-15T10:00:00.000Z",
   updatedAt: "2026-05-15T10:00:00.000Z",
 };

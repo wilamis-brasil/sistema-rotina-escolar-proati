@@ -1,0 +1,39 @@
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    min-width: 320px;
+    margin: 0;
+    color: var(--text);
+    background: var(--bg);
+    font-family: "Rawline", sans-serif;
+    text-rendering: geometricPrecision;
+  }
+
+  ::selection {
+    color: #ffffff;
+    background: var(--accent);
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+
+  button {
+    cursor: pointer;
+  }
+
+  :focus-visible {
+    outline: 3px solid rgba(255, 22, 31, 0.22);
+    outline-offset: 3px;
+  }
+}

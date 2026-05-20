@@ -1,0 +1,101 @@
+@layer layout {
+  .app-shell {
+    width: min(var(--content-width), calc(100% - 40px));
+    margin: 0 auto;
+    padding: 34px 0 112px;
+  }
+
+  .operations-bar {
+    display: grid;
+    gap: 24px;
+    margin-bottom: 28px;
+    padding-bottom: 28px;
+  }
+
+  .operations-copy {
+    display: grid;
+    max-width: 760px;
+    gap: 8px;
+  }
+
+  .operations-copy strong {
+    font-size: 2.35rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .operations-copy span:not(.eyebrow) {
+    max-width: 560px;
+    color: var(--muted);
+    font-size: 0.98rem;
+    line-height: 1.5;
+  }
+
+  .operations-actions {
+    display: flex;
+    gap: 10px;
+    align-items: end;
+  }
+
+  .today-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    flex: 1 1 auto;
+    gap: 10px;
+    min-width: 0;
+  }
+
+  .metric-item {
+    display: grid;
+    min-height: 64px;
+    gap: 4px;
+    padding: 11px 14px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+
+  .metric-item strong {
+    color: var(--text);
+    font-size: 1.2rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .metric-item span,
+  .metric-item small {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 0;
+    line-height: 1.2;
+    text-transform: uppercase;
+  }
+
+  .view {
+    display: none;
+  }
+
+  .view.is-active {
+    display: block;
+  }
+
+  .operations-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1.04fr) minmax(390px, 0.96fr);
+    gap: 24px;
+    align-items: start;
+  }
+}

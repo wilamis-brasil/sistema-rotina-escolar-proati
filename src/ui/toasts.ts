@@ -9,11 +9,10 @@ const ICONS: Record<string, string> = {
   error: "circle-alert",
   warning: "triangle-alert",
   info: "info",
-  alarm: "alarm-clock",
 };
 
 export interface ToastPayload {
-  type?: "success" | "error" | "warning" | "info" | "alarm";
+  type?: "success" | "error" | "warning" | "info";
   title?: string;
   message?: string;
   timeout?: number;
@@ -41,7 +40,7 @@ export function createToastManager({
         className: "toast",
         attrs: {
           "data-type": type,
-          role: type === "error" || type === "alarm" ? "alert" : "status",
+          role: type === "error" ? "alert" : "status",
         },
       },
       [

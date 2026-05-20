@@ -11,20 +11,7 @@
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
-    <script type="module">
-      const isViteDevServer =
-        ["localhost", "127.0.0.1", "::1"].includes(window.location.hostname) && window.location.port === "5173";
-
-      if (!isViteDevServer) {
-        const stylesheet = document.createElement("link");
-        stylesheet.rel = "stylesheet";
-        stylesheet.href = "./assets/app.css";
-        document.head.append(stylesheet);
-      }
-
-      const appModule = new URL(isViteDevServer ? "./src/" + "main.ts" : "./assets/" + "app.js", document.baseURI).href;
-      void import(/* @vite-ignore */ appModule);
-    </script>
+    <script type="module" src="./src/main.ts"></script>
   </head>
   <body>
     <header class="app-header">
@@ -83,6 +70,13 @@
               <small>Equipamentos usados</small>
             </span>
           </button>
+          <button class="nav-button" type="button" data-view="maintenance">
+            <i data-lucide="wrench" aria-hidden="true"></i>
+            <span class="nav-button-copy">
+              <span>Manutenção</span>
+              <small>Controle técnico</small>
+            </span>
+          </button>
           <button class="nav-button" type="button" data-view="passwords">
             <i data-lucide="key-round" aria-hidden="true"></i>
             <span class="nav-button-copy">
@@ -94,7 +88,7 @@
             <i data-lucide="settings" aria-hidden="true"></i>
             <span class="nav-button-copy">
               <span>Configurações</span>
-              <small>Alertas e dados locais</small>
+              <small>Dados locais</small>
             </span>
           </button>
         </div>
@@ -126,10 +120,6 @@
                 <h2 id="today-heading">Retiradas de hoje</h2>
                 <p id="today-summary">Carregando rotina.</p>
               </div>
-              <button class="button button-secondary button-small" type="button" id="request-notification-button">
-                <i data-lucide="bell-ring" aria-hidden="true"></i>
-                <span>Permitir alertas</span>
-              </button>
             </div>
             <div id="today-routines" class="routine-list" aria-live="polite"></div>
           </section>
@@ -139,7 +129,7 @@
               <div>
                 <span class="eyebrow" id="routine-form-mode-label">Cadastro rápido</span>
                 <h2 id="routine-form-title">Nova rotina</h2>
-                <p>Registre retirada, turma, professor, dispositivos e alerta.</p>
+                <p>Registre retirada, turma, professor e dispositivos.</p>
               </div>
               <button class="icon-button" type="button" id="clear-routine-form" aria-label="Limpar formulário" title="Limpar formulário">
                 <i data-lucide="eraser" aria-hidden="true"></i>
@@ -205,36 +195,14 @@
                 </div>
               </fieldset>
 
-              <section class="form-block" aria-label="Alertas e observações">
-                <h3>Alertas e observações</h3>
+              <section class="form-block" aria-label="Observações">
+                <h3>Observações</h3>
                 <label>
                   <span>Observações</span>
                   <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..."></textarea>
                 </label>
 
                 <div class="routine-footer-row">
-                  <div class="routine-alert-controls">
-                    <label class="toggle-label">
-                      <input id="routine-notification-enabled" name="notificationEnabled" type="checkbox" checked>
-                      <span>Alertar esta rotina</span>
-                    </label>
-                    <label>
-                      <span>Antecedência</span>
-                      <select class="form-input" id="routine-lead-mode" name="leadMode">
-                        <option value="global">Usar padrão</option>
-                        <option value="5">5 min</option>
-                        <option value="10">10 min</option>
-                        <option value="15">15 min</option>
-                        <option value="20">20 min</option>
-                        <option value="30">30 min</option>
-                        <option value="custom">Personalizado</option>
-                      </select>
-                    </label>
-                    <label id="routine-custom-lead-wrap" class="is-hidden">
-                      <span>Minutos</span>
-                      <input class="form-input" id="routine-custom-lead" name="customLead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
-                    </label>
-                  </div>
                   <div class="form-actions routine-save-actions">
                     <p id="routine-form-feedback" class="form-feedback" role="alert"></p>
                     <button class="button button-primary" type="submit" id="save-routine-button">
@@ -409,6 +377,81 @@
         </section>
       </section>
 
+      <section class="view" id="view-maintenance" aria-labelledby="maintenance-heading">
+        <section class="panel">
+          <div class="panel-heading toolbar-heading">
+            <div class="heading-row">
+              <div>
+                <h2 id="maintenance-heading">Controle de Manutenção</h2>
+                <p>Gerencie equipamentos com problema, acompanhe chamados, prioridades e histórico técnico.</p>
+              </div>
+              <div class="filter-summary">
+                <span id="maintenance-results-count"></span>
+              </div>
+            </div>
+
+            <div id="maintenance-summary" class="maintenance-summary" aria-label="Resumo da manutenção"></div>
+
+            <div class="filter-bar" id="maintenance-filter-bar" role="search" aria-label="Filtros da manutenção">
+              <div class="filter-header-row">
+                <div class="filter-search-wrap">
+                  <div class="filter-search-input-wrap">
+                    <i data-lucide="search" class="filter-search-icon" aria-hidden="true"></i>
+                    <input id="maintenance-filter" type="search" autocomplete="off"
+                           class="filter-search-input"
+                           placeholder="Identificador, problema, chamado, responsável…" aria-label="Buscar registros de manutenção">
+                  </div>
+                </div>
+                <button id="maintenance-filter-clear" class="filter-clear-btn" type="button" hidden>
+                  <i data-lucide="x" aria-hidden="true"></i>
+                  <span>Limpar filtros</span>
+                </button>
+              </div>
+
+              <div class="filter-grid filter-grid--maintenance">
+                <div class="filter-group">
+                  <label class="filter-group-label" for="maintenance-filter-type">Tipo</label>
+                  <select id="maintenance-filter-type" class="filter-select-input"></select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-group-label" for="maintenance-filter-status">Status</label>
+                  <select id="maintenance-filter-status" class="filter-select-input"></select>
+                </div>
+                <div class="filter-group">
+                  <label class="filter-group-label" for="maintenance-filter-priority">Prioridade</label>
+                  <select id="maintenance-filter-priority" class="filter-select-input"></select>
+                </div>
+              </div>
+
+              <div class="maintenance-toolbar">
+                <button class="button button-primary" type="button" id="maintenance-new">
+                  <i data-lucide="plus" aria-hidden="true"></i>
+                  <span>Novo registro</span>
+                </button>
+                <button class="button button-secondary" type="button" id="maintenance-bulk">
+                  <i data-lucide="list-plus" aria-hidden="true"></i>
+                  <span>Adicionar em massa</span>
+                </button>
+                <button class="button button-secondary" type="button" id="maintenance-export-csv">
+                  <i data-lucide="file-text" aria-hidden="true"></i>
+                  <span>Exportar CSV</span>
+                </button>
+                <button class="button button-secondary" type="button" id="maintenance-export-json">
+                  <i data-lucide="download" aria-hidden="true"></i>
+                  <span>Exportar JSON</span>
+                </button>
+                <label class="button button-secondary import-button">
+                  <i data-lucide="upload" aria-hidden="true"></i>
+                  <span>Importar JSON</span>
+                  <input id="maintenance-import-file" type="file" accept="application/json,.json">
+                </label>
+              </div>
+            </div>
+          </div>
+          <div id="maintenance-table-wrap" class="maintenance-table-wrap"></div>
+        </section>
+      </section>
+
       <section class="view" id="view-passwords" aria-labelledby="passwords-heading">
         <section class="panel catalog-panel">
           <div class="panel-heading">
@@ -460,32 +503,6 @@
           </div>
 
           <form id="settings-form" class="stacked-form" novalidate>
-            <div class="form-row form-row-3 align-end">
-              <label class="toggle-label">
-                <input id="settings-notifications-enabled" type="checkbox">
-                <span>Ativar notificações</span>
-              </label>
-              <label>
-                <span>Antecedência Padrão</span>
-                <select id="settings-default-lead">
-                  <option value="5">5 min</option>
-                  <option value="10">10 min</option>
-                  <option value="15">15 min</option>
-                  <option value="20">20 min</option>
-                  <option value="30">30 min</option>
-                  <option value="custom">Personalizado</option>
-                </select>
-              </label>
-              <label id="settings-custom-lead-wrap" class="is-hidden">
-                <span>Minutos</span>
-                <input id="settings-custom-lead" type="number" min="0" max="1440" step="1" value="10" placeholder="...">
-              </label>
-            </div>
-            <label class="toggle-label">
-              <input id="settings-sound-enabled" type="checkbox">
-              <span>Som de alerta quando a página estiver aberta</span>
-            </label>
-            <p class="notice-text">As notificações do navegador dependem da permissão do usuário e da página aberta. O sistema mantém um alerta visual dentro da aplicação.</p>
             <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, salas e horários; guarde-os com cuidado em computadores compartilhados.</p>
             <div class="settings-footer">
               <div class="settings-data-actions">
@@ -515,16 +532,6 @@
         </section>
       </section>
     </main>
-
-    <aside class="alert-dock" aria-label="Alertas recentes">
-      <div class="alert-dock-heading">
-        <strong>Alertas</strong>
-        <button class="icon-button" type="button" id="clear-alerts-button" aria-label="Limpar alertas" title="Limpar alertas">
-          <i data-lucide="x" aria-hidden="true"></i>
-        </button>
-      </div>
-      <div id="alert-list" class="alert-list" aria-live="assertive"></div>
-    </aside>
 
     <div id="toast-root" class="toast-root" aria-live="polite" aria-atomic="false"></div>
     <div id="dialog-root" class="dialog-root"></div>

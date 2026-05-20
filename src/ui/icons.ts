@@ -16,6 +16,7 @@ import {
   Info,
   KeyRound,
   Laptop,
+  ListPlus,
   MapPin,
   Menu,
   MessageSquare,
@@ -23,6 +24,7 @@ import {
   Plus,
   Save,
   School,
+  Search,
   Settings,
   Trash2,
   TriangleAlert,
@@ -30,6 +32,7 @@ import {
   Upload,
   User,
   Users,
+  Wrench,
   X,
   createIcons,
 } from "lucide";
@@ -52,6 +55,7 @@ const icons = {
   Info,
   KeyRound,
   Laptop,
+  ListPlus,
   MapPin,
   Menu,
   MessageSquare,
@@ -59,6 +63,7 @@ const icons = {
   Plus,
   Save,
   School,
+  Search,
   Settings,
   Trash2,
   TriangleAlert,
@@ -66,6 +71,7 @@ const icons = {
   Upload,
   User,
   Users,
+  Wrench,
   X,
 };
 

@@ -2,6 +2,8 @@ import { z } from "zod";
 import { resultFailure } from "./errors";
 import {
   DEFAULT_DEVICE_NAMES,
+  MAINTENANCE_PRIORITIES,
+  MAINTENANCE_STATUSES,
   SCHEMA_VERSION,
   SORT_OPTIONS,
   WEEKDAYS,
@@ -9,6 +11,11 @@ import {
   type CatalogItem,
   type CatalogPayload,
   type Device,
+  type MaintenanceHistoryEntry,
+  type MaintenancePayload,
+  type MaintenancePriority,
+  type MaintenanceRecord,
+  type MaintenanceStatus,
   type Password,
   type PasswordPayload,
   type Result,
@@ -30,6 +37,7 @@ const RawStateSchema = z
     rooms: z.array(z.unknown()).optional(),
     devices: z.array(z.unknown()).optional(),
     passwords: z.array(z.unknown()).optional(),
+    maintenanceRecords: z.array(z.unknown()).optional(),
     settings: z.unknown().optional(),
     meta: z.unknown().optional(),
   })
@@ -38,7 +46,7 @@ const RawStateSchema = z
 // AVISO DE SEGURANÇA: este arquivo contém credenciais em texto puro.
 // Mantenha o repositório PRIVADO ou substitua os valores de "secret" abaixo
 // antes de publicar uma build pública (ex.: GitHub Pages).
-export const DEFAULT_PASSWORDS: Password[] = [
+const DEFAULT_PASSWORDS: Password[] = [
   {
     id: "password-netbook-positivo-multilaser-sala",
     title: "Netbook Positivo/Multilaser – Sala de Aula",
@@ -115,7 +123,7 @@ export function normalizeCase(value: unknown): string {
   return normalizeText(value).toLocaleLowerCase("pt-BR");
 }
 
-export function uniqueNames(values: unknown): string[] {
+function uniqueNames(values: unknown): string[] {
   const seen = new Set<string>();
   const result: string[] = [];
   const list = Array.isArray(values) ? values : [];
@@ -193,10 +201,8 @@ export function createEmptyState(): AppState {
     rooms: [],
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
     passwords: DEFAULT_PASSWORDS.map((p) => ({ ...p })),
+    maintenanceRecords: [],
     settings: {
-      notificationsEnabled: true,
-      defaultLeadMinutes: 10,
-      soundEnabled: true,
       sortBy: "weekday-time",
       filterText: "",
     },
@@ -205,25 +211,6 @@ export function createEmptyState(): AppState {
       updatedAt: timestamp,
     },
   };
-}
-
-export function validateLeadMinutes(
-  value: unknown,
-  fieldLabel = "Antecedência",
-): { value: number | null; error: string | null } {
-  if (value === null || value === undefined || value === "") {
-    return { value: null, error: null };
-  }
-
-  const numberValue = Number(value);
-  if (!Number.isInteger(numberValue) || numberValue < 0 || numberValue > 1440) {
-    return {
-      value: null,
-      error: `${fieldLabel} deve ser um número inteiro entre 0 e 1440 minutos.`,
-    };
-  }
-
-  return { value: numberValue, error: null };
 }
 
 export function buildRoutine(
@@ -240,7 +227,6 @@ export function buildRoutine(
   const studentCount = Number(payload.studentCount);
   const devices = uniqueNames(payload.devices);
   const notes = normalizeRoutineNotes(payload.notes);
-  const leadResult = validateLeadMinutes(payload.leadMinutes, "Antecedência da rotina");
 
   if (!isWeekdayId(weekday)) {
     errors.push("Escolha um dia útil entre segunda e sexta-feira.");
@@ -274,10 +260,6 @@ export function buildRoutine(
     errors.push("Selecione ou cadastre ao menos um dispositivo.");
   }
 
-  if (leadResult.error) {
-    errors.push(leadResult.error);
-  }
-
   if (errors.length > 0) {
     return resultFailure(errors);
   }
@@ -297,15 +279,13 @@ export function buildRoutine(
       studentCount,
       devices,
       notes,
-      notificationEnabled: Boolean(payload.notificationEnabled),
-      leadMinutes: leadResult.value,
       createdAt: existingRoutine?.createdAt ?? timestamp,
       updatedAt: timestamp,
     },
   };
 }
 
-export function validateCatalogName(name: unknown, label: string): Result<string> {
+function validateCatalogName(name: unknown, label: string): Result<string> {
   const value = normalizeText(name);
   if (!value) {
     return resultFailure(`Informe ${label}.`);
@@ -332,7 +312,7 @@ function normalizeRoutineNotes(notes: unknown): string {
   return value === legacyImportNote ? "" : value;
 }
 
-export function validateRoomCount(value: unknown): Result<number | null> {
+function validateRoomCount(value: unknown): Result<number | null> {
   if (value === null || value === undefined || value === "") {
     return { ok: true, value: null };
   }
@@ -405,6 +385,7 @@ export function normalizeState(candidate: unknown): AppState {
     rooms: normalizeRoomCollection(raw.rooms),
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
     passwords: normalizeAndSeedPasswords(raw.passwords),
+    maintenanceRecords: normalizeMaintenanceCollection(raw.maintenanceRecords),
     settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
     meta: {
       createdAt: normalizeText(readObjectField(raw.meta, "createdAt")) || base.meta.createdAt,
@@ -562,25 +543,13 @@ function normalizeRoomCollection(items: unknown): Room[] {
   }, []);
 }
 
-function normalizeSettings(settings: unknown, defaults: Settings, schemaVersion: unknown): Settings {
+function normalizeSettings(settings: unknown, defaults: Settings, _schemaVersion: unknown): Settings {
   const settingsRecord = toRecord(settings);
-  const lead = validateLeadMinutes(settingsRecord.defaultLeadMinutes, "Antecedência Padrão");
   const sortBy = SORT_OPTIONS.some((option) => option.value === settingsRecord.sortBy)
     ? (settingsRecord.sortBy as SortOption)
     : defaults.sortBy;
-  const schemaNumber = Number(schemaVersion);
-  const isLegacyState = !Number.isInteger(schemaNumber) || schemaNumber < 2;
-  const rawNotificationsEnabled = settingsRecord.notificationsEnabled;
 
   return {
-    notificationsEnabled:
-      typeof rawNotificationsEnabled === "boolean"
-        ? isLegacyState && !rawNotificationsEnabled
-          ? defaults.notificationsEnabled
-          : rawNotificationsEnabled
-        : defaults.notificationsEnabled,
-    defaultLeadMinutes: lead.error ? defaults.defaultLeadMinutes : lead.value ?? defaults.defaultLeadMinutes,
-    soundEnabled: settingsRecord.soundEnabled !== false,
     sortBy,
     filterText: normalizeText(settingsRecord.filterText),
   };
@@ -623,6 +592,244 @@ function normalizePasswordCollection(items: unknown): Password[] {
     });
     return result;
   }, []);
+}
+
+export function isMaintenancePriority(value: unknown): value is MaintenancePriority {
+  return MAINTENANCE_PRIORITIES.some((p) => p.value === value);
+}
+
+export function isMaintenanceStatus(value: unknown): value is MaintenanceStatus {
+  return MAINTENANCE_STATUSES.some((s) => s.value === value);
+}
+
+export function getMaintenancePriorityLabel(value: unknown): string {
+  return MAINTENANCE_PRIORITIES.find((p) => p.value === value)?.label ?? "";
+}
+
+export function getMaintenanceStatusLabel(value: unknown): string {
+  return MAINTENANCE_STATUSES.find((s) => s.value === value)?.label ?? "";
+}
+
+export function getMaintenanceStatusTone(value: unknown): string {
+  return MAINTENANCE_STATUSES.find((s) => s.value === value)?.tone ?? "neutral";
+}
+
+export function buildMaintenanceRecord(
+  payload: MaintenancePayload,
+  existingRecords: MaintenanceRecord[],
+  existing: Pick<MaintenanceRecord, "id" | "createdAt" | "history"> | null = null,
+): Result<MaintenanceRecord> {
+  const errors: string[] = [];
+  const equipmentId = normalizeText(payload.equipmentId);
+  const type = normalizeText(payload.type);
+  const brandModel = normalizeText(payload.brandModel);
+  const location = normalizeText(payload.location);
+  const mainProblem = normalizeText(payload.mainProblem);
+  const technicalDescription = normalizeText(payload.technicalDescription);
+  const priority = normalizeText(payload.priority);
+  const status = normalizeText(payload.status);
+  const ticketNumber = normalizeText(payload.ticketNumber);
+  const responsibleContact = normalizeText(payload.responsibleContact);
+  const actionsTaken = normalizeText(payload.actionsTaken);
+  const notes = normalizeText(payload.notes);
+
+  if (!equipmentId) {
+    errors.push("Informe o número/identificador do equipamento.");
+  } else if (equipmentId.length > 60) {
+    errors.push("O identificador deve ter no máximo 60 caracteres.");
+  }
+
+  if (!type) {
+    errors.push("Informe o tipo do equipamento.");
+  }
+
+  if (!mainProblem) {
+    errors.push("Descreva o problema principal.");
+  }
+
+  if (!isMaintenancePriority(priority)) {
+    errors.push("Escolha uma prioridade válida.");
+  }
+
+  if (!isMaintenanceStatus(status)) {
+    errors.push("Escolha um status válido.");
+  }
+
+  if (equipmentId) {
+    const key = normalizeCase(equipmentId);
+    const duplicated = existingRecords.some(
+      (record) => record.id !== existing?.id && normalizeCase(record.equipmentId) === key,
+    );
+    if (duplicated) {
+      errors.push("Já existe um registro com esse identificador.");
+    }
+  }
+
+  if (errors.length > 0) {
+    return resultFailure(errors);
+  }
+
+  const timestamp = nowIso();
+  const history = existing?.history ? [...existing.history] : [];
+
+  return {
+    ok: true,
+    value: {
+      id: existing?.id ?? createId("maintenance"),
+      equipmentId,
+      type,
+      brandModel,
+      location,
+      mainProblem,
+      technicalDescription,
+      priority: priority as MaintenancePriority,
+      status: status as MaintenanceStatus,
+      ticketNumber,
+      responsibleContact,
+      actionsTaken,
+      notes,
+      history,
+      createdAt: existing?.createdAt ?? timestamp,
+      updatedAt: timestamp,
+    },
+  };
+}
+
+export function appendMaintenanceHistory(
+  record: MaintenanceRecord,
+  message: string,
+): MaintenanceRecord {
+  const text = normalizeText(message);
+  if (!text) return record;
+
+  const entry: MaintenanceHistoryEntry = {
+    id: createId("history"),
+    at: nowIso(),
+    message: text,
+  };
+
+  return { ...record, history: [...record.history, entry] };
+}
+
+export function describeMaintenanceChanges(
+  previous: MaintenanceRecord,
+  next: MaintenanceRecord,
+): string[] {
+  const messages: string[] = [];
+
+  if (previous.status !== next.status) {
+    messages.push(
+      `Status alterado de "${getMaintenanceStatusLabel(previous.status)}" para "${getMaintenanceStatusLabel(next.status)}".`,
+    );
+  }
+  if (previous.priority !== next.priority) {
+    messages.push(
+      `Prioridade alterada de "${getMaintenancePriorityLabel(previous.priority)}" para "${getMaintenancePriorityLabel(next.priority)}".`,
+    );
+  }
+  if (normalizeText(previous.ticketNumber) !== normalizeText(next.ticketNumber)) {
+    const before = previous.ticketNumber || "sem chamado";
+    const after = next.ticketNumber || "sem chamado";
+    messages.push(`Chamado alterado de "${before}" para "${after}".`);
+  }
+  if (previous.status !== next.status && next.status === "resolvido") {
+    messages.push("Marcado como resolvido.");
+  }
+
+  return messages;
+}
+
+export function filterMaintenance(
+  records: MaintenanceRecord[],
+  query: unknown,
+): MaintenanceRecord[] {
+  const normalizedQuery = normalizeCase(query);
+  if (!normalizedQuery) return records;
+
+  return records.filter((record) => {
+    const haystack = [
+      record.equipmentId,
+      record.type,
+      record.brandModel,
+      record.location,
+      record.mainProblem,
+      record.technicalDescription,
+      getMaintenancePriorityLabel(record.priority),
+      record.priority,
+      getMaintenanceStatusLabel(record.status),
+      record.status,
+      record.ticketNumber,
+      record.responsibleContact,
+      record.actionsTaken,
+      record.notes,
+    ]
+      .join(" ")
+      .toLocaleLowerCase("pt-BR");
+
+    return haystack.includes(normalizedQuery);
+  });
+}
+
+function normalizeMaintenanceCollection(items: unknown): MaintenanceRecord[] {
+  if (!Array.isArray(items)) return [];
+
+  const result: MaintenanceRecord[] = [];
+  const timestamp = nowIso();
+  const seenIds = new Set<string>();
+  const seenEquipmentIds = new Set<string>();
+
+  items.forEach((item) => {
+    const rec = toRecord(item);
+    const equipmentId = normalizeText(rec.equipmentId);
+    if (!equipmentId) return;
+    const equipmentKey = normalizeCase(equipmentId);
+    if (seenEquipmentIds.has(equipmentKey)) return;
+    seenEquipmentIds.add(equipmentKey);
+
+    let id = normalizeText(rec.id) || createId("maintenance");
+    if (seenIds.has(id)) id = createId("maintenance");
+    seenIds.add(id);
+
+    const priority = isMaintenancePriority(rec.priority) ? rec.priority : "media";
+    const status = isMaintenanceStatus(rec.status) ? rec.status : "com-problema";
+
+    result.push({
+      id,
+      equipmentId,
+      type: normalizeText(rec.type),
+      brandModel: normalizeText(rec.brandModel),
+      location: normalizeText(rec.location),
+      mainProblem: normalizeText(rec.mainProblem),
+      technicalDescription: normalizeText(rec.technicalDescription),
+      priority,
+      status,
+      ticketNumber: normalizeText(rec.ticketNumber),
+      responsibleContact: normalizeText(rec.responsibleContact),
+      actionsTaken: normalizeText(rec.actionsTaken),
+      notes: normalizeText(rec.notes),
+      history: normalizeMaintenanceHistory(rec.history),
+      createdAt: normalizeText(rec.createdAt) || timestamp,
+      updatedAt: normalizeText(rec.updatedAt) || timestamp,
+    });
+  });
+
+  return result;
+}
+
+function normalizeMaintenanceHistory(value: unknown): MaintenanceHistoryEntry[] {
+  if (!Array.isArray(value)) return [];
+  const result: MaintenanceHistoryEntry[] = [];
+  value.forEach((item) => {
+    const rec = toRecord(item);
+    const message = normalizeText(rec.message);
+    if (!message) return;
+    result.push({
+      id: normalizeText(rec.id) || createId("history"),
+      at: normalizeText(rec.at) || nowIso(),
+      message,
+    });
+  });
+  return result;
 }
 
 export function validatePasswordPayload(

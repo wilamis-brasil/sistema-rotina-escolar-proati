@@ -42,7 +42,6 @@ npm run build
 src/domain         regras de negocio e modelo de dados
 src/persistence    localStorage, importacao e exportacao
 src/app            controller da aplicacao
-src/notifications  alertas e alarme
 src/ui             renderizacao e interacao DOM
 ```
 

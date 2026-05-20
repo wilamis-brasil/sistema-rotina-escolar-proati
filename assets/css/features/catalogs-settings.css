@@ -1,0 +1,79 @@
+@layer features {
+  .catalog-panel,
+  .settings-panel {
+    max-width: 900px;
+  }
+
+  .catalog-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    margin-bottom: 4px;
+  }
+
+  .catalog-form-room {
+    grid-template-columns: minmax(0, 1fr) minmax(140px, 0.35fr) auto;
+  }
+
+  #password-form {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-item span:has(.icon-button) {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .catalog-item strong,
+  .catalog-item span {
+    display: block;
+  }
+
+  .catalog-item strong {
+    font-size: 1rem;
+    font-weight: 900;
+  }
+
+  .settings-footer {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 12px 16px;
+    flex-wrap: wrap;
+    padding-top: 20px;
+    margin-top: 4px;
+    border-top: 1px solid var(--border);
+  }
+
+  .settings-data-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .settings-save-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .import-button {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .import-button input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .notice-text {
+    max-width: 740px;
+    margin: 0;
+    line-height: 1.6;
+  }
+}

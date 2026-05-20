@@ -1,0 +1,30 @@
+@layer components {
+  .routine-list,
+  .catalog-list {
+    display: grid;
+    gap: 10px;
+  }
+
+  .routine-card,
+  .catalog-item {
+    display: grid;
+    gap: 12px;
+    padding: 16px;
+    background: var(--surface-soft);
+    border: 0;
+    border-radius: var(--radius);
+  }
+
+  .routine-card:hover,
+  .catalog-item:hover {
+    background: #ededec;
+  }
+
+  .routine-card-top,
+  .catalog-item {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+}

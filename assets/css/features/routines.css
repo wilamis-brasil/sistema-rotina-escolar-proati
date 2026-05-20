@@ -1,0 +1,138 @@
+@layer features {
+  .routine-panel[data-mode="edit"] {
+    border-color: rgba(255, 22, 31, 0.55);
+    box-shadow: 0 0 0 4px rgba(255, 22, 31, 0.06);
+  }
+
+  .routine-footer-row {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+  }
+
+  .routine-save-actions {
+    display: grid;
+    align-items: end;
+    justify-items: end;
+    gap: 8px;
+    margin-left: 0;
+  }
+
+  .routine-save-actions .form-feedback {
+    min-height: 0;
+    max-width: 240px;
+    margin: 0;
+    font-size: 0.8rem;
+    line-height: 1.35;
+    text-align: right;
+  }
+
+  .routine-save-actions .form-feedback:empty {
+    display: none;
+  }
+
+  #save-routine-button {
+    min-width: 158px;
+  }
+
+  .routine-time {
+    display: block;
+    color: var(--text);
+    font-size: 1.72rem;
+    font-weight: 900;
+    line-height: 1;
+  }
+
+  .routine-day {
+    display: block;
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 900;
+  }
+
+  .routine-actions {
+    display: flex;
+    gap: 6px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .routine-card-smart .routine-time {
+    overflow-wrap: anywhere;
+    line-height: 1.08;
+  }
+
+  .routine-group-status {
+    display: flex;
+    justify-content: flex-end;
+    align-items: flex-start;
+    gap: 6px;
+    flex: 0 0 auto;
+    flex-wrap: wrap;
+  }
+
+  .routine-group-badge {
+    display: inline-flex;
+    align-items: center;
+    min-height: 32px;
+    padding: 6px 9px;
+    border-radius: 4px;
+    background: #000000;
+    color: #ffffff;
+    font-size: 0.75rem;
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+
+  .routine-group-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    padding-top: 2px;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.4;
+  }
+
+  .routine-group-note svg {
+    width: 16px;
+    height: 16px;
+    flex: 0 0 auto;
+    margin-top: 2px;
+    color: #000000;
+    opacity: 0.58;
+  }
+
+  .detail-line {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 0;
+    color: var(--text);
+    line-height: 1.4;
+  }
+
+  .detail-line svg {
+    width: 16px;
+    height: 16px;
+    color: #000000;
+    flex: 0 0 auto;
+    margin-top: 2px;
+    opacity: 0.58;
+  }
+
+  .routine-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+    padding-top: 2px;
+    font-size: 0.78rem;
+    font-weight: 800;
+  }
+}
