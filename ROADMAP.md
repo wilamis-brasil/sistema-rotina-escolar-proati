@@ -4,67 +4,65 @@ Este roadmap lista melhorias futuras para o Sistema de Rotina Escolar PROATI.
 
 ## Prioridade alta
 
-### Deploy automatico no GitHub Pages
+### Content Security Policy
 
-Criar um workflow do GitHub Actions para:
+Adicionar uma política CSP no `index.html` e validar o build.
 
-- instalar dependencias;
-- rodar typecheck;
-- gerar build;
-- publicar `dist/` no GitHub Pages.
+Motivo: reduzir impacto caso alguma mudança futura introduza risco de XSS.
 
-### Limite para importacao JSON
+### Limite para importação JSON
 
-Adicionar limite de tamanho antes de ler arquivos JSON.
+Adicionar verificação de tamanho antes de processar arquivos JSON importados.
 
 Motivo: evitar travamento do navegador com arquivos grandes demais.
 
-### Content Security Policy
+### Testes no CI
 
-Adicionar uma politica CSP no `index.html` e testar o build.
+Incluir `npm test` no workflow do GitHub Actions (hoje o CI só roda typecheck e build).
 
-Motivo: reduzir impacto caso alguma mudanca futura introduza risco de XSS.
+Motivo: garantir que os testes de domínio e controller sejam executados automaticamente a cada push.
 
-## Prioridade media
+## Prioridade média
 
 ### Melhorar modo mobile
 
-Revisar a experiencia em celulares, principalmente:
+Revisar a experiência em celulares, principalmente:
 
-- formulario de rotina;
+- formulário de rotina;
 - listas de professores;
-- visualizacao semanal;
-- botoes de acao.
+- visualização semanal;
+- botões de ação.
 
-### Modo impressao
+### Modo impressão
 
-Criar CSS de impressao para gerar uma rotina semanal em papel quando necessario.
+Criar CSS de impressão para gerar a rotina semanal em papel quando necessário.
 
 ### Aviso de privacidade na interface
 
-Adicionar um aviso claro explicando que os dados ficam no navegador.
+Adicionar um aviso claro na tela de configurações explicando que os dados ficam no navegador.
 
 ## Prioridade baixa
 
 ### Tema escuro
 
-Criar uma variacao visual para ambientes com pouca luz.
+Criar uma variação visual para ambientes com pouca luz.
 
 ### Backup guiado
 
-Melhorar a experiencia de exportacao e importacao com mensagens mais educativas.
+Melhorar a experiência de exportação e importação com mensagens mais educativas.
 
 ### Tutorial para outros PROATIs
 
-Criar um guia rapido com prints explicando como usar o sistema no dia a dia.
+Criar um guia rápido com prints explicando como usar o sistema no dia a dia.
 
 ## Fora do escopo por enquanto
 
-- Login.
-- Banco remoto.
-- Sincronizacao online.
+- Login e controle por usuário.
+- Banco remoto e sincronização online.
 - Painel administrativo.
-- Controle por usuario.
 
-Essas ideias podem ser uteis no futuro, mas aumentam a complexidade. O foco atual e manter o projeto simples, estatico e facil de publicar.
+Essas funcionalidades podem ser úteis no futuro, mas aumentam a complexidade. O foco atual é manter o projeto simples, estático e fácil de publicar.
 
+## Concluído
+
+- ✅ Workflow automático de deploy no GitHub Pages (`.github/workflows/pages.yml`).

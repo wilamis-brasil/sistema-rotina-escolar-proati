@@ -1,101 +1,87 @@
 # Estudo de Caso: Sistema de Rotina Escolar PROATI
 
-Este documento apresenta o projeto como estudo de caso de portfólio, com foco em entrevistas técnicas e análise de currículo.
+Este documento complementa o README com foco em entrevista técnica — explica as decisões de design, as trocas feitas e como eu explicaria o projeto em conversa.
+
+---
 
 ## Contexto
 
-O projeto foi criado por um PROATI, estagiário de TI em escola pública, para resolver uma necessidade real do trabalho: organizar a rotina de uso de equipamentos compartilhados.
+Sou PROATI (estagiário de TI) em escola pública. Uma das principais responsabilidades é controlar o uso de equipamentos compartilhados: notebooks, chromebooks, tablets e headsets que professores retiram e devolvem ao longo da semana.
 
-Em uma escola, o PROATI pode precisar lidar com:
+Antes desse sistema, o controle dependia de papel, memória, grupos de mensagem e planilhas improvisadas. O risco era real: esquecer uma retirada, não saber onde estava um equipamento, não ter histórico quando um dispositivo apresentava defeito repetido.
 
-- professores pedindo equipamentos em horários diferentes;
-- salas e turmas usando dispositivos ao longo do dia;
-- necessidade de lembrar retiradas e devoluções;
-- atendimentos paralelos de suporte;
-- ausência de sistemas internos simples para esse fluxo.
+O sistema foi construído para resolver isso — não para ser um projeto de portfolio, mas para ser usado de verdade. O portfolio é consequência.
 
-O problema não é apenas técnico. É operacional.
+---
 
-## Problema
+## Decisões técnicas e por que as tomei
 
-A rotina antes do sistema podia depender de:
+### Sem backend
 
-- papel;
-- memória;
-- mensagens soltas;
-- planilhas improvisadas;
-- combinados verbais.
+Não há necessidade comprovada de servidor. A ferramenta é pessoal, local e opera sem internet obrigatória. Adicionar backend aumentaria custo, complexidade e superfície de ataque sem entregar nada que o `localStorage` já não resolve para esse caso de uso.
 
-Isso gera risco de atraso, esquecimento e retrabalho.
+Se o uso escalar (múltiplos usuários, sincronização entre dispositivos), backend faria sentido. Por enquanto, não.
 
-## Solução
+### TypeScript estrito em vez de JavaScript
 
-Foi criado um app web estático para registrar e visualizar a rotina PROATI.
+O modelo de dados é complexo: rotinas com múltiplos campos, manutenção com 10 status, notificações com 3 tipos e log de status, schema versionado para migração. TypeScript evita erros de manutenção sem custo de runtime — especialmente útil quando o estado do `localStorage` precisa sobreviver a versões futuras do código.
 
-Principais decisões:
+### DOM API em vez de React ou Vue
 
-- rodar no navegador;
-- salvar dados localmente;
-- funcionar sem backend;
-- ser publicável no GitHub Pages;
-- usar TypeScript para reduzir erro de manutenção;
-- separar domínio, persistência e interface;
-- preservar importação e exportação JSON.
+A app tem escopo definido. React aumentaria o bundle, adicionaria complexidade de estado e introduziria uma camada de abstração que não resolve nenhum problema real no tamanho atual. Se a app crescer para múltiplos usuários ou sincronização, revisitaria essa decisão.
 
-## Decisões Técnicas
+### Zod nos pontos de entrada
 
-### Vite e TypeScript
+O `localStorage` pode conter dados salvos por versões anteriores do código. JSON importado pelo usuário pode estar malformado ou corrompido. Zod entra exatamente nesses dois pontos — não em todo o código, apenas onde dados externos entram no estado da aplicação.
 
-Vite foi escolhido para entregar build estático simples e rápido. TypeScript foi usado para tornar o modelo de dados mais explícito e reduzir erros em regras de negócio.
+### Schema versionado com migração
 
-### DOM API em vez de framework pesado
+O estado local tem `schemaVersion: 6`. Toda vez que o modelo de dados muda de forma incompatível, o código sabe migrar o estado salvo para a versão atual. Também há suporte a uma chave legada de `localStorage` (`kickoff-proati-state-v1`) para não perder dados de instalações anteriores.
 
-A aplicação não exige um framework complexo. A escolha por DOM API mantém o projeto menor, direto e compatível com o objetivo de simplicidade.
+Essa foi uma decisão não óbvia para um projeto pessoal — mas é o tipo de coisa que distingue um app que funciona de um que quebra silenciosamente após uma atualização.
 
-### localStorage
+### Engine de notificações própria
 
-O `localStorage` atende ao requisito de funcionar sem backend. A decisão reduz custo e complexidade, mas exige cuidado com privacidade.
+O sistema calcula automaticamente quando disparar notificações com base no horário de início de cada rotina. Há agrupamento de notificações próximas (janela configurável em minutos), detecção de notificações atrasadas ("overdue"), snooze com tempo configurável e log persistido de status (vista, adiada, ignorada).
 
-### Zod
+Tudo isso sem Push API nem servidor — funciona enquanto a aba está aberta.
 
-Zod entra no limite de validação e normalização de dados, especialmente para importação JSON e estado salvo no navegador.
+---
 
-## Competências Demonstradas
+## Competências demonstradas por módulo
 
-| Área | Evidência |
-| --- | --- |
-| Produto | O projeto resolve uma dor real do ambiente escolar. |
-| Frontend | Interface funcional com HTML, CSS, TypeScript e DOM API. |
-| Arquitetura | Separação clara entre domínio, persistência e UI. |
-| Dados | Compatibilidade com storage key legada e importação/exportação JSON. |
-| Segurança | Sem backend desnecessário, sem segredos e com validação antes de persistir. |
-| Deploy | Compatível com GitHub Pages e build estático. |
-| Comunicação | Documentação voltada a uso, manutenção e análise técnica. |
+| Módulo | O que mostra |
+|---|---|
+| Rotina semanal | CRUD completo com validação, desfazer exclusão, filtros e ordenação. |
+| Notificações | Lógica de negócio não trivial: planejamento, agrupamento, snooze, log, overdue. |
+| Manutenção | Modelagem de domínio: workflow de status, histórico automático, prioridade, exportação separada. |
+| Persistência | Schema versionado, migração de dados legados, importação com validação Zod. |
+| Catálogos | Consistência referencial: editar um professor atualiza todas as rotinas vinculadas. |
+| Testes | Domínio, controller e UI cobertos com Vitest. |
+| Deploy | GitHub Actions: typecheck → build → GitHub Pages automático. |
 
-## Resultado
+---
 
-O resultado é uma ferramenta prática para o dia a dia de um PROATI e, ao mesmo tempo, um projeto de portfólio que mostra capacidade de:
+## Como eu explicaria em uma entrevista
 
-- entender o usuário;
-- desenhar uma solução proporcional;
-- tomar decisões técnicas simples;
-- escrever código organizado;
-- pensar em dados e privacidade;
-- preparar um projeto para publicação.
+> Criei um sistema para organizar a rotina de equipamentos na escola onde trabalho como PROATI. Em vez de depender de papel ou memória, o app permite cadastrar professores, salas, dispositivos e horários, receber notificações antes de cada retirada, e registrar ocorrências de manutenção com histórico de status.
+>
+> Escolhi uma arquitetura estática com Vite e TypeScript porque o projeto não precisa de servidor — os dados ficam no navegador, o deploy é no GitHub Pages e funciona sem internet obrigatória. Usei Zod só nos pontos de entrada, onde dados externos chegam, e separei o código em domain, persistence, app e ui com responsabilidades bem definidas. A parte mais interessante tecnicamente foi o sistema de notificações: precisei calcular horários de disparo, agrupar notificações próximas, detectar atrasos e persistir o log de status no localStorage.
 
-## Como Eu Explicaria Em Uma Entrevista
+---
 
-> Eu criei um sistema para organizar a rotina de retirada de equipamentos na escola onde atuo como PROATI. Em vez de depender de papel ou memória, o app permite cadastrar professores, salas, dispositivos e horários. Escolhi uma arquitetura estática com Vite e TypeScript para publicar facilmente no GitHub Pages, sem backend. Também me preocupei com persistência local, importação/exportação JSON, validação de dados e privacidade.
+## O que eu faria diferente hoje
 
-## Pontos de Evolução
+- Adicionaria Content Security Policy desde o início.
+- Colocaria `npm test` no workflow de CI (hoje o Actions só roda typecheck e build).
+- Investiria mais cedo na experiência mobile — o desktop-first foi uma escolha de prazo, não de design.
 
-Se o projeto crescer, próximos passos técnicos seriam:
+---
 
-- CI/CD com GitHub Actions;
-- CodeQL no GitHub;
-- testes automatizados reintroduzidos no repositório;
-- Content Security Policy;
-- modo PWA;
-- impressão da rotina semanal;
+## Próximos passos técnicos
+
+- Content Security Policy no `index.html`.
+- Testes no CI (hoje apenas typecheck + build).
+- Modo de impressão da rotina semanal.
 - UX mobile mais refinada.
-
+- Tutorial visual para outros PROATIs que queiram usar o sistema.

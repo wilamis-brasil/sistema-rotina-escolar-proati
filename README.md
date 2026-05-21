@@ -1,271 +1,193 @@
 # Sistema de Rotina Escolar PROATI
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?style=flat-square&logo=typescript&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-static_build-646cff?style=flat-square&logo=vite&logoColor=white)
-![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-ready-222?style=flat-square&logo=github&logoColor=white)
-![No Backend](https://img.shields.io/badge/backend-none-success?style=flat-square)
-![Local First](https://img.shields.io/badge/data-localStorage-informational?style=flat-square)
+![Vite](https://img.shields.io/badge/Vite-build-646cff?style=flat-square&logo=vite&logoColor=white)
+![Vitest](https://img.shields.io/badge/testes-Vitest-6E9F18?style=flat-square&logo=vitest&logoColor=white)
+![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-publicado-222?style=flat-square&logo=github&logoColor=white)
+![Local First](https://img.shields.io/badge/dados-localStorage-informational?style=flat-square)
+![Sem Backend](https://img.shields.io/badge/backend-nenhum-success?style=flat-square)
 
-Aplicação web estática para ajudar PROATIs e estagiários de TI de escolas públicas a organizar a rotina de retirada, uso e devolução de equipamentos.
+Ferramenta web para PROATIs de escolas públicas organizarem a rotina de equipamentos — retiradas, devoluções, manutenção e notificações de horário — sem precisar de servidor, cadastro ou internet obrigatória.
 
-Este projeto foi criado a partir de uma dor real de trabalho: controlar horários, professores, salas, turmas e dispositivos compartilhados sem depender de papel, memória, planilhas improvisadas ou servidor externo.
+**[→ Abrir o sistema publicado](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)**
 
-## Site Online
+---
 
-> **Acesse o sistema publicado:** [wilamis-brasil.github.io/sistema-rotina-escolar-proati](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)
+## Por que esse projeto existe
 
-## Visão Geral
+Na escola pública, o PROATI controla notebooks, chromebooks, tablets e headsets compartilhados entre professores e turmas ao longo da semana. Parece simples — até envolver múltiplos horários, salas e dispositivos no mesmo dia. Aí a memória, o papel e o grupo de mensagens deixam de funcionar.
 
-O Sistema de Rotina Escolar PROATI é um site local-first, compatível com GitHub Pages, que permite registrar e consultar rotinas semanais de uso de equipamentos escolares.
+Problemas reais antes desse sistema:
 
-Ele foi pensado para o cotidiano de um PROATI: uma pessoa que precisa atender chamados, apoiar professores, organizar dispositivos, lidar com salas diferentes e ainda manter a rotina funcionando sem perder horário.
+- esquecer que um professor vai retirar equipamento às 9h;
+- não saber qual turma está com qual dispositivo agora;
+- não ter onde registrar que um chromebook específico está com defeito aberto;
+- não receber aviso quando um horário de devolução está chegando.
 
-## Demonstração
+Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma ferramenta que eu mesmo uso.
 
-A versão pública fica disponível em:
+---
 
-[https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)
+## O que o sistema faz
 
-Para rodar localmente:
+**Rotina semanal**
+- Cadastro por dia útil com horário de início e fim, professor, sala, dispositivos e observações.
+- Visualização do dia atual com destaque inteligente ("hoje") e visualização semanal.
+- Ordenação por dia, horário, professor, sala ou dispositivo. Filtro textual em tempo real.
+- Edição, duplicação e exclusão com desfazer.
 
-```bash
-npm ci
-npm run dev
-```
+**Notificações internas**
+- Popups automáticos: aviso antecipado (configurável), início e término da retirada.
+- Agrupamento de notificações próximas para não poluir a tela.
+- Snooze por item. Som configurável ou silencioso.
+- Log persistido de notificações vistas, adiadas e ignoradas.
+- Configuração global com override por rotina individual.
 
-## Por Que Este Projeto Existe
+**Manutenção de equipamentos**
+- Registro de ocorrências com 10 status: com problema, em análise, aguardando chamado, chamado aberto, em manutenção, aguardando peça, resolvido, sem conserto, descartado, entre outros.
+- Prioridade: baixa, média, alta, urgente.
+- Histórico automático de mudanças de status.
+- Campos para número de chamado, contato responsável e ações tomadas.
+- Exportação e importação separada dos registros de manutenção.
 
-Na rotina escolar, o controle de equipamentos pode parecer simples até começar a envolver vários professores, turmas, horários e dispositivos no mesmo dia.
+**Outros**
+- Cofre de senhas local para credenciais de sistemas escolares.
+- Catálogos de professores, salas/turmas (com contagem de alunos) e dispositivos.
+- Editar um item do catálogo reflete automaticamente em todas as rotinas vinculadas.
+- Exportação e importação JSON com validação via Zod.
+- Migração automática de dados salvos (schema v6, compatível com chaves legadas).
 
-Problemas comuns:
+---
 
-- esquecer uma retirada;
-- perder o horário de devolução;
-- não saber qual turma está usando determinado equipamento;
-- depender de bilhetes, grupos de mensagem ou memória;
-- repetir o mesmo cadastro manualmente;
-- não ter um backup simples da rotina.
+## Por que essa stack
 
-Este projeto resolve esse problema com uma ferramenta simples, visual e feita para o contexto real da escola.
+| Tecnologia | Motivo da escolha |
+|---|---|
+| **TypeScript estrito** | O modelo de dados tem muitos estados e relacionamentos; TS elimina erros de manutenção sem custo de runtime. |
+| **Vite** | Build estático rápido, caminhos relativos com `base: "./"`, compatível com GitHub Pages sem servidor. |
+| **Zod** | Valida e normaliza JSON nos pontos de entrada (importação, formulários) — onde dados externos chegam ao estado local. |
+| **DOM API (sem React)** | A app tem tamanho gerenciável; adicionar um framework aumentaria complexidade sem benefício real. |
+| **localStorage** | Atende ao requisito de funcionar sem backend; os dados ficam privados no dispositivo do usuário. |
+| **Lucide Icons** | SVGs consistentes, sem CDN obrigatória em runtime. |
+| **Vitest** | Testes de domínio e controller sem overhead de configuração. |
 
-## Funcionalidades
+---
 
-### Rotina Escolar
+## Destaques para entrevistadores
 
-- Cadastro de rotinas por dia útil.
-- Visualização da rotina do dia.
-- Visualização semanal.
-- Edição, duplicação e exclusão de rotinas.
-- Desfazer exclusão recente.
-- Ordenação por dia, horário, professor, sala ou dispositivo.
-- Filtro textual por professor, sala, horário, dispositivo ou observação.
+| O que demonstra | Como aparece no projeto |
+|---|---|
+| **Entendimento do problema** | O sistema foi desenhado a partir de uma necessidade operacional real, não de uma especificação genérica. |
+| **Modelagem de domínio** | Tipos explícitos para rotina, manutenção (10 status, histórico, prioridade) e notificação; schema versionado (v6) com migração de chaves legadas do `localStorage`. |
+| **Validação de dados** | Zod nos pontos de entrada; `textContent` / DOM API em vez de `innerHTML` para dados do usuário; confirmação antes de reset ou importação. |
+| **Lógica não trivial** | Engine de planejamento de notificações: agrupamento por janela de tempo, cálculo de lead, detecção de overdue, snooze e log de status persistido. |
+| **Arquitetura em camadas** | Separação real entre domínio, persistência, controller e UI — responsabilidades definidas, não apenas pastas com nomes bonitos. |
+| **Testes** | Domínio, controller, persistência e componentes de UI cobertos com Vitest. |
+| **Deploy automatizado** | GitHub Actions faz typecheck → build → deploy ao GitHub Pages a cada push na `main`. |
+| **Privacidade por design** | Sem backend, sem CDN obrigatória, sem dado pessoal de aluno necessário, sem segredo no repositório. |
 
-### Cadastros de Apoio
-
-- Professores.
-- Salas e turmas.
-- Quantidade padrão de alunos por sala.
-- Dispositivos disponíveis.
-
-### Dados
-
-- Persistência em `localStorage`.
-- Exportação JSON.
-- Importação JSON com validação.
-- Reset dos dados locais.
-- Chave do `localStorage`:
-
-```txt
-sistema-rotina-escolar-proati-state-v1
-```
-
-## Destaques Técnicos Para Entrevistadores
-
-Este projeto demonstra mais do que uma interface bonita. Ele mostra decisões práticas de engenharia aplicadas a um problema real.
-
-| Competência | Como aparece no projeto |
-| --- | --- |
-| Entendimento de negócio | A aplicação foi desenhada a partir da rotina real de um PROATI em escola pública. |
-| Frontend moderno | Vite, TypeScript estrito, módulos separados e build estático. |
-| Arquitetura simples | Separação entre domínio, persistência, controller e UI. |
-| Preservação de dados | Migração de dados e normalização do estado local. |
-| Segurança básica | Sem backend, sem segredo no código, validação de JSON e renderização segura via DOM API. |
-| Deploy barato | Compatível com GitHub Pages, sem servidor próprio e sem banco remoto. |
-| Produto real | Foco em produtividade, rotina operacional e usabilidade para ambiente escolar. |
-
-## Stack
-
-- TypeScript
-- Vite
-- HTML
-- CSS
-- DOM API
-- Zod
-- Lucide Icons
-- GitHub Pages
-- localStorage
-
-O projeto não usa backend, autenticação, banco remoto ou servidor próprio.
+---
 
 ## Arquitetura
 
 ```txt
 src/
-+-- app/             coordenação do estado e ações da aplicação
-+-- domain/          regras de negócio, tipos e normalização de dados
-+-- persistence/     localStorage, importação e exportação
-+-- ui/              renderização e eventos de interface
+├── domain/        → tipos, regras de negócio, validação, migração de schema
+├── persistence/   → localStorage, exportação e importação JSON
+├── app/           → controller: ações centralizadas, estado em memória
+└── ui/            → renderização e eventos DOM (sem framework)
+```
+
+**Fluxo de dados:**
+```
+Formulário / JSON importado
+  → Controller (valida payload)
+  → Domínio (normaliza, constrói entidade)
+  → Estado em memória
+  → localStorage (serializado)
+  → UI re-renderizada
 ```
 
 Documentação complementar:
+[Arquitetura](ARCHITECTURE.md) · [GitHub Pages](GITHUB_PAGES.md) · [Privacidade](PRIVACY.md) · [Segurança](SECURITY.md) · [Roadmap](ROADMAP.md) · [Contribuição](CONTRIBUTING.md) · [Estudo de caso](PORTFOLIO_CASE_STUDY.md)
 
-- [Arquitetura](ARCHITECTURE.md)
-- [Estudo de caso para portfólio](PORTFOLIO_CASE_STUDY.md)
-- [Deploy no GitHub Pages](GITHUB_PAGES.md)
-- [Privacidade e dados locais](PRIVACY.md)
-- [Segurança](SECURITY.md)
-- [Roadmap](ROADMAP.md)
-- [Contribuição](CONTRIBUTING.md)
+---
 
-## Estrutura do Repositório
+## Como rodar localmente
 
-```txt
-.
-+-- index.html
-+-- assets/
-|   +-- css/
-|   +-- img/
-+-- src/
-|   +-- app/
-|   +-- domain/
-|   +-- persistence/
-|   +-- ui/
-+-- public/
-+-- ARCHITECTURE.md
-+-- GITHUB_PAGES.md
-+-- package.json
-+-- tsconfig.json
-+-- vite.config.ts
-```
-
-## Rodando Localmente
-
-Requisitos:
-
-- Node.js
-- npm
-
-Instale as dependências:
+Requisitos: Node.js e npm.
 
 ```bash
+git clone https://github.com/wilamis-brasil/sistema-rotina-escolar-proati.git
+cd sistema-rotina-escolar-proati
 npm ci
-```
-
-Inicie o servidor local:
-
-```bash
 npm run dev
 ```
 
-Abra a URL exibida pelo Vite. Normalmente:
-
-```txt
-http://localhost:5173
-```
+Abre em `http://localhost:5173`.
 
 ## Scripts
 
 ```bash
-npm run dev        # ambiente de desenvolvimento
-npm run build      # gera a versão estática em dist/
+npm run dev        # servidor de desenvolvimento
+npm test           # executa todos os testes (Vitest)
+npm run typecheck  # valida TypeScript sem compilar
+npm run build      # gera dist/ para deploy
 npm run preview    # visualiza o build localmente
-npm run typecheck  # valida TypeScript
 ```
 
-## Build
+---
+
+## Testes
+
+Cobertura com **Vitest**:
+
+- `src/domain/*.test.ts` — modelo, validação, filtros, ordenação e notificações;
+- `src/app/controller.test.ts` — ações, persistência e importação de dados;
+- `src/ui/*.test.ts` — visualização semanal e lógica do smart-today.
+
+```bash
+npm test
+```
+
+---
+
+## Build e deploy
+
+O deploy é automático: a cada push na `main`, o GitHub Actions roda typecheck → build → publica `dist/` no GitHub Pages.
+
+Para gerar o build manualmente:
 
 ```bash
 npm ci
+npm run typecheck
 npm run build
 ```
 
-O build final será gerado em:
+O build final fica em `dist/`. Mais detalhes em [GITHUB_PAGES.md](GITHUB_PAGES.md).
 
-```txt
-dist/
-```
+---
 
-Essa é a pasta que deve ser publicada no GitHub Pages.
+## Privacidade e segurança
 
-## GitHub Pages
+Os dados ficam no navegador (`localStorage`). O app não faz requisições para servidor, não usa CDN obrigatória e não exige dados pessoais de alunos.
 
-Este projeto é compatível com GitHub Pages, mas o Pages deve publicar o build gerado pelo Vite.
+- JSON validado antes de persistir (Zod).
+- Dados do usuário renderizados via DOM API, sem `innerHTML`.
+- Sem cookies, sem login, sem segredos no repositório.
 
-Fluxo correto:
+Leia [PRIVACY.md](PRIVACY.md) e [SECURITY.md](SECURITY.md) antes de usar em ambiente escolar real.
 
-```bash
-npm ci
-npm run build
-```
-
-Depois publique o conteúdo de:
-
-```txt
-dist/
-```
-
-Mais detalhes em [GITHUB_PAGES.md](GITHUB_PAGES.md).
-
-## Privacidade
-
-Os dados ficam no navegador do usuário, usando `localStorage`. O app não envia dados para servidor.
-
-Mesmo assim, a rotina escolar pode conter informações sensíveis de contexto, como nomes de professores, salas, horários e observações. Por isso, o sistema evita backend e mantém os dados sob controle local.
-
-Leia [PRIVACY.md](PRIVACY.md) antes de usar em ambiente real.
-
-## Segurança
-
-Resumo das decisões atuais:
-
-- sem backend;
-- sem banco remoto;
-- sem autenticação;
-- sem segredo no repositório;
-- sem CDN obrigatória em runtime para o código principal;
-- validação de JSON antes de persistir;
-- renderização de dados via DOM API, sem `innerHTML` para dados do usuário.
-
-Notas e melhorias recomendadas estão em [SECURITY.md](SECURITY.md).
+---
 
 ## Roadmap
 
-Próximas melhorias planejadas:
+Próximas melhorias: Content Security Policy, limite de tamanho para importação JSON, modo de impressão da rotina semanal, melhorias mobile, tutorial visual para outros PROATIs.
 
-- workflow automático de deploy no GitHub Pages;
-- limite de tamanho para importação JSON;
-- Content Security Policy;
-- modo de impressão da rotina semanal;
-- melhorias mobile;
-- tutorial visual para outros PROATIs.
+Veja o contexto completo em [ROADMAP.md](ROADMAP.md).
 
-Veja [ROADMAP.md](ROADMAP.md).
-
-## Valor Como Portfólio
-
-Este projeto demonstra que eu consigo:
-
-- identificar um problema real no ambiente onde trabalho;
-- transformar uma rotina manual em uma ferramenta web;
-- escolher uma stack simples e adequada;
-- pensar em deploy, privacidade e manutenção;
-- organizar código em módulos;
-- entregar algo útil para outras pessoas na mesma função.
-
-É um projeto de portfólio porque mostra tecnologia aplicada a um problema concreto, não apenas uma tela genérica.
+---
 
 ## Licença
 
-Este projeto é distribuído sob a licença MIT.
-
-Veja o arquivo [LICENSE](LICENSE) para os termos completos.
+MIT — veja [LICENSE](LICENSE).

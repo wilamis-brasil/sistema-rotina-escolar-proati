@@ -1,17 +1,17 @@
 # Contribuindo
 
-Este projeto e um sistema simples para rotina PROATI. A prioridade e manter a ferramenta facil de usar, facil de publicar e segura para dados locais.
+Este projeto é uma ferramenta simples para rotina PROATI. A prioridade é manter o sistema fácil de usar, fácil de publicar e seguro para dados locais.
 
 ## Antes de alterar
 
-Confira se a mudanca:
+Verifique se a mudança:
 
 - ajuda a rotina real de um PROATI;
-- nao exige backend sem necessidade;
-- nao quebra o GitHub Pages;
-- nao apaga dados ja salvos no navegador;
-- nao muda a chave `sistema-rotina-escolar-proati-state-v1` sem migracao;
-- nao adiciona dependencia desnecessaria.
+- não exige backend sem necessidade;
+- não quebra o GitHub Pages;
+- não apaga dados já salvos no navegador;
+- não muda a chave `sistema-rotina-escolar-proati-state-v1` sem migração;
+- não adiciona dependência desnecessária.
 
 ## Rodar localmente
 
@@ -24,45 +24,44 @@ npm run dev
 
 ```bash
 npm run typecheck
+npm test
 npm run build
 ```
 
-## Padroes do projeto
+## Padrões do projeto
 
 - TypeScript estrito.
-- UI com DOM API.
-- Dados persistidos no navegador.
+- UI com DOM API (sem framework).
+- Dados persistidos no navegador via `localStorage`.
 - Sem backend.
-- Sem CDN obrigatoria em runtime.
-- Build estatico via Vite.
+- Sem CDN obrigatória em runtime.
+- Build estático via Vite.
 
-## Areas do codigo
+## Áreas do código
 
 ```txt
-src/domain         regras de negocio e modelo de dados
-src/persistence    localStorage, importacao e exportacao
-src/app            controller da aplicacao
-src/ui             renderizacao e interacao DOM
+src/domain         regras de negócio, tipos, validação, migração de schema
+src/persistence    localStorage, importação e exportação JSON
+src/app            controller: ações centralizadas, estado em memória
+src/ui             renderização e eventos DOM
 ```
 
-## Seguranca
+## Segurança
 
-Nao use `innerHTML` para renderizar dados digitados pelo usuario ou vindos de JSON.
+Não use `innerHTML` para renderizar dados digitados pelo usuário ou vindos de JSON.
 
-Prefira sempre:
+Use sempre:
 
-- `textContent`;
-- `createTextNode`;
-- validacao antes de persistir;
-- mensagens de erro claras;
-- confirmacao antes de reset/importacao.
+- `textContent` ou `createTextNode` para texto;
+- validação Zod antes de persistir;
+- confirmação do usuário antes de reset ou importação;
+- mensagens de erro claras.
 
 ## Ideias boas para contribuir
 
 - Melhorar acessibilidade.
-- Criar workflow de deploy para GitHub Pages.
-- Adicionar limite de tamanho para importacao JSON.
-- Adicionar modo de impressao da rotina semanal.
-- Melhorar experiencia mobile.
+- Adicionar limite de tamanho para importação JSON.
+- Adicionar modo de impressão da rotina semanal.
+- Melhorar experiência mobile.
 - Criar tutorial visual para outros PROATIs.
-
+- Adicionar Content Security Policy no `index.html`.
