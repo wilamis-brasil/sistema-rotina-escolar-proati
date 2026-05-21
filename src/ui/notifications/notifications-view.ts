@@ -243,14 +243,11 @@ export function createNotificationsView({
   }
 
   function renderStatus(summary: NotificationSummary): void {
-    const settings = getState().settings.notifications;
     const nextLabel = summary.nextPending
       ? `${summary.nextPending.time} · ${getNotificationTypeShortLabel(summary.nextPending.type)}`
       : "Sem próximo aviso";
 
     replaceChildren(refs.notificationsStatus, [
-      statusCard("Notificações", settings.enabled ? "Ativadas" : "Desativadas", settings.enabled ? "Avisos internos ligados." : "Avisos internos desligados."),
-      statusCard("Som", settings.soundEnabled && settings.soundName !== "none" ? "Ativado" : "Desativado", settings.soundEnabled && settings.soundName !== "none" ? `Som: ${labelForSound(settings.soundName)}` : "Sem áudio."),
       statusCard("Próximo aviso", nextLabel, summary.nextPending ? formatDateTime(`${summary.nextPending.date}T${summary.nextPending.time}:00`) : "Sem retiradas pendentes."),
       statusCard("Pendentes hoje", String(summary.pending), summary.overdue ? `${summary.overdue} atrasada(s)` : "Sem atrasos"),
       statusCard("Não vistas", String(summary.unseen), summary.unseen === 0 ? "Tudo conferido" : "Confira a lista abaixo"),
@@ -621,10 +618,6 @@ function labelForStatus(plan: NotificationPlan): string {
     default:
       return plan.status;
   }
-}
-
-function labelForSound(value: string): string {
-  return NOTIFICATION_SOUNDS.find((option) => option.value === value)?.label ?? "Padrão";
 }
 
 function formatMinutes(value: number): string {

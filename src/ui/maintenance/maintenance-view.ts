@@ -137,13 +137,13 @@ export function createMaintenanceView({
 
   function populateTypeFilter(): void {
     const state = getState();
-    const types = [...new Set(state.maintenanceRecords.map((r) => r.type).filter(Boolean))].sort(
-      (a, b) => a.localeCompare(b, "pt-BR"),
-    );
+    const catalogNames = [...state.devices]
+      .map((d) => d.name)
+      .sort((a, b) => a.localeCompare(b, "pt-BR"));
     const prev = refs.maintenanceFilterType.value;
     replaceChildren(refs.maintenanceFilterType, [
       option("", "Todos os tipos"),
-      ...types.map((t) => option(t, t)),
+      ...catalogNames.map((name) => option(name, name)),
     ]);
     refs.maintenanceFilterType.value = prev;
   }
@@ -220,7 +220,7 @@ export function createMaintenanceView({
           el("tr", {}, [
             th("Nº / Identificador", "maintenance-col-id"),
             th("Tipo"),
-            th("Marca / Modelo"),
+            th("Modelo"),
             th("Local"),
             th("Problema principal"),
             th("Prioridade"),
@@ -276,6 +276,7 @@ export function createMaintenanceView({
       submitLabel: record ? "Atualizar registro" : "Salvar registro",
       initial,
       allowSaveAndAnother: !record,
+      devices: getState().devices,
       onSubmit: (payload, mode) => {
         const result = record
           ? actions.updateMaintenanceRecord(record.id, payload)
@@ -304,6 +305,7 @@ export function createMaintenanceView({
 
   function openBulk(): void {
     openMaintenanceBulkModal({
+      devices: getState().devices,
       onSubmit: (entries) => {
         const created: string[] = [];
         const errors: string[] = [];
@@ -376,7 +378,7 @@ export function createMaintenanceView({
     const details = [
       { label: "Identificador", value: record.equipmentId },
       { label: "Tipo", value: record.type || "—" },
-      { label: "Marca / Modelo", value: record.brandModel || "—" },
+      { label: "Modelo", value: record.brandModel || "—" },
       { label: "Local", value: record.location || "—" },
       { label: "Problema", value: record.mainProblem || "—" },
       { label: "Descrição técnica", value: record.technicalDescription || "—" },

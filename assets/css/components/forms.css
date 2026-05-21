@@ -131,10 +131,6 @@
     box-shadow: none;
   }
 
-  input[type="checkbox"]:hover {
-    background-color: #ffffff;
-  }
-
   input[type="checkbox"]:focus {
     background-color: #ffffff;
     box-shadow:

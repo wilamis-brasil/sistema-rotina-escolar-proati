@@ -28,6 +28,7 @@ interface MaintenanceFormOptions {
   submitLabel: string;
   initial: MaintenanceFormInitial;
   allowSaveAndAnother: boolean;
+  devices: Array<{ name: string }>;
   onSubmit(payload: MaintenancePayload, mode: SubmitMode): boolean;
 }
 
@@ -38,9 +39,18 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
 
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  const idInput = textInput("Nº / Identificador", "Ex.: PC-001, NB-014", true, options.initial.equipmentId);
-  const typeInput = textInput("Tipo", "Ex.: Notebook, Tablet", true, options.initial.type);
-  const brandInput = textInput("Marca / Modelo", "Ex.: Lenovo IdeaPad 1", false, options.initial.brandModel);
+  const idInput = textInput("Nº / Identificador", "Ex.: 01", true, options.initial.equipmentId);
+  const sortedTypeNames = [...options.devices].map((d) => d.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const typeNameSet = new Set(sortedTypeNames);
+  const typeOpts: Array<{ value: string; label: string }> = [
+    { value: "", label: "— selecione o tipo —" },
+    ...sortedTypeNames.map((name) => ({ value: name, label: name })),
+  ];
+  if (options.initial.type && !typeNameSet.has(options.initial.type)) {
+    typeOpts.push({ value: options.initial.type, label: `${options.initial.type} (legado)` });
+  }
+  const typeSelect = selectInput("Tipo *", typeOpts, options.initial.type ?? "");
+  const brandInput = textInput("Modelo", "Ex.: UL124", false, options.initial.brandModel);
   const locationInput = textInput("Local", "Ex.: Sala 12, Lab. Informática", false, options.initial.location);
   const problemInput = textInput("Problema principal", "Ex.: Não liga", true, options.initial.mainProblem);
   const techArea = textArea("Descrição técnica", options.initial.technicalDescription);
@@ -54,7 +64,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
     MAINTENANCE_STATUSES.map((s) => ({ value: s.value, label: s.label })),
     options.initial.status ?? "com-problema",
   );
-  const ticketInput = textInput("Número do chamado", "Ex.: SED-12345", false, options.initial.ticketNumber);
+  const ticketInput = textInput("Número do chamado", "Ex.: 12345", false, options.initial.ticketNumber);
   const responsibleInput = textInput(
     "Responsável / contato",
     "Ex.: PROATEC – Maria",
@@ -91,7 +101,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
       el("form", { className: "maintenance-form" }, [
         el("div", { className: "maintenance-form-grid" }, [
           idInput.wrap,
-          typeInput.wrap,
+          typeSelect.wrap,
           brandInput.wrap,
           locationInput.wrap,
           problemInput.wrap,
@@ -128,7 +138,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
   function collectPayload(): MaintenancePayload {
     return {
       equipmentId: idInput.input.value,
-      type: typeInput.input.value,
+      type: typeSelect.input.value,
       brandModel: brandInput.input.value,
       location: locationInput.input.value,
       mainProblem: problemInput.input.value,
@@ -173,6 +183,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
 }
 
 interface MaintenanceBulkOptions {
+  devices: Array<{ name: string }>;
   onSubmit(entries: MaintenancePayload[]): boolean;
 }
 
@@ -186,7 +197,7 @@ interface BulkDeviceDefaults {
 interface BulkDeviceRow {
   wrap: HTMLElement;
   equipmentId: HTMLInputElement;
-  type: HTMLInputElement;
+  type: HTMLSelectElement;
   brandModel: HTMLInputElement;
   location: HTMLInputElement;
 }
@@ -232,8 +243,17 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
 
   function addDeviceRow(defaults: BulkDeviceDefaults = {}): BulkDeviceRow {
     const equipmentId = textInput("Identificador / Número", "Ex.: TAB-003", true, defaults.equipmentId);
-    const type = textInput("Tipo", "Ex.: Tablet", true, defaults.type);
-    const brandModel = textInput("Marca / Modelo", "Ex.: Positivo T1060", false, defaults.brandModel);
+    const bulkSortedNames = [...options.devices].map((d) => d.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
+    const bulkNameSet = new Set(bulkSortedNames);
+    const bulkTypeOpts: Array<{ value: string; label: string }> = [
+      { value: "", label: "— selecione o tipo —" },
+      ...bulkSortedNames.map((name) => ({ value: name, label: name })),
+    ];
+    if (defaults.type && !bulkNameSet.has(defaults.type)) {
+      bulkTypeOpts.push({ value: defaults.type, label: `${defaults.type} (legado)` });
+    }
+    const type = selectInput("Tipo *", bulkTypeOpts, defaults.type ?? "");
+    const brandModel = textInput("Modelo", "Ex.: Positivo T1060", false, defaults.brandModel);
     const location = textInput("Local", "Ex.: Sala 12", false, defaults.location);
 
     const removeBtn = el(
