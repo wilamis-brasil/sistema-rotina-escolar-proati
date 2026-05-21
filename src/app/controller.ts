@@ -7,6 +7,7 @@ import {
   createEmptyState,
   describeMaintenanceChanges,
   getMaintenanceStatusLabel,
+  isCanonicalRoomName,
   normalizeCatalogPayload,
   normalizeCase,
   normalizeNotificationSettings,
@@ -15,21 +16,22 @@ import {
   singularKind,
   validatePasswordPayload,
 } from "../domain/model";
-import type {
-  AppState,
-  CatalogKind,
-  CatalogPayload,
-  EmptyResult,
-  MaintenancePayload,
-  NotificationLogEntry,
-  NotificationSettings,
-  NotificationStatus,
-  NotificationType,
-  PasswordPayload,
-  Routine,
-  RoutinePayload,
-  SortOption,
-  StorageAdapter,
+import {
+  CLASS_LETTERS,
+  type AppState,
+  type CatalogKind,
+  type CatalogPayload,
+  type EmptyResult,
+  type MaintenancePayload,
+  type NotificationLogEntry,
+  type NotificationSettings,
+  type NotificationStatus,
+  type NotificationType,
+  type PasswordPayload,
+  type Routine,
+  type RoutinePayload,
+  type SortOption,
+  type StorageAdapter,
 } from "../domain/types";
 import {
   clearStoredState,
@@ -97,6 +99,10 @@ export function createAppController({
       const result = buildRoutine(payload);
       if (!result.ok) return result;
 
+      if (!isCanonicalRoomName(result.value.room, CLASS_LETTERS)) {
+        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      }
+
       state.routines.push(result.value);
       ensureCatalogsFromRoutine(result.value);
       return persist();
@@ -108,6 +114,10 @@ export function createAppController({
 
       const result = buildRoutine(payload, state.routines[index]);
       if (!result.ok) return result;
+
+      if (!isCanonicalRoomName(result.value.room, CLASS_LETTERS)) {
+        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      }
 
       state.routines[index] = result.value;
       ensureCatalogsFromRoutine(result.value);
@@ -156,6 +166,10 @@ export function createAppController({
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
 
+      if (kind === "rooms" && !isCanonicalRoomName(normalized.value.name, CLASS_LETTERS)) {
+        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      }
+
       if (catalogHasName(kind, normalized.value.name)) {
         return failure("Já existe um cadastro com esse nome.");
       }
@@ -176,6 +190,10 @@ export function createAppController({
 
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
+
+      if (kind === "rooms" && !isCanonicalRoomName(normalized.value.name, CLASS_LETTERS)) {
+        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      }
 
       const duplicate = collection.some(
         (item) => item.id !== id && normalizeCase(item.name) === normalizeCase(normalized.value.name),

@@ -20,7 +20,8 @@ export interface UIRefs {
   routineEndTime: HTMLInputElement;
   routineSubject: HTMLInputElement;
   routineTeacher: HTMLInputElement;
-  routineRoom: HTMLInputElement;
+  routineRoom: HTMLSelectElement;
+  routineRoomLegacyWarning: HTMLElement;
   routineStudentCount: HTMLInputElement;
   routineDevices: HTMLElement;
   routineNewDevice: HTMLInputElement;
@@ -41,7 +42,6 @@ export interface UIRefs {
   filterResultsCount: HTMLElement;
   filterClearAll: HTMLButtonElement;
   teachersDatalist: HTMLElement;
-  roomsDatalist: HTMLElement;
   subjectsDatalist: HTMLElement;
   teacherForm: HTMLFormElement;
   teacherId: HTMLInputElement;
@@ -50,7 +50,8 @@ export interface UIRefs {
   teachersListPanel: HTMLElement;
   roomForm: HTMLFormElement;
   roomId: HTMLInputElement;
-  roomName: HTMLInputElement;
+  roomYear: HTMLSelectElement;
+  roomLetter: HTMLSelectElement;
   roomStudentCount: HTMLInputElement;
   roomFeedback: HTMLElement;
   roomsListPanel: HTMLElement;
@@ -120,6 +121,7 @@ export function bindRefs(): UIRefs {
     routineSubject: qs("#routine-subject"),
     routineTeacher: qs("#routine-teacher"),
     routineRoom: qs("#routine-room"),
+    routineRoomLegacyWarning: qs("#routine-room-legacy-warning"),
     routineStudentCount: qs("#routine-student-count"),
     routineDevices: qs("#routine-devices"),
     routineNewDevice: qs("#routine-new-device"),
@@ -140,7 +142,6 @@ export function bindRefs(): UIRefs {
     filterResultsCount: qs("#filter-results-count"),
     filterClearAll: qs("#filter-clear-all"),
     teachersDatalist: qs("#teachers-list"),
-    roomsDatalist: qs("#rooms-list"),
     subjectsDatalist: qs("#subjects-list"),
     teacherForm: qs("#teacher-form"),
     teacherId: qs("#teacher-id"),
@@ -149,7 +150,8 @@ export function bindRefs(): UIRefs {
     teachersListPanel: qs("#teachers-list-panel"),
     roomForm: qs("#room-form"),
     roomId: qs("#room-id"),
-    roomName: qs("#room-name"),
+    roomYear: qs("#room-year"),
+    roomLetter: qs("#room-letter"),
     roomStudentCount: qs("#room-student-count"),
     roomFeedback: qs("#room-feedback"),
     roomsListPanel: qs("#rooms-list-panel"),

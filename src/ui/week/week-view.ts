@@ -262,7 +262,7 @@ function renderScheduleHead(): HTMLTableSectionElement {
       "tr",
       {},
       WEEKDAYS.flatMap(() => [
-        el("th", { className: "schedule-subheader", text: "Sala/Turma", attrs: { scope: "col" } }),
+        el("th", { className: "schedule-subheader", text: "Turma", attrs: { scope: "col" } }),
         el("th", { className: "schedule-subheader", text: "Professor", attrs: { scope: "col" } }),
       ]),
     ),

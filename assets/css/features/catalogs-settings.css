@@ -11,7 +11,12 @@
   }
 
   .catalog-form-room {
-    grid-template-columns: minmax(0, 1fr) minmax(140px, 0.35fr) auto;
+    grid-template-columns: minmax(260px, 1fr) minmax(120px, 0.35fr) minmax(150px, 0.45fr) auto;
+    align-items: end;
+  }
+
+  .catalog-form-room .button {
+    white-space: nowrap;
   }
 
   #password-form {

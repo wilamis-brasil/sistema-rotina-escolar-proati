@@ -1,6 +1,13 @@
 import type { AppActions } from "../../app/controller";
-import { getTodayWeekdayId, normalizeText } from "../../domain/model";
 import {
+  buildCanonicalRoomName,
+  getTodayWeekdayId,
+  isCanonicalRoomName,
+  normalizeText,
+} from "../../domain/model";
+import {
+  CLASS_LETTERS,
+  CLASS_YEARS,
   WEEKDAYS,
   type AppState,
   type Routine,
@@ -25,6 +32,7 @@ type RoutineFormRefs = Pick<
   | "routineSubject"
   | "routineTeacher"
   | "routineRoom"
+  | "routineRoomLegacyWarning"
   | "routineStudentCount"
   | "routineDevices"
   | "routineNewDevice"
@@ -35,7 +43,6 @@ type RoutineFormRefs = Pick<
   | "addDeviceToRoutine"
   | "storageStatus"
   | "teachersDatalist"
-  | "roomsDatalist"
   | "subjectsDatalist"
 >;
 
@@ -129,6 +136,9 @@ export function createRoutineForm({
     refs.routineSubject.value = "";
     refs.routineNewDevice.value = "";
     refs.saveRoutineButton.textContent = "Salvar rotina";
+    refs.routineRoomLegacyWarning.hidden = true;
+    refs.routineRoomLegacyWarning.textContent = "";
+    refs.routineRoom.value = "";
     feedback.setFeedback(refs.routineFeedback, "", "neutral");
     renderDevices();
   }
@@ -145,15 +155,32 @@ export function createRoutineForm({
     refs.routineEndTime.value = routine.endTime;
     refs.routineSubject.value = routine.subject;
     refs.routineTeacher.value = routine.teacher;
-    refs.routineRoom.value = routine.room;
     refs.routineStudentCount.value = String(routine.studentCount);
     refs.routineNotes.value = routine.notes;
+
+    const isLegacy = !isCanonicalRoomName(routine.room, CLASS_LETTERS);
+    if (isLegacy) {
+      refs.routineRoomLegacyWarning.hidden = false;
+      refs.routineRoomLegacyWarning.textContent =
+        `Esta rotina usa a turma "${routine.room}" que não segue o padrão atual. ` +
+        `Selecione uma turma padronizada para salvar.`;
+      refs.routineRoom.value = "";
+    } else {
+      refs.routineRoomLegacyWarning.hidden = true;
+      refs.routineRoomLegacyWarning.textContent = "";
+      setRoomSelectValue(routine.room);
+    }
 
     refs.saveRoutineButton.textContent = "Atualizar rotina";
     navigation.setView("today");
     renderDevices();
     refs.routineForm.scrollIntoView({ behavior: "smooth", block: "start" });
     refs.routineStartTime.focus();
+  }
+
+  function setRoomSelectValue(value: string): void {
+    const hasOption = [...refs.routineRoom.options].some((o) => o.value === value);
+    refs.routineRoom.value = hasOption ? value : "";
   }
 
   function startNew(): void {
@@ -204,13 +231,31 @@ export function createRoutineForm({
       state.teachers.map((teacher) => option(teacher.name, teacher.name)),
     );
     replaceChildren(
-      refs.roomsDatalist,
-      state.rooms.map((room) => option(room.name, room.name)),
-    );
-    replaceChildren(
       refs.subjectsDatalist,
       uniqueRoutineSubjects(state.routines).map((subject) => option(subject, subject)),
     );
+    renderRoomSelect();
+  }
+
+  function renderRoomSelect(): void {
+    const currentValue = refs.routineRoom.value;
+    const letters = CLASS_LETTERS;
+    const roomOptions: HTMLOptionElement[] = [
+      option("", "Selecione a turma..."),
+    ];
+
+    CLASS_YEARS.forEach((year) => {
+      letters.forEach((letter) => {
+        const name = buildCanonicalRoomName(year, letter);
+        roomOptions.push(option(name, name));
+      });
+    });
+
+    replaceChildren(refs.routineRoom, roomOptions);
+
+    // Preserve current selection if still valid
+    const hasOption = [...refs.routineRoom.options].some((o) => o.value === currentValue);
+    refs.routineRoom.value = hasOption ? currentValue : "";
   }
 
   function fillStudentCountFromRoom(): void {
