@@ -73,7 +73,7 @@ Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma 
 
 ---
 
-## Destaques para entrevistadores
+## Destaques Importantes
 
 | O que demonstra | Como aparece no projeto |
 |---|---|
