@@ -11,7 +11,7 @@
     min-width: 320px;
     margin: 0;
     color: var(--text);
-    background: var(--bg);
+    background: #f1f1f0;
     font-family: "Rawline", sans-serif;
     text-rendering: geometricPrecision;
   }
