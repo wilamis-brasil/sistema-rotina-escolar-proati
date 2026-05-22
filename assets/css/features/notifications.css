@@ -7,7 +7,7 @@
   height: 42px;
   place-items: center;
   flex: 0 0 auto;
-  margin-right: 0.5rem;
+  margin-right: 0;
   color: var(--text);
   background: var(--surface-soft);
   border: 0;

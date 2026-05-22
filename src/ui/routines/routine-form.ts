@@ -1,18 +1,21 @@
 import type { AppActions } from "../../app/controller";
 import {
-  buildCanonicalRoomName,
   getTodayWeekdayId,
   isCanonicalRoomName,
   normalizeText,
 } from "../../domain/model";
 import {
   CLASS_LETTERS,
-  CLASS_YEARS,
   WEEKDAYS,
   type AppState,
+  type Room,
   type Routine,
   type RoutinePayload,
 } from "../../domain/types";
+
+export function buildRoomSelectOptions(rooms: Room[]): string[] {
+  return rooms.map((room) => room.name);
+}
 import { el, option, replaceChildren, span } from "../dom";
 import type { Navigation } from "../navigation";
 import { slug } from "../ui-elements";
@@ -239,17 +242,10 @@ export function createRoutineForm({
 
   function renderRoomSelect(): void {
     const currentValue = refs.routineRoom.value;
-    const letters = CLASS_LETTERS;
     const roomOptions: HTMLOptionElement[] = [
       option("", "Selecione a turma..."),
+      ...buildRoomSelectOptions(getState().rooms).map((name) => option(name, name)),
     ];
-
-    CLASS_YEARS.forEach((year) => {
-      letters.forEach((letter) => {
-        const name = buildCanonicalRoomName(year, letter);
-        roomOptions.push(option(name, name));
-      });
-    });
 
     replaceChildren(refs.routineRoom, roomOptions);
 

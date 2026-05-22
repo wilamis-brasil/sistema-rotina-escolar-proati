@@ -43,7 +43,7 @@
     }
 
     .app-header {
-      grid-template-columns: minmax(0, 1fr) var(--main-menu-button-width);
+      grid-template-columns: minmax(0, 1fr) auto;
       gap: 12px;
       padding: 12px 16px;
     }
@@ -65,6 +65,7 @@
       justify-content: center;
       gap: 0;
       width: var(--main-menu-button-width);
+      flex-basis: var(--main-menu-button-width);
       height: 48px;
       padding: 0;
     }

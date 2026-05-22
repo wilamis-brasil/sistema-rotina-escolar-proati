@@ -182,13 +182,13 @@
   }
 
   .filter-pill:has(input:checked) {
-    background: #111827;
-    border-color: #111827;
+    background: #000000;
+    border-color: #000000;
     color: #ffffff;
   }
 
   .filter-pill:has(input:checked):hover {
-    background: #1f2937;
+    background: #252525;
   }
 
   .filter-pill:focus-within {
