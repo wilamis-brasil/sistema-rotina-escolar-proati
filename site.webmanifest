@@ -1,0 +1,24 @@
+{
+  "name": "Sistema de Rotina Escolar PROATI",
+  "short_name": "PROATI",
+  "description": "Rotina local para retirada, uso e devolucao de dispositivos escolares.",
+  "id": "./",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#f7f7f6",
+  "theme_color": "#f7f7f6",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
