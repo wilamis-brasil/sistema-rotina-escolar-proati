@@ -12,24 +12,6 @@
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
     <script type="module" src="./src/main.ts"></script>
-    <script>
-      (() => {
-        const isGitHubPages = location.hostname.endsWith("github.io");
-        const hasSourceEntry = [...document.scripts].some((script) => script.src.endsWith("/src/main.ts"));
-
-        if (!isGitHubPages || !hasSourceEntry) return;
-
-        const stylesheet = document.createElement("link");
-        stylesheet.rel = "stylesheet";
-        stylesheet.href = "./assets/index.css";
-        document.head.appendChild(stylesheet);
-
-        const script = document.createElement("script");
-        script.type = "module";
-        script.src = "./assets/index.js";
-        document.head.appendChild(script);
-      })();
-    </script>
   </head>
   <body>
     <header class="app-header">

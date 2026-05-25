@@ -1,6 +1,7 @@
 import {
   AlarmClock,
   BellRing,
+  BookOpenCheck,
   CalendarDays,
   ChevronDown,
   CheckCircle2,
@@ -40,6 +41,7 @@ import {
 const icons = {
   AlarmClock,
   BellRing,
+  BookOpenCheck,
   CalendarDays,
   ChevronDown,
   CheckCircle2,

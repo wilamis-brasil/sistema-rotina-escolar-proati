@@ -51,10 +51,6 @@
     min-height: 100px;
   }
 
-  .align-end {
-    align-items: end;
-  }
-
   label:not(.button),
   .device-fieldset {
     display: grid;
@@ -236,30 +232,6 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 8px;
-  }
-
-  .toggle-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 10px;
-    min-height: var(--control-height);
-    padding: 0;
-  }
-
-  .toggle-label input {
-    width: 18px;
-    height: 18px;
-    min-height: 18px;
-    accent-color: var(--accent);
-  }
-
-  .toggle-label input:checked {
-    background-color: var(--accent);
-  }
-
-  .toggle-label input[type="checkbox"]:checked:focus {
-    background-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(255, 22, 31, 0.12);
   }
 
   .form-feedback {

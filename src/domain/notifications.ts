@@ -1,7 +1,6 @@
-import { isValidTime, timeToMinutes, weekdayIndex, normalizeCase } from "./model";
+import { isValidTime, timeToMinutes, normalizeCase } from "./model";
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
-  NOTIFICATION_TYPES,
   WEEKDAYS,
   type NotificationLogEntry,
   type NotificationSettings,
@@ -62,10 +61,6 @@ export function formatIsoDate(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
-}
-
-export function getWeekdayIdFromDate(date: Date): WeekdayId | null {
-  return WEEKDAYS.find((day) => day.jsDay === date.getDay())?.id ?? null;
 }
 
 function effectiveLead(routine: Routine, settings: NotificationSettings): number {
@@ -326,10 +321,6 @@ export function getRecentMissed(plans: NotificationPlan[], now: Date, windowMinu
   });
 }
 
-export function findPlanById(plans: NotificationPlan[], id: string): NotificationPlan | undefined {
-  return plans.find((plan) => plan.id === id);
-}
-
 export function describePlanRoutines(plan: NotificationPlan): string {
   return plan.routines
     .map((routine) => `${routine.teacher} · ${routine.room}`)
@@ -340,14 +331,3 @@ export function getPlanWeekdayLabel(plan: NotificationPlan): string {
   return WEEKDAYS.find((day) => day.id === plan.weekday)?.label ?? "";
 }
 
-export function sortPlansChronologically(plans: NotificationPlan[]): NotificationPlan[] {
-  return [...plans].sort((a, b) => {
-    const dayDiff = weekdayIndex(a.weekday) - weekdayIndex(b.weekday);
-    if (dayDiff !== 0) return dayDiff;
-    return a.fireMinutes - b.fireMinutes;
-  });
-}
-
-export function isPlanType(value: unknown): value is NotificationType {
-  return NOTIFICATION_TYPES.includes(value as NotificationType);
-}
