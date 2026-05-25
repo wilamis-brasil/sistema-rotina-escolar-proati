@@ -1,12 +1,10 @@
 import type { AppActions } from "../../app/controller";
 import {
   getTodayWeekdayId,
-  isCanonicalRoomName,
   normalizeText,
 } from "../../domain/model";
 import { MAX_DEVICES_PER_ROUTINE } from "../../domain/limits";
 import {
-  CLASS_LETTERS,
   WEEKDAYS,
   type AppState,
   type Room,
@@ -162,12 +160,12 @@ export function createRoutineForm({
     refs.routineStudentCount.value = String(routine.studentCount);
     refs.routineNotes.value = routine.notes;
 
-    const isLegacy = !isCanonicalRoomName(routine.room, CLASS_LETTERS);
-    if (isLegacy) {
+    const roomInCatalog = getState().rooms.some((r) => r.name === routine.room);
+    if (!roomInCatalog) {
       refs.routineRoomLegacyWarning.hidden = false;
       refs.routineRoomLegacyWarning.textContent =
-        `Esta rotina usa a turma "${routine.room}" que não segue o padrão atual. ` +
-        `Selecione uma turma padronizada para salvar.`;
+        `Esta rotina usa a turma "${routine.room}", que não está cadastrada no catálogo. ` +
+        `Cadastre ou selecione uma turma existente para salvar.`;
       refs.routineRoom.value = "";
     } else {
       refs.routineRoomLegacyWarning.hidden = true;
@@ -197,7 +195,10 @@ export function createRoutineForm({
   function addDeviceFromRoutineInput(): void {
     const name = normalizeText(refs.routineNewDevice.value);
     if (!name) return;
-    if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) return;
+    if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) {
+      feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`, "error");
+      return;
+    }
     selectedDevices.add(name);
     refs.routineNewDevice.value = "";
     renderDevices();
@@ -220,8 +221,16 @@ export function createRoutineForm({
         });
         input.checked = selectedDevices.has(name);
         input.addEventListener("change", () => {
-          if (input.checked) selectedDevices.add(name);
-          else selectedDevices.delete(name);
+          if (input.checked) {
+            if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) {
+              input.checked = false;
+              feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`, "error");
+              return;
+            }
+            selectedDevices.add(name);
+          } else {
+            selectedDevices.delete(name);
+          }
         });
 
         return el("label", { className: "check-pill" }, [input, span(name)]);

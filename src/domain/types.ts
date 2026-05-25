@@ -2,54 +2,6 @@ export const SCHEMA_VERSION = 7;
 export const STORAGE_KEY = "sistema-rotina-escolar-proati-state-v1";
 export const LEGACY_STORAGE_KEYS = ["kickoff-proati-state-v1"] as const;
 
-export const CLASS_YEARS = [
-  "1º ano EF",
-  "2º ano EF",
-  "3º ano EF",
-  "4º ano EF",
-  "5º ano EF",
-  "6º ano EF",
-  "7º ano EF",
-  "8º ano EF",
-  "9º ano EF",
-  "1º ano EM",
-  "2º ano EM",
-  "3º ano EM",
-] as const;
-
-export type ClassYear = (typeof CLASS_YEARS)[number];
-
-export const CLASS_LETTERS = [
-  "A",
-  "B",
-  "C",
-  "D",
-  "E",
-  "F",
-  "G",
-  "H",
-  "I",
-  "J",
-  "K",
-  "L",
-  "M",
-  "N",
-  "O",
-  "P",
-  "Q",
-  "R",
-  "S",
-  "T",
-  "U",
-  "V",
-  "W",
-  "X",
-  "Y",
-  "Z",
-] as const;
-
-export type ClassLetter = (typeof CLASS_LETTERS)[number];
-
 export const WEEKDAYS = [
   { id: "monday", label: "Segunda-feira", shortLabel: "Seg", jsDay: 1 },
   { id: "tuesday", label: "Terça-feira", shortLabel: "Ter", jsDay: 2 },

@@ -23,4 +23,9 @@ describe("buildRoomSelectOptions", () => {
     expect(options).not.toContain("3º ano EM - Z");
     expect(options).toHaveLength(1);
   });
+
+  it("returns free-form room names as-is", () => {
+    const rooms = [makeRoom("Sala 12"), makeRoom("1A", "2"), makeRoom("Laboratório", "3")];
+    expect(buildRoomSelectOptions(rooms)).toEqual(["Sala 12", "1A", "Laboratório"]);
+  });
 });

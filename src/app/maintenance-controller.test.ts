@@ -11,7 +11,7 @@ const validRoutinePayload = {
   endTime: "09:00",
   subject: "Matemática",
   teacher: "Ana",
-  room: "6º ano EF - A",
+  room: "6A",
   studentCount: "30",
   devices: ["Notebook"],
   notes: "",
@@ -147,6 +147,7 @@ describe("controller — manutenção", () => {
       initialState: createEmptyState(),
       storage: createMemoryStorage(),
     });
+    controller.actions.addCatalogItem("rooms", { name: "6A" });
     expect(controller.actions.addRoutine(validRoutinePayload).ok).toBe(true);
     expect(controller.actions.addMaintenanceRecord(basePayload).ok).toBe(true);
 
@@ -171,6 +172,7 @@ describe("controller — manutenção", () => {
       initialState: createEmptyState(),
       storage: createMemoryStorage(),
     });
+    target.actions.addCatalogItem("rooms", { name: "6A" });
     expect(target.actions.addRoutine(validRoutinePayload).ok).toBe(true);
 
     const importResult = target.actions.importMaintenanceData(json);

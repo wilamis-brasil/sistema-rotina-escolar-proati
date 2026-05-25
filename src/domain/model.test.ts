@@ -1,15 +1,12 @@
 import { describe, expect, it } from "vitest";
 import {
-  buildCanonicalRoomName,
   buildRoutine,
   createEmptyState,
   filterRoutines,
-  isCanonicalRoomName,
+  normalizeCatalogPayload,
   normalizeState,
-  parseCanonicalRoomName,
   sortRoutines,
 } from "./model";
-import { CLASS_LETTERS } from "./types";
 import { MAX_DEVICES_PER_ROUTINE } from "./limits";
 
 const validRoutinePayload = {
@@ -123,66 +120,22 @@ describe("state normalization", () => {
   });
 });
 
-describe("buildCanonicalRoomName", () => {
-  it("builds a canonical name from year and letter", () => {
-    expect(buildCanonicalRoomName("6º ano EF", "B")).toBe("6º ano EF - B");
-    expect(buildCanonicalRoomName("1º ano EM", "A")).toBe("1º ano EM - A");
+describe("normalizeCatalogPayload — turmas com nome livre", () => {
+  it("aceita nomes livres como 'Sala 12', '1A', 'Laboratório'", () => {
+    expect(normalizeCatalogPayload("rooms", { name: "Sala 12" }).ok).toBe(true);
+    expect(normalizeCatalogPayload("rooms", { name: "1A" }).ok).toBe(true);
+    expect(normalizeCatalogPayload("rooms", { name: "Laboratório" }).ok).toBe(true);
+    expect(normalizeCatalogPayload("rooms", { name: "6º ano EF - A" }).ok).toBe(true);
   });
 
-  it("uppercases the letter", () => {
-    expect(buildCanonicalRoomName("3º ano EF", "c")).toBe("3º ano EF - C");
-  });
-});
-
-describe("parseCanonicalRoomName", () => {
-  it("parses a valid canonical name", () => {
-    expect(parseCanonicalRoomName("6º ano EF - B")).toEqual({ year: "6º ano EF", letter: "B" });
-    expect(parseCanonicalRoomName("3º ano EM - A")).toEqual({ year: "3º ano EM", letter: "A" });
+  it("rejeita nome de turma vazio", () => {
+    const result = normalizeCatalogPayload("rooms", { name: "" });
+    expect(result.ok).toBe(false);
   });
 
-  it("returns null for legacy non-canonical names", () => {
-    expect(parseCanonicalRoomName("Sala 12")).toBeNull();
-    expect(parseCanonicalRoomName("1A")).toBeNull();
-    expect(parseCanonicalRoomName("Laboratório")).toBeNull();
-  });
-
-  it("returns null for names with valid pattern but invalid year", () => {
-    expect(parseCanonicalRoomName("10º ano EF - A")).toBeNull();
-    expect(parseCanonicalRoomName("Sala - A")).toBeNull();
-  });
-});
-
-describe("isCanonicalRoomName", () => {
-  it("returns true for a canonical name with allowed letter", () => {
-    expect(isCanonicalRoomName("6º ano EF - B", CLASS_LETTERS)).toBe(true);
-    expect(isCanonicalRoomName("1º ano EM - A", CLASS_LETTERS)).toBe(true);
-    expect(isCanonicalRoomName("6º ano EF - Z", CLASS_LETTERS)).toBe(true);
-  });
-
-  it("returns false for a legacy non-canonical name", () => {
-    expect(isCanonicalRoomName("Sala 12", CLASS_LETTERS)).toBe(false);
-    expect(isCanonicalRoomName("1A", CLASS_LETTERS)).toBe(false);
-  });
-
-  it("returns false for names with invalid letters", () => {
-    expect(isCanonicalRoomName("6º ano EF - AA", CLASS_LETTERS)).toBe(false);
-    expect(isCanonicalRoomName("6º ano EF - Ç", CLASS_LETTERS)).toBe(false);
-    expect(isCanonicalRoomName("6º ano EF - 1", CLASS_LETTERS)).toBe(false);
-  });
-
-  it("handles non-string input safely", () => {
-    expect(isCanonicalRoomName(null, CLASS_LETTERS)).toBe(false);
-    expect(isCanonicalRoomName(undefined, CLASS_LETTERS)).toBe(false);
-    expect(isCanonicalRoomName(42, CLASS_LETTERS)).toBe(false);
-  });
-});
-
-describe("CLASS_LETTERS", () => {
-  it("contains the full alphabet from A to Z", () => {
-    expect(CLASS_LETTERS).toHaveLength(26);
-    expect(CLASS_LETTERS[0]).toBe("A");
-    expect(CLASS_LETTERS[25]).toBe("Z");
-    expect(CLASS_LETTERS).toEqual("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  it("rejeita nome de turma acima de 80 caracteres", () => {
+    const result = normalizeCatalogPayload("rooms", { name: "A".repeat(81) });
+    expect(result.ok).toBe(false);
   });
 });
 

@@ -313,7 +313,7 @@ export function getDueNotifications(plans: NotificationPlan[], now: Date): Notif
   });
 }
 
-export function getRecentMissed(plans: NotificationPlan[], now: Date, windowMinutes = 240): NotificationPlan[] {
+export function getRecentMissed(plans: NotificationPlan[], now: Date, windowMinutes = NOTIF_RECENT_DELAY_WINDOW): NotificationPlan[] {
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   return plans.filter((plan) => {
     if (plan.status !== "pendente") return false;

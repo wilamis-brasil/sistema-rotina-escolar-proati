@@ -11,8 +11,6 @@ import {
   MAX_NOTIFICATION_LOG,
 } from "./limits";
 import {
-  CLASS_LETTERS,
-  CLASS_YEARS,
   DEFAULT_DEVICE_NAMES,
   DEFAULT_NOTIFICATION_SETTINGS,
   MAINTENANCE_PRIORITIES,
@@ -214,35 +212,6 @@ export function formatDateTime(value: unknown): string {
     timeStyle: "short",
   }).format(date);
 }
-
-// --- Class room helpers ---
-
-export function buildCanonicalRoomName(year: string, letter: string): string {
-  return `${year} - ${letter.toUpperCase()}`;
-}
-
-const CANONICAL_ROOM_PATTERN = /^(.+) - ([A-Z])$/;
-
-export function parseCanonicalRoomName(name: string): { year: string; letter: string } | null {
-  const match = CANONICAL_ROOM_PATTERN.exec(name);
-  if (!match) return null;
-  const year = match[1]!;
-  const letter = match[2]!;
-  if (!(CLASS_YEARS as readonly string[]).includes(year)) return null;
-  return { year, letter };
-}
-
-export function isCanonicalRoomName(
-  name: unknown,
-  allowedLetters: readonly string[] = CLASS_LETTERS,
-): boolean {
-  if (typeof name !== "string") return false;
-  const parsed = parseCanonicalRoomName(name);
-  if (!parsed) return false;
-  return allowedLetters.includes(parsed.letter);
-}
-
-// --- End class room helpers ---
 
 export function createCatalogItem(
   name: unknown,
@@ -1108,4 +1077,53 @@ export function validatePasswordPayload(
       updatedAt: timestamp,
     },
   };
+}
+
+export function validateImportedMaintenanceLimits(records: MaintenanceRecord[]): string[] {
+  const errors: string[] = [];
+  const checks: Array<[(r: MaintenanceRecord) => string, number, string]> = [
+    [(r) => r.equipmentId, MAINTENANCE_ID_MAX, "Identificador"],
+    [(r) => r.type, MAINTENANCE_SHORT_MAX, "Tipo"],
+    [(r) => r.brandModel, MAINTENANCE_SHORT_MAX, "Modelo"],
+    [(r) => r.location, MAINTENANCE_SHORT_MAX, "Local"],
+    [(r) => r.mainProblem, MAINTENANCE_MEDIUM_MAX, "Problema principal"],
+    [(r) => r.technicalDescription, MAINTENANCE_LONG_MAX, "Descrição técnica"],
+    [(r) => r.ticketNumber, MAINTENANCE_TICKET_MAX, "Número do chamado"],
+    [(r) => r.responsibleContact, MAINTENANCE_SHORT_MAX, "Responsável"],
+    [(r) => r.actionsTaken, MAINTENANCE_LONG_MAX, "Ações realizadas"],
+    [(r) => r.notes, MAINTENANCE_LONG_MAX, "Observações"],
+  ];
+  for (const r of records) {
+    for (const [getter, max, label] of checks) {
+      const e = checkMaxLen(getter(r), max, label);
+      if (e) {
+        errors.push(e);
+        break;
+      }
+    }
+  }
+  return errors;
+}
+
+export function validateImportedStateLimits(state: AppState): string[] {
+  const errors: string[] = [];
+  for (const t of state.teachers) {
+    if (t.name.length > 80) errors.push(`Professor "${t.name.slice(0, 20)}" excede 80 caracteres.`);
+  }
+  for (const r of state.rooms) {
+    if (r.name.length > 80) errors.push(`Turma "${r.name.slice(0, 20)}" excede 80 caracteres.`);
+  }
+  for (const d of state.devices) {
+    if (d.name.length > 80) errors.push(`Dispositivo "${d.name.slice(0, 20)}" excede 80 caracteres.`);
+  }
+  for (const p of state.passwords) {
+    const e =
+      checkMaxLen(p.title, PASSWORD_TITLE_MAX, "Título da senha") ??
+      checkMaxLen(p.username, PASSWORD_USERNAME_MAX, "Usuário da senha") ??
+      checkMaxLen(p.secret, PASSWORD_SECRET_MAX, "Senha importada") ??
+      checkMaxLen(p.description, PASSWORD_DESCRIPTION_MAX, "Descrição da senha");
+    if (e) errors.push(e);
+  }
+  errors.push(...validateImportedMaintenanceLimits(state.maintenanceRecords));
+  return errors;
 }

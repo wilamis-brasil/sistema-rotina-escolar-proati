@@ -1,5 +1,12 @@
 import { failure } from "../domain/errors";
-import { createEmptyState, migrateState, nowIso, pruneNotificationLog } from "../domain/model";
+import {
+  createEmptyState,
+  migrateState,
+  nowIso,
+  pruneNotificationLog,
+  validateImportedStateLimits,
+  validateImportedMaintenanceLimits,
+} from "../domain/model";
 import {
   IMPORT_MAX_BYTES,
   MAX_NOTIFICATION_LOG,
@@ -115,6 +122,10 @@ export function importStateFromText(rawText: string): Result<AppState> {
   try {
     const parsed = JSON.parse(rawText);
     const state = migrateState(parsed);
+    const fieldErrors = validateImportedStateLimits(state);
+    if (fieldErrors.length > 0) {
+      return { ok: false, errors: fieldErrors };
+    }
     if (state.routines.length > MAX_ROUTINES) {
       return { ok: false, errors: [`Importação contém muitas rotinas (máximo: ${MAX_ROUTINES}).`] };
     }
@@ -165,6 +176,10 @@ export function importMaintenanceFromText(rawText: string): Result<MaintenanceRe
         ok: false,
         errors: [`O arquivo contém ${migrated.maintenanceRecords.length} registros. O limite por importação é ${MAX_MAINTENANCE_BATCH}.`],
       };
+    }
+    const fieldErrors = validateImportedMaintenanceLimits(migrated.maintenanceRecords);
+    if (fieldErrors.length > 0) {
+      return { ok: false, errors: fieldErrors };
     }
     return { ok: true, value: migrated.maintenanceRecords };
   } catch (error) {

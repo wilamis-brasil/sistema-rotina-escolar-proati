@@ -3,6 +3,7 @@ import {
   buildNotificationId,
   getDueNotifications,
   getNotificationTypeLabel,
+  getRecentMissed,
   planTodayNotifications,
   summarizeNotifications,
 } from "./notifications";
@@ -404,5 +405,39 @@ describe("getNotificationTypeLabel", () => {
     expect(getNotificationTypeLabel("aviso_antecipado")).toBe("Aviso antecipado");
     expect(getNotificationTypeLabel("inicio")).toBe("Início da retirada");
     expect(getNotificationTypeLabel("termino")).toBe("Término da retirada");
+  });
+});
+
+describe("getRecentMissed usa NOTIF_RECENT_DELAY_WINDOW como janela padrão", () => {
+  it(`inclui plano pendente dentro da janela de ${NOTIF_RECENT_DELAY_WINDOW} min`, () => {
+    const fireMinutes = 8 * 60;
+    const nowMinutes = fireMinutes + NOTIF_RECENT_DELAY_WINDOW;
+    const now = new Date(2026, 4, 18, Math.floor(nowMinutes / 60), nowMinutes % 60, 0);
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate: "2026-05-18",
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({ startTime: "08:00", endTime: "09:00" })],
+      log: [],
+    });
+    const missed = getRecentMissed(plans, now);
+    expect(missed.find((p) => p.type === "inicio")).toBeDefined();
+  });
+
+  it(`exclui plano pendente além da janela de ${NOTIF_RECENT_DELAY_WINDOW} min`, () => {
+    const fireMinutes = 8 * 60;
+    const nowMinutes = fireMinutes + NOTIF_RECENT_DELAY_WINDOW + 1;
+    const now = new Date(2026, 4, 18, Math.floor(nowMinutes / 60), nowMinutes % 60, 0);
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate: "2026-05-18",
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({ startTime: "08:00", endTime: "09:00" })],
+      log: [],
+    });
+    const missed = getRecentMissed(plans, now);
+    expect(missed.find((p) => p.type === "inicio")).toBeUndefined();
   });
 });

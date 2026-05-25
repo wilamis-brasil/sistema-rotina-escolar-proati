@@ -6,6 +6,7 @@ import {
   MAX_DEVICES,
   MAX_PASSWORDS,
   MAX_MAINTENANCES,
+  MAX_NOTIFICATION_LOG,
 } from "../domain/limits";
 import {
   appendMaintenanceHistory,
@@ -15,17 +16,16 @@ import {
   createEmptyState,
   describeMaintenanceChanges,
   getMaintenanceStatusLabel,
-  isCanonicalRoomName,
   normalizeCatalogPayload,
   normalizeCase,
   normalizeNotificationSettings,
   normalizeText,
   nowIso,
+  pruneNotificationLog,
   singularKind,
   validatePasswordPayload,
 } from "../domain/model";
 import {
-  CLASS_LETTERS,
   type AppState,
   type CatalogKind,
   type CatalogPayload,
@@ -110,9 +110,12 @@ export function createAppController({
       const result = buildRoutine(payload);
       if (!result.ok) return result;
 
-      if (!isCanonicalRoomName(result.value.room, CLASS_LETTERS)) {
-        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      if (!catalogHasName("rooms", result.value.room)) {
+        return failure("Cadastre a turma antes de usá-la em uma rotina.");
       }
+
+      const capacityError = checkCatalogCapacity(result.value);
+      if (capacityError) return failure(capacityError);
 
       state.routines.push(result.value);
       ensureCatalogsFromRoutine(result.value);
@@ -126,9 +129,12 @@ export function createAppController({
       const result = buildRoutine(payload, state.routines[index]);
       if (!result.ok) return result;
 
-      if (!isCanonicalRoomName(result.value.room, CLASS_LETTERS)) {
-        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
+      if (!catalogHasName("rooms", result.value.room)) {
+        return failure("Cadastre a turma antes de usá-la em uma rotina.");
       }
+
+      const capacityError = checkCatalogCapacity(result.value);
+      if (capacityError) return failure(capacityError);
 
       state.routines[index] = result.value;
       ensureCatalogsFromRoutine(result.value);
@@ -145,6 +151,9 @@ export function createAppController({
     },
 
     duplicateRoutine(id) {
+      if (state.routines.length >= MAX_ROUTINES) {
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+      }
       const routine = state.routines.find((item) => item.id === id);
       if (!routine) return failure("Rotina não encontrada.");
 
@@ -154,6 +163,9 @@ export function createAppController({
       };
       const result = buildRoutine(duplicated);
       if (!result.ok) return result;
+
+      const capacityError = checkCatalogCapacity(result.value);
+      if (capacityError) return failure(capacityError);
 
       state.routines.push(result.value);
       return persist();
@@ -165,6 +177,9 @@ export function createAppController({
 
     undoDeleteRoutine() {
       if (!lastDeletedRoutine) return failure("Não há exclusão recente para desfazer.");
+      if (state.routines.length >= MAX_ROUTINES) {
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+      }
       state.routines.push({
         ...lastDeletedRoutine,
         updatedAt: nowIso(),
@@ -186,10 +201,6 @@ export function createAppController({
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
 
-      if (kind === "rooms" && !isCanonicalRoomName(normalized.value.name, CLASS_LETTERS)) {
-        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
-      }
-
       if (catalogHasName(kind, normalized.value.name)) {
         return failure("Já existe um cadastro com esse nome.");
       }
@@ -210,10 +221,6 @@ export function createAppController({
 
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
-
-      if (kind === "rooms" && !isCanonicalRoomName(normalized.value.name, CLASS_LETTERS)) {
-        return failure("Selecione uma turma padronizada (ex.: 6º ano EF - B).");
-      }
 
       const duplicate = collection.some(
         (item) => item.id !== id && normalizeCase(item.name) === normalizeCase(normalized.value.name),
@@ -384,10 +391,11 @@ export function createAppController({
       };
       if (index === -1) {
         log.push(entry);
+        state.notificationLog = log.length > MAX_NOTIFICATION_LOG ? pruneNotificationLog(log) : log;
       } else {
         log[index] = entry;
+        state.notificationLog = log;
       }
-      state.notificationLog = log;
       return persist();
     },
 
@@ -432,12 +440,18 @@ export function createAppController({
 
   function ensureCatalogsFromRoutine(routine: Routine): void {
     ensureCatalogItem("teachers", { name: routine.teacher });
-    ensureCatalogItem("rooms", { name: routine.room, studentCount: routine.studentCount });
     routine.devices.forEach((device) => ensureCatalogItem("devices", { name: device }));
   }
 
   function ensureCatalogItem(kind: CatalogKind, payload: CatalogPayload): void {
     if (catalogHasName(kind, payload.name)) return;
+    const catalogLimitMap: Record<string, number> = {
+      teachers: MAX_TEACHERS,
+      rooms: MAX_CLASSES,
+      devices: MAX_DEVICES,
+    };
+    const catalogLimit = catalogLimitMap[kind];
+    if (catalogLimit !== undefined && state[kind].length >= catalogLimit) return;
     const normalized = normalizeCatalogPayload(kind, payload);
     if (!normalized.ok) return;
     const item = createCatalogItem(
@@ -446,6 +460,18 @@ export function createAppController({
       normalized.value.extra as never,
     );
     state[kind].push(item as never);
+  }
+
+  function checkCatalogCapacity(routine: Routine): string | null {
+    if (!catalogHasName("teachers", routine.teacher) && state.teachers.length >= MAX_TEACHERS) {
+      return `Limite de ${MAX_TEACHERS} professores atingido.`;
+    }
+    for (const device of routine.devices) {
+      if (!catalogHasName("devices", device) && state.devices.length >= MAX_DEVICES) {
+        return `Limite de ${MAX_DEVICES} dispositivos atingido.`;
+      }
+    }
+    return null;
   }
 
   function catalogHasName(kind: CatalogKind, name: unknown): boolean {

@@ -50,8 +50,7 @@ export interface UIRefs {
   teachersListPanel: HTMLElement;
   roomForm: HTMLFormElement;
   roomId: HTMLInputElement;
-  roomYear: HTMLSelectElement;
-  roomLetter: HTMLSelectElement;
+  roomName: HTMLInputElement;
   roomStudentCount: HTMLInputElement;
   roomFeedback: HTMLElement;
   roomsListPanel: HTMLElement;
@@ -150,8 +149,7 @@ export function bindRefs(): UIRefs {
     teachersListPanel: qs("#teachers-list-panel"),
     roomForm: qs("#room-form"),
     roomId: qs("#room-id"),
-    roomYear: qs("#room-year"),
-    roomLetter: qs("#room-letter"),
+    roomName: qs("#room-name"),
     roomStudentCount: qs("#room-student-count"),
     roomFeedback: qs("#room-feedback"),
     roomsListPanel: qs("#rooms-list-panel"),
