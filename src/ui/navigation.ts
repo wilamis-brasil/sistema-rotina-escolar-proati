@@ -5,7 +5,7 @@ const NAVIGATION_LABELS: Record<string, string> = {
   today: "Home",
   week: "Semana",
   teachers: "Professores",
-  rooms: "Salas",
+  rooms: "Turmas",
   devices: "Dispositivos",
   maintenance: "Manutenção",
   passwords: "Senhas",

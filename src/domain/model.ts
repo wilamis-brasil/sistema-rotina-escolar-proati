@@ -1,6 +1,8 @@
 import { z } from "zod";
 import { resultFailure } from "./errors";
 import {
+  CLASS_LETTERS,
+  CLASS_YEARS,
   DEFAULT_DEVICE_NAMES,
   DEFAULT_NOTIFICATION_SETTINGS,
   MAINTENANCE_PRIORITIES,
@@ -186,6 +188,35 @@ export function formatDateTime(value: unknown): string {
   }).format(date);
 }
 
+// --- Class room helpers ---
+
+export function buildCanonicalRoomName(year: string, letter: string): string {
+  return `${year} - ${letter.toUpperCase()}`;
+}
+
+const CANONICAL_ROOM_PATTERN = /^(.+) - ([A-Z])$/;
+
+export function parseCanonicalRoomName(name: string): { year: string; letter: string } | null {
+  const match = CANONICAL_ROOM_PATTERN.exec(name);
+  if (!match) return null;
+  const year = match[1]!;
+  const letter = match[2]!;
+  if (!(CLASS_YEARS as readonly string[]).includes(year)) return null;
+  return { year, letter };
+}
+
+export function isCanonicalRoomName(
+  name: unknown,
+  allowedLetters: readonly string[] = CLASS_LETTERS,
+): boolean {
+  if (typeof name !== "string") return false;
+  const parsed = parseCanonicalRoomName(name);
+  if (!parsed) return false;
+  return allowedLetters.includes(parsed.letter);
+}
+
+// --- End class room helpers ---
+
 export function createCatalogItem(
   name: unknown,
   type: SingularCatalogKind,
@@ -263,7 +294,7 @@ export function buildRoutine(
   }
 
   if (!room) {
-    errors.push("Informe a sala ou turma.");
+    errors.push("Informe a turma.");
   }
 
   if (!Number.isInteger(studentCount) || studentCount < 1) {
@@ -484,7 +515,7 @@ export function normalizeCatalogPayload(
 ): Result<{ name: string; extra: { studentCount?: number | null } }> {
   const labels = {
     teachers: "o nome do professor",
-    rooms: "a sala/turma",
+    rooms: "a turma",
     devices: "o dispositivo",
   };
   const name = validateCatalogName(payload.name, labels[kind] ?? "o cadastro");

@@ -10,7 +10,7 @@ const validRoutinePayload = {
   endTime: "09:00",
   subject: "Matemática",
   teacher: "Ana",
-  room: "1A",
+  room: "6º ano EF - A",
   studentCount: "30",
   devices: ["Notebook"],
   notes: "",
@@ -47,7 +47,7 @@ describe("createAppController", () => {
     expect(savedState.routines?.[0]).toMatchObject({
       subject: "Matemática",
       teacher: "Ana",
-      room: "1A",
+      room: "6º ano EF - A",
     });
   });
 
@@ -85,5 +85,115 @@ describe("createAppController", () => {
     expect(controller.actions.undoDeleteRoutine().ok).toBe(true);
     expect(controller.getState().routines).toHaveLength(1);
     expect(controller.actions.canUndoDeleteRoutine()).toBe(false);
+  });
+
+  it("rejects a new routine with non-canonical room", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const result = controller.actions.addRoutine({ ...validRoutinePayload, room: "Sala 12" });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toContain("turma padronizada");
+    }
+  });
+
+  it("rejects a new routine with legacy '1A' room", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const result = controller.actions.addRoutine({ ...validRoutinePayload, room: "1A" });
+    expect(result.ok).toBe(false);
+  });
+
+  it("accepts a new routine with canonical room", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const result = controller.actions.addRoutine({ ...validRoutinePayload, room: "9º ano EF - C" });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects updating a routine to a non-canonical room", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    controller.actions.addRoutine(validRoutinePayload);
+    const routineId = controller.getState().routines[0]!.id;
+
+    const result = controller.actions.updateRoutine(routineId, {
+      ...validRoutinePayload,
+      room: "Laboratório",
+    });
+    expect(result.ok).toBe(false);
+  });
+});
+
+describe("fixed class letters", () => {
+  it("accepts Z as a standard class letter", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const result = controller.actions.addRoutine({ ...validRoutinePayload, room: "6º ano EF - Z" });
+    expect(result.ok).toBe(true);
+    expect(controller.getState().routines[0]?.room).toBe("6º ano EF - Z");
+  });
+
+  it("rejects canonical-looking rooms with invalid letters", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    expect(controller.actions.addRoutine({ ...validRoutinePayload, room: "6º ano EF - AA" }).ok).toBe(false);
+    expect(controller.actions.addRoutine({ ...validRoutinePayload, room: "6º ano EF - Ç" }).ok).toBe(false);
+    const result = controller.actions.addRoutine({ ...validRoutinePayload, room: "6º ano EF - 1" });
+    expect(result.ok).toBe(false);
+  });
+
+  it("catalog room stores canonical name and studentCount", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    controller.actions.addCatalogItem("rooms", { name: "6º ano EF - Z", studentCount: 32 });
+    const room = controller.getState().rooms.find((r) => r.name === "6º ano EF - Z");
+    expect(room?.studentCount).toBe(32);
+  });
+
+  it("rejects a non-canonical catalog room", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const result = controller.actions.addCatalogItem("rooms", { name: "Sala 12", studentCount: 32 });
+    expect(result.ok).toBe(false);
+  });
+
+  it("legacy routines and legacy classLetters imported via normalizeState are preserved without loss", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+
+    const json = JSON.stringify({
+      schemaVersion: 6,
+      routines: [
+        {
+          id: "r1",
+          weekday: "monday",
+          startTime: "08:00",
+          endTime: "09:00",
+          subject: "Informática",
+          teacher: "João",
+          room: "Sala 12",
+          studentCount: 25,
+          devices: ["Notebook"],
+          notes: "",
+          createdAt: "2024-01-01T00:00:00.000Z",
+          updatedAt: "2024-01-01T00:00:00.000Z",
+        },
+      ],
+      settings: { classLetters: ["A", "B", "D"] },
+    });
+
+    const result = controller.actions.importData(json);
+    expect(result.ok).toBe(true);
+    expect(controller.getState().routines[0]?.room).toBe("Sala 12");
+    expect("classLetters" in controller.getState().settings).toBe(false);
   });
 });

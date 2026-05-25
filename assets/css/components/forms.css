@@ -51,13 +51,17 @@
     min-height: 100px;
   }
 
-  label:not(.button),
+  .align-end {
+    align-items: end;
+  }
+
+  label:not(.button):not(.filter-pill),
   .device-fieldset {
     display: grid;
     gap: 7px;
   }
 
-  label:not(.button) span {
+  label:not(.button):not(.filter-pill) span {
     color: var(--muted);
     font-size: 0.8rem;
     font-weight: 800;

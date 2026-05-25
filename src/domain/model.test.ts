@@ -1,5 +1,15 @@
 import { describe, expect, it } from "vitest";
-import { buildRoutine, filterRoutines, normalizeState, sortRoutines } from "./model";
+import {
+  buildCanonicalRoomName,
+  buildRoutine,
+  createEmptyState,
+  filterRoutines,
+  isCanonicalRoomName,
+  normalizeState,
+  parseCanonicalRoomName,
+  sortRoutines,
+} from "./model";
+import { CLASS_LETTERS } from "./types";
 
 const validRoutinePayload = {
   weekday: "monday",
@@ -109,5 +119,98 @@ describe("state normalization", () => {
     });
 
     expect(state.routines[0]?.notes).toBe("");
+  });
+});
+
+describe("buildCanonicalRoomName", () => {
+  it("builds a canonical name from year and letter", () => {
+    expect(buildCanonicalRoomName("6º ano EF", "B")).toBe("6º ano EF - B");
+    expect(buildCanonicalRoomName("1º ano EM", "A")).toBe("1º ano EM - A");
+  });
+
+  it("uppercases the letter", () => {
+    expect(buildCanonicalRoomName("3º ano EF", "c")).toBe("3º ano EF - C");
+  });
+});
+
+describe("parseCanonicalRoomName", () => {
+  it("parses a valid canonical name", () => {
+    expect(parseCanonicalRoomName("6º ano EF - B")).toEqual({ year: "6º ano EF", letter: "B" });
+    expect(parseCanonicalRoomName("3º ano EM - A")).toEqual({ year: "3º ano EM", letter: "A" });
+  });
+
+  it("returns null for legacy non-canonical names", () => {
+    expect(parseCanonicalRoomName("Sala 12")).toBeNull();
+    expect(parseCanonicalRoomName("1A")).toBeNull();
+    expect(parseCanonicalRoomName("Laboratório")).toBeNull();
+  });
+
+  it("returns null for names with valid pattern but invalid year", () => {
+    expect(parseCanonicalRoomName("10º ano EF - A")).toBeNull();
+    expect(parseCanonicalRoomName("Sala - A")).toBeNull();
+  });
+});
+
+describe("isCanonicalRoomName", () => {
+  it("returns true for a canonical name with allowed letter", () => {
+    expect(isCanonicalRoomName("6º ano EF - B", CLASS_LETTERS)).toBe(true);
+    expect(isCanonicalRoomName("1º ano EM - A", CLASS_LETTERS)).toBe(true);
+    expect(isCanonicalRoomName("6º ano EF - Z", CLASS_LETTERS)).toBe(true);
+  });
+
+  it("returns false for a legacy non-canonical name", () => {
+    expect(isCanonicalRoomName("Sala 12", CLASS_LETTERS)).toBe(false);
+    expect(isCanonicalRoomName("1A", CLASS_LETTERS)).toBe(false);
+  });
+
+  it("returns false for names with invalid letters", () => {
+    expect(isCanonicalRoomName("6º ano EF - AA", CLASS_LETTERS)).toBe(false);
+    expect(isCanonicalRoomName("6º ano EF - Ç", CLASS_LETTERS)).toBe(false);
+    expect(isCanonicalRoomName("6º ano EF - 1", CLASS_LETTERS)).toBe(false);
+  });
+
+  it("handles non-string input safely", () => {
+    expect(isCanonicalRoomName(null, CLASS_LETTERS)).toBe(false);
+    expect(isCanonicalRoomName(undefined, CLASS_LETTERS)).toBe(false);
+    expect(isCanonicalRoomName(42, CLASS_LETTERS)).toBe(false);
+  });
+});
+
+describe("CLASS_LETTERS", () => {
+  it("contains the full alphabet from A to Z", () => {
+    expect(CLASS_LETTERS).toHaveLength(26);
+    expect(CLASS_LETTERS[0]).toBe("A");
+    expect(CLASS_LETTERS[25]).toBe("Z");
+    expect(CLASS_LETTERS).toEqual("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  });
+});
+
+describe("createEmptyState", () => {
+  it("does not persist customizable class letters", () => {
+    const state = createEmptyState();
+    expect("classLetters" in state.settings).toBe(false);
+  });
+});
+
+describe("normalizeState with classLetters", () => {
+  it("ignores legacy saved classLetters without breaking import", () => {
+    const state = normalizeState({ routines: [], settings: { classLetters: ["A", "B", "C", "D"] } });
+    expect("classLetters" in state.settings).toBe(false);
+  });
+
+  it("preserves legacy routines with non-canonical room during import", () => {
+    const state = normalizeState({
+      routines: [{ ...validRoutinePayload, room: "Sala 12" }],
+      settings: {},
+    });
+    expect(state.routines[0]?.room).toBe("Sala 12");
+  });
+
+  it("preserves legacy routines with legacy '1A' room during import", () => {
+    const state = normalizeState({
+      routines: [{ ...validRoutinePayload, room: "1A" }],
+      settings: {},
+    });
+    expect(state.routines[0]?.room).toBe("1A");
   });
 });

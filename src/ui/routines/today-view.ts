@@ -183,7 +183,7 @@ export function createTodayView({
     return el("div", { className: "empty-state empty-state-action" }, [
       el("strong", { text: message }),
       el("span", {
-        text: "Cadastre horários, professor, sala, alunos e dispositivos para não depender de papel.",
+        text: "Cadastre horários, professor, turma, alunos e dispositivos para não depender de papel.",
       }),
       button,
     ]);

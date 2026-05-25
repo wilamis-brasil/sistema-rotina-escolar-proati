@@ -1,11 +1,17 @@
 import type { AppActions } from "../../app/controller";
 import {
+  buildCanonicalRoomName,
+  parseCanonicalRoomName,
+} from "../../domain/model";
+import {
+  CLASS_LETTERS,
+  CLASS_YEARS,
   type AppState,
   type CatalogKind,
   type EmptyResult,
 } from "../../domain/types";
 import type { DialogManager } from "../dialogs";
-import { el, replaceChildren } from "../dom";
+import { el, option, replaceChildren } from "../dom";
 import { emptyState, iconButton } from "../ui-elements";
 import type { FeedbackPresenter } from "../ui-feedback";
 import type { UIRefs } from "../ui-refs";
@@ -19,7 +25,8 @@ type CatalogsRefs = Pick<
   | "teachersListPanel"
   | "roomForm"
   | "roomId"
-  | "roomName"
+  | "roomYear"
+  | "roomLetter"
   | "roomStudentCount"
   | "roomFeedback"
   | "roomsListPanel"
@@ -54,6 +61,12 @@ export function createCatalogsView({
     refs.teacherForm.addEventListener("submit", handleTeacherSubmit);
     refs.roomForm.addEventListener("submit", handleRoomSubmit);
     refs.deviceForm.addEventListener("submit", handleDeviceSubmit);
+
+    // Populate static year options once
+    replaceChildren(
+      refs.roomYear,
+      CLASS_YEARS.map((year) => option(year, year)),
+    );
   }
 
   function render(): void {
@@ -61,6 +74,17 @@ export function createCatalogsView({
     renderCatalogList("teachers", state.teachers, refs.teachersListPanel);
     renderCatalogList("rooms", state.rooms, refs.roomsListPanel);
     renderCatalogList("devices", state.devices, refs.devicesListPanel);
+    renderRoomLetterSelect();
+  }
+
+  function renderRoomLetterSelect(): void {
+    const currentValue = refs.roomLetter.value;
+    replaceChildren(
+      refs.roomLetter,
+      CLASS_LETTERS.map((letter) => option(letter, letter)),
+    );
+    const hasOption = [...refs.roomLetter.options].some((o) => o.value === currentValue);
+    refs.roomLetter.value = hasOption ? currentValue : CLASS_LETTERS[0];
   }
 
   function renderCatalogList(
@@ -129,9 +153,18 @@ export function createCatalogsView({
 
     if (kind === "rooms") {
       refs.roomId.value = item.id;
-      refs.roomName.value = item.name;
       refs.roomStudentCount.value = "studentCount" in item && item.studentCount ? String(item.studentCount) : "";
-      refs.roomName.focus();
+
+      const parsed = parseCanonicalRoomName(item.name);
+      if (parsed) {
+        refs.roomYear.value = parsed.year;
+        refs.roomLetter.value = parsed.letter;
+      } else {
+        // Legacy room: default selects to first available options
+        refs.roomYear.value = refs.roomYear.options[0]?.value ?? "";
+        refs.roomLetter.value = refs.roomLetter.options[0]?.value ?? "";
+      }
+      refs.roomYear.focus();
       return;
     }
 
@@ -153,13 +186,19 @@ export function createCatalogsView({
 
   function handleRoomSubmit(event: SubmitEvent): void {
     event.preventDefault();
-    const payload = { name: refs.roomName.value, studentCount: refs.roomStudentCount.value };
+    const canonicalName = buildCanonicalRoomName(refs.roomYear.value, refs.roomLetter.value);
+    const payload = { name: canonicalName, studentCount: refs.roomStudentCount.value };
     const result = refs.roomId.value
       ? actions.updateCatalogItem("rooms", refs.roomId.value, payload)
       : actions.addCatalogItem("rooms", payload);
 
-    showCatalogResult("rooms", result, "Sala salva.");
-    if (result.ok) refs.roomForm.reset();
+    showCatalogResult("rooms", result, "Turma salva.");
+    if (result.ok) {
+      refs.roomForm.reset();
+      refs.roomId.value = "";
+      // Re-populate letter select after form reset (reset() clears dynamic selects)
+      render();
+    }
     onChange();
   }
 

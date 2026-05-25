@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
+    <meta name="color-scheme" content="light">
     <meta name="description" content="Kick OFF - Função Estagiário PROATI: rotina local para retirada, uso e devolução de dispositivos eletrônicos.">
     <meta name="application-name" content="Sistema de Rotina Escolar PROATI">
     <meta name="apple-mobile-web-app-title" content="PROATI">
@@ -69,7 +69,7 @@
           <button class="nav-button" type="button" data-view="rooms">
             <i data-lucide="school" aria-hidden="true"></i>
             <span class="nav-button-copy">
-              <span>Salas</span>
+              <span>Turmas</span>
               <small>Turmas e alunos</small>
             </span>
           </button>
@@ -188,15 +188,15 @@
                     <datalist id="teachers-list"></datalist>
                   </label>
                   <label>
-                    <span class="form-label">Sala ou turma</span>
-                    <input class="form-input" id="routine-room" name="room" list="rooms-list" autocomplete="off" placeholder="..." required>
-                    <datalist id="rooms-list"></datalist>
+                    <span class="form-label">Turma</span>
+                    <select class="form-input" id="routine-room" name="room" required></select>
                   </label>
                   <label>
                     <span class="form-label">Alunos</span>
                     <input class="form-input" id="routine-student-count" name="studentCount" type="number" min="1" step="1" placeholder="Ex.: 12" required>
                   </label>
                 </div>
+                <p id="routine-room-legacy-warning" class="form-feedback" role="alert" hidden></p>
               </section>
 
               <fieldset class="device-fieldset form-block">
@@ -240,7 +240,7 @@
             <div class="heading-row">
               <div>
                 <h2 id="week-heading">Rotina semanal</h2>
-                <p>Matriz semanal por equipamento, horário, turma/sala, professor e aula.</p>
+                <p>Matriz semanal por equipamento, horário, turma, professor e aula.</p>
               </div>
               <div class="filter-summary">
                 <span id="filter-results-count"></span>
@@ -255,7 +255,7 @@
                     <i data-lucide="search" class="filter-search-icon" aria-hidden="true"></i>
                     <input id="routine-filter" type="search" autocomplete="off"
                            class="filter-search-input"
-                           placeholder="Professor, sala, aula…" aria-label="Buscar rotinas">
+                           placeholder="Professor, turma, aula…" aria-label="Buscar rotinas">
                   </div>
                 </div>
                 <button id="filter-clear-all" class="filter-clear-btn" type="button" hidden>
@@ -291,7 +291,7 @@
                 </div>
 
                 <div class="filter-group">
-                  <label class="filter-group-label" for="filter-room">Sala</label>
+                  <label class="filter-group-label" for="filter-room">Turma</label>
                   <select id="filter-room" class="filter-select-input"></select>
                 </div>
               </div>
@@ -346,23 +346,27 @@
         <section class="panel catalog-panel">
           <div class="panel-heading">
             <div>
-              <h2 id="rooms-heading">Salas e turmas</h2>
+              <h2 id="rooms-heading">Turmas</h2>
               <p>Salve turmas e quantidade padrão de alunos.</p>
             </div>
           </div>
           <form id="room-form" class="catalog-form catalog-form-room" novalidate>
             <input type="hidden" id="room-id">
             <label>
-              <span>Sala/turma</span>
-              <input id="room-name" type="text" autocomplete="off" placeholder="..." required>
+              <span>Ano/Série</span>
+              <select id="room-year" required></select>
             </label>
             <label>
-              <span>Alunos padrão</span>
+              <span>Classe</span>
+              <select id="room-letter" required></select>
+            </label>
+            <label>
+              <span>Quantidade alunos</span>
               <input id="room-student-count" type="number" min="1" step="1" placeholder="...">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>
-              <span>Salvar sala</span>
+              <span>Salvar turma</span>
             </button>
           </form>
           <p id="room-feedback" class="form-feedback" role="alert"></p>
@@ -557,7 +561,7 @@
           </div>
 
           <form id="settings-form" class="stacked-form" novalidate>
-            <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, salas e horários; guarde-os com cuidado em computadores compartilhados.</p>
+            <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, turmas e horários; guarde-os com cuidado em computadores compartilhados.</p>
             <div class="settings-footer">
               <div class="settings-data-actions">
                 <button class="button button-secondary" type="button" id="export-data-button">

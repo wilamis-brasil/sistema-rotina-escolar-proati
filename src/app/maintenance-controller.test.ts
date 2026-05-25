@@ -10,7 +10,7 @@ const validRoutinePayload = {
   endTime: "09:00",
   subject: "Matemática",
   teacher: "Ana",
-  room: "1A",
+  room: "6º ano EF - A",
   studentCount: "30",
   devices: ["Notebook"],
   notes: "",

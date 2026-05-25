@@ -1,65 +1,54 @@
-# Seguranca
+# Segurança
 
-Este projeto e um app estatico para GitHub Pages. Mesmo sem backend, seguranca ainda importa porque a rotina escolar pode conter dados sensiveis.
+Este projeto é um app estático para GitHub Pages. Mesmo sem backend, segurança ainda importa porque a rotina escolar pode conter dados sensíveis de contexto.
 
-## Modelo de ameaca
+## Modelo de ameaça
 
-O sistema nao possui:
+O sistema não possui:
 
-- login;
-- senha;
+- login ou senha;
 - banco remoto;
-- API propria;
-- servidor de aplicacao;
-- cookies de sessao;
+- API própria;
+- servidor de aplicação;
+- cookies de sessão;
 - upload para servidor.
 
-As principais superficies sao:
+As principais superfícies de risco são:
 
-- dados no `localStorage`;
-- importacao de JSON;
-- exportacao de JSON;
-- renderizacao de dados digitados pelo usuario;
-- supply chain npm.
+- dados no `localStorage` (acessíveis por qualquer script na mesma origem);
+- importação de JSON (arquivo externo que entra no estado da aplicação);
+- exportação de JSON (arquivo com dados da rotina que sai do navegador);
+- renderização de dados digitados pelo usuário;
+- dependências npm (supply chain).
 
-## Regras de seguranca do projeto
+## Regras de segurança do projeto
 
-- Nao renderizar dados do usuario com `innerHTML`.
-- Validar JSON antes de salvar.
-- Confirmar com o usuario antes de importar dados.
-- Confirmar com o usuario antes de apagar dados.
-- Nao adicionar CDN obrigatoria para codigo critico.
-- Nao colocar segredos no codigo.
-- Nao armazenar senhas ou dados pessoais desnecessarios.
+- Não renderizar dados do usuário com `innerHTML` — use `textContent` ou `createTextNode`.
+- Validar JSON importado com Zod antes de salvar no estado.
+- Confirmar com o usuário antes de importar ou apagar dados.
+- Não adicionar CDN obrigatória para código crítico.
+- Não colocar segredos no código ou no repositório.
+- Não armazenar senhas de alunos ou dados pessoais desnecessários.
 
 ## Dados locais
 
 Os dados ficam em:
 
 ```txt
-localStorage
+localStorage — chave: sistema-rotina-escolar-proati-state-v1
 ```
 
-Chave:
+Isso é suficiente para um app local de rotina, mas não deve ser tratado como cofre seguro. Qualquer script rodando na mesma origem pode acessar esses dados.
 
-```txt
-sistema-rotina-escolar-proati-state-v1
-```
+## Recomendações para uso real
 
-Isso e suficiente para um app local de rotina, mas nao deve ser tratado como cofre seguro.
+- Use HTTPS (o GitHub Pages já fornece).
+- Prefira domínio ou subdomínio próprio para isolamento do `localStorage`.
+- Evite dados sensíveis de alunos nas observações das rotinas.
+- Exporte o JSON apenas quando necessário e guarde o arquivo com cuidado.
+- Limpe os dados do navegador em computadores compartilhados quando apropriado.
 
-## Recomendacoes para uso real
-
-- Usar HTTPS.
-- Preferir dominio/subdominio proprio.
-- Evitar dados sensiveis de alunos nas observacoes.
-- Exportar JSON apenas quando necessario.
-- Guardar arquivos exportados com cuidado.
-- Limpar dados do navegador em computadores compartilhados quando apropriado.
-
-## Antes de publicar
-
-Rode:
+## Antes de publicar uma nova versão
 
 ```bash
 npm ci
@@ -70,9 +59,8 @@ npm audit --audit-level=low
 
 ## Melhorias futuras recomendadas
 
-- Content Security Policy.
-- Limite de tamanho para importacao JSON.
-- Workflow de CodeQL no GitHub.
-- Workflow automatizado de deploy para GitHub Pages.
-- Aviso visivel de privacidade dentro da tela de configuracoes.
-
+- Content Security Policy no `index.html`.
+- Limite de tamanho para importação JSON.
+- Workflow de CodeQL no GitHub Actions.
+- Aviso visível de privacidade na tela de configurações.
+- Testes executados no CI (hoje apenas typecheck e build).

@@ -51,7 +51,7 @@ function buildEventData(routine: Routine, fromDate = new Date()): CalendarEventD
   const descriptionLines = [
     routine.teacher ? `Professor: ${routine.teacher}` : "",
     routine.subject ? `Aula: ${routine.subject}` : "",
-    `Sala/turma: ${routine.room}`,
+    `Turma: ${routine.room}`,
     `Alunos: ${routine.studentCount}`,
     `Dispositivos: ${routine.devices.join(", ")}`,
     routine.notes ? `Observações: ${routine.notes}` : "",
