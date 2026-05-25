@@ -3,6 +3,7 @@ import {
   getNotificationTypeLabel,
   type NotificationPlan,
 } from "../../domain/notifications";
+import { NOTIF_POPUP_FADE_S, NOTIF_POPUP_AUTOCLOSE_S } from "../../domain/limits";
 import { el, icon, span } from "../dom";
 import { refreshIcons } from "../icons";
 
@@ -105,11 +106,11 @@ export function createNotificationPopupManager({
     window.setTimeout(() => {
       if (!openPopups.has(plan.id)) return;
       popup.classList.add("is-fading");
-    }, 60_000);
+    }, NOTIF_POPUP_FADE_S * 1_000);
 
     window.setTimeout(() => {
       removePopup(plan.id);
-    }, 90_000);
+    }, NOTIF_POPUP_AUTOCLOSE_S * 1_000);
   }
 
   function removePopup(planId: string): void {

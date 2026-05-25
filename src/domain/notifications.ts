@@ -1,4 +1,5 @@
 import { isValidTime, timeToMinutes, normalizeCase } from "./model";
+import { NOTIF_TRIGGER_WINDOW, NOTIF_RECENT_DELAY_WINDOW } from "./limits";
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
   WEEKDAYS,
@@ -249,7 +250,7 @@ export function planTodayNotifications(context: NotificationContext): Notificati
     const isOverdue =
       status === "pendente" &&
       currentMinutes >= plan.fireMinutes &&
-      currentMinutes - plan.fireMinutes <= 240;
+      currentMinutes - plan.fireMinutes <= NOTIF_RECENT_DELAY_WINDOW;
 
     return {
       ...plan,
@@ -282,7 +283,7 @@ export function summarizeNotifications(plans: NotificationPlan[], now: Date): No
     if (plan.status === "exibida") unseen += 1;
     if (plan.isOverdue) {
       overdue += 1;
-      if (currentMinutes - plan.fireMinutes <= 240) {
+      if (currentMinutes - plan.fireMinutes <= NOTIF_RECENT_DELAY_WINDOW) {
         recentMissed.push(plan);
       }
     }
@@ -308,7 +309,7 @@ export function getDueNotifications(plans: NotificationPlan[], now: Date): Notif
   return plans.filter((plan) => {
     if (plan.status !== "pendente") return false;
     if (plan.fireMinutes > currentMinutes) return false;
-    return currentMinutes - plan.fireMinutes <= 60;
+    return currentMinutes - plan.fireMinutes <= NOTIF_TRIGGER_WINDOW;
   });
 }
 

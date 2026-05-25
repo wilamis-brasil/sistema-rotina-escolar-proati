@@ -55,7 +55,7 @@ Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma 
 - Catálogos de professores, salas/turmas (com contagem de alunos) e dispositivos.
 - Editar um item do catálogo reflete automaticamente em todas as rotinas vinculadas.
 - Exportação e importação JSON com validação via Zod.
-- Migração automática de dados salvos (schema v6, compatível com chaves legadas).
+- Migração automática de dados salvos (schema v7, compatível com chaves legadas).
 
 ---
 
@@ -78,12 +78,12 @@ Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma 
 | O que demonstra | Como aparece no projeto |
 |---|---|
 | **Entendimento do problema** | O sistema foi desenhado a partir de uma necessidade operacional real, não de uma especificação genérica. |
-| **Modelagem de domínio** | Tipos explícitos para rotina, manutenção (10 status, histórico, prioridade) e notificação; schema versionado (v6) com migração de chaves legadas do `localStorage`. |
+| **Modelagem de domínio** | Tipos explícitos para rotina, manutenção (10 status, histórico, prioridade) e notificação; schema versionado (v7) com migração de chaves legadas do `localStorage`. |
 | **Validação de dados** | Zod nos pontos de entrada; `textContent` / DOM API em vez de `innerHTML` para dados do usuário; confirmação antes de reset ou importação. |
 | **Lógica não trivial** | Engine de planejamento de notificações: agrupamento por janela de tempo, cálculo de lead, detecção de overdue, snooze e log de status persistido. |
 | **Arquitetura em camadas** | Separação real entre domínio, persistência, controller e UI — responsabilidades definidas, não apenas pastas com nomes bonitos. |
 | **Testes** | Domínio, controller, persistência e componentes de UI cobertos com Vitest. |
-| **Deploy automatizado** | GitHub Actions faz typecheck → build → deploy ao GitHub Pages a cada push na `main`. |
+| **Deploy automatizado** | GitHub Actions faz typecheck → test → build → deploy ao GitHub Pages a cada push na `main`. |
 | **Privacidade por design** | Sem backend, sem CDN obrigatória, sem dado pessoal de aluno necessário, sem segredo no repositório. |
 
 ---
@@ -154,7 +154,7 @@ npm test
 
 ## Build e deploy
 
-O deploy é automático: a cada push na `main`, o GitHub Actions roda typecheck → build → publica `dist/` no GitHub Pages.
+O deploy é automático: a cada push na `main`, o GitHub Actions roda typecheck → test → build → publica `dist/` no GitHub Pages.
 
 Para gerar o build manualmente:
 

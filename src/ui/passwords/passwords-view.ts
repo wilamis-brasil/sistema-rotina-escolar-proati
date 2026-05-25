@@ -55,8 +55,7 @@ export function createPasswordsView({
     refs.passwordSecretToggle.setAttribute("aria-pressed", String(isPassword));
     refs.passwordSecretToggle.setAttribute("aria-label", isPassword ? "Ocultar senha" : "Mostrar senha");
     refs.passwordSecretToggle.title = isPassword ? "Ocultar senha" : "Mostrar/ocultar senha";
-    refs.passwordSecretToggle.innerHTML = "";
-    refs.passwordSecretToggle.appendChild(icon(isPassword ? "eye-off" : "eye"));
+    replaceChildren(refs.passwordSecretToggle, [icon(isPassword ? "eye-off" : "eye")]);
     refreshIcons(refs.passwordSecretToggle);
   }
 
@@ -96,8 +95,7 @@ export function createPasswordsView({
     refs.passwordSecretToggle.setAttribute("aria-pressed", "false");
     refs.passwordSecretToggle.setAttribute("aria-label", "Mostrar senha");
     refs.passwordSecretToggle.title = "Mostrar/ocultar senha";
-    refs.passwordSecretToggle.innerHTML = "";
-    refs.passwordSecretToggle.appendChild(icon("eye"));
+    replaceChildren(refs.passwordSecretToggle, [icon("eye")]);
     refreshIcons(refs.passwordSecretToggle);
   }
 
@@ -166,8 +164,7 @@ export function createPasswordsView({
       revealBtn.setAttribute("aria-pressed", String(revealed));
       revealBtn.setAttribute("aria-label", revealed ? "Ocultar senha" : "Mostrar senha");
       revealBtn.title = revealed ? "Ocultar senha" : "Mostrar/ocultar senha";
-      revealBtn.innerHTML = "";
-      revealBtn.appendChild(icon(revealed ? "eye-off" : "eye"));
+      replaceChildren(revealBtn, [icon(revealed ? "eye-off" : "eye")]);
       refreshIcons(revealBtn);
     });
 

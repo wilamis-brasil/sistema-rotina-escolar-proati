@@ -10,6 +10,7 @@ import {
   sortRoutines,
 } from "./model";
 import { CLASS_LETTERS } from "./types";
+import { MAX_DEVICES_PER_ROUTINE } from "./limits";
 
 const validRoutinePayload = {
   weekday: "monday",
@@ -182,6 +183,57 @@ describe("CLASS_LETTERS", () => {
     expect(CLASS_LETTERS[0]).toBe("A");
     expect(CLASS_LETTERS[25]).toBe("Z");
     expect(CLASS_LETTERS).toEqual("ABCDEFGHIJKLMNOPQRSTUVWXYZ".split(""));
+  });
+});
+
+describe("buildRoutine — limites operacionais", () => {
+  it(`rejeita mais de ${MAX_DEVICES_PER_ROUTINE} dispositivos`, () => {
+    const devices = Array.from({ length: MAX_DEVICES_PER_ROUTINE + 1 }, (_, i) => `Dispositivo ${i + 1}`);
+    const result = buildRoutine({ ...validRoutinePayload, devices });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/máximo/i);
+    }
+  });
+
+  it("aceita exatamente MAX_DEVICES_PER_ROUTINE dispositivos", () => {
+    const devices = Array.from({ length: MAX_DEVICES_PER_ROUTINE }, (_, i) => `Dispositivo ${i + 1}`);
+    const result = buildRoutine({ ...validRoutinePayload, devices });
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejeita professor acima do limite de texto (81 chars)", () => {
+    const result = buildRoutine({ ...validRoutinePayload, teacher: "A".repeat(81) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/professor/i);
+    }
+  });
+
+  it("rejeita aula acima do limite de texto (81 chars)", () => {
+    const result = buildRoutine({ ...validRoutinePayload, subject: "A".repeat(81) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/aula/i);
+    }
+  });
+
+  it("rejeita observações acima do limite de texto (501 chars)", () => {
+    const result = buildRoutine({ ...validRoutinePayload, notes: "A".repeat(501) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/observações/i);
+    }
+  });
+
+  it("aceita professor, aula e notas dentro dos limites", () => {
+    const result = buildRoutine({
+      ...validRoutinePayload,
+      teacher: "A".repeat(80),
+      subject: "A".repeat(80),
+      notes: "A".repeat(500),
+    });
+    expect(result.ok).toBe(true);
   });
 });
 

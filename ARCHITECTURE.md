@@ -74,7 +74,7 @@ Chave de armazenamento:
 sistema-rotina-escolar-proati-state-v1
 ```
 
-Versão atual do schema: `6`. O código migra automaticamente estados salvos em versões anteriores.
+Versão atual do schema: `7`. O código migra automaticamente estados salvos em versões anteriores.
 
 Chave legada suportada: `kickoff-proati-state-v1`.
 

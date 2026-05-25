@@ -49,8 +49,9 @@ O projeto já inclui um workflow em `.github/workflows/pages.yml` que executa au
 
 1. `npm ci`
 2. `npm run typecheck`
-3. `npm run build`
-4. Publica `dist/` no GitHub Pages.
+3. `npm test`
+4. `npm run build`
+5. Publica `dist/` no GitHub Pages.
 
 ### Opção 2: branch `gh-pages`
 

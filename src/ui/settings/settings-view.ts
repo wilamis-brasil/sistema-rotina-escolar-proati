@@ -1,4 +1,5 @@
 import type { AppActions } from "../../app/controller";
+import { IMPORT_MAX_BYTES } from "../../domain/limits";
 import type { DialogManager } from "../dialogs";
 import type { FeedbackPresenter } from "../ui-feedback";
 import type { UIRefs } from "../ui-refs";
@@ -51,6 +52,16 @@ export function createSettingsView({
     const input = event.target instanceof HTMLInputElement ? event.target : refs.importDataFile;
     const [file] = input.files ?? [];
     if (!file) return;
+
+    if (file.size > IMPORT_MAX_BYTES) {
+      feedback.showResult(
+        { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] },
+        refs.settingsFeedback,
+        "Dados importados.",
+      );
+      input.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.addEventListener("load", async () => {

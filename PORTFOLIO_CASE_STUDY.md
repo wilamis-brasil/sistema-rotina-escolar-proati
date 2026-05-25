@@ -36,7 +36,7 @@ O `localStorage` pode conter dados salvos por versões anteriores do código. JS
 
 ### Schema versionado com migração
 
-O estado local tem `schemaVersion: 6`. Toda vez que o modelo de dados muda de forma incompatível, o código sabe migrar o estado salvo para a versão atual. Também há suporte a uma chave legada de `localStorage` (`kickoff-proati-state-v1`) para não perder dados de instalações anteriores.
+O estado local tem `schemaVersion: 7`. Toda vez que o modelo de dados muda de forma incompatível, o código sabe migrar o estado salvo para a versão atual. Também há suporte a uma chave legada de `localStorage` (`kickoff-proati-state-v1`) para não perder dados de instalações anteriores.
 
 Essa foi uma decisão não óbvia para um projeto pessoal — mas é o tipo de coisa que distingue um app que funciona de um que quebra silenciosamente após uma atualização.
 

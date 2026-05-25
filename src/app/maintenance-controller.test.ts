@@ -3,6 +3,7 @@ import { createEmptyState } from "../domain/model";
 import type { MaintenancePayload } from "../domain/types";
 import { createMemoryStorage } from "../persistence/store";
 import { createAppController } from "./controller";
+import { IMPORT_MAX_BYTES, MAX_MAINTENANCE_BATCH } from "../domain/limits";
 
 const validRoutinePayload = {
   weekday: "monday",
@@ -30,6 +31,90 @@ const basePayload: MaintenancePayload = {
   actionsTaken: "",
   notes: "",
 };
+
+describe("controller — senhas", () => {
+  it("rejeita senha com título acima de 120 chars", () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const result = controller.actions.addPassword({
+      title: "A".repeat(121),
+      username: "",
+      secret: "senha123",
+      description: "",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/título/i);
+    }
+  });
+
+  it("rejeita senha com campo secret acima de 200 chars", () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const result = controller.actions.addPassword({
+      title: "Senha válida",
+      username: "",
+      secret: "S".repeat(201),
+      description: "",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/senha/i);
+    }
+  });
+
+  it("rejeita senha com username acima de 80 chars", () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const result = controller.actions.addPassword({
+      title: "Senha válida",
+      username: "U".repeat(81),
+      secret: "senha123",
+      description: "",
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/usuário/i);
+    }
+  });
+
+  it("rejeita senha com descrição acima de 500 chars", () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const result = controller.actions.addPassword({
+      title: "Senha válida",
+      username: "",
+      secret: "senha123",
+      description: "D".repeat(501),
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/descrição/i);
+    }
+  });
+
+  it("aceita senha com campos dentro dos limites", () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const result = controller.actions.addPassword({
+      title: "A".repeat(120),
+      username: "U".repeat(80),
+      secret: "S".repeat(200),
+      description: "D".repeat(500),
+    });
+    expect(result.ok).toBe(true);
+  });
+});
 
 describe("controller — manutenção", () => {
   it("adiciona, edita e exclui registros de manutenção", () => {
@@ -92,6 +177,50 @@ describe("controller — manutenção", () => {
     expect(importResult.ok).toBe(true);
     expect(target.getState().routines).toHaveLength(1);
     expect(target.getState().maintenanceRecords).toHaveLength(2);
+  });
+
+  it(`rejeita importação de manutenção acima de ${IMPORT_MAX_BYTES} bytes`, () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const oversized = "x".repeat(IMPORT_MAX_BYTES + 1);
+    const result = controller.actions.importMaintenanceData(oversized);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/limite/i);
+    }
+  });
+
+  it(`rejeita lote de manutenção com mais de ${MAX_MAINTENANCE_BATCH} registros`, () => {
+    const controller = createAppController({
+      initialState: createEmptyState(),
+      storage: createMemoryStorage(),
+    });
+    const records = Array.from({ length: MAX_MAINTENANCE_BATCH + 1 }, (_, i) => ({
+      id: `maint-${i}`,
+      equipmentId: `EQ-${i.toString().padStart(3, "0")}`,
+      type: "Notebook",
+      brandModel: "",
+      location: "",
+      mainProblem: "Problema",
+      technicalDescription: "",
+      priority: "media",
+      status: "com-problema",
+      ticketNumber: "",
+      responsibleContact: "",
+      actionsTaken: "",
+      notes: "",
+      history: [],
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+    }));
+    const json = JSON.stringify({ maintenanceRecords: records });
+    const result = controller.actions.importMaintenanceData(json);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(new RegExp(String(MAX_MAINTENANCE_BATCH)));
+    }
   });
 
   it("rejeita identificador duplicado ao adicionar", () => {

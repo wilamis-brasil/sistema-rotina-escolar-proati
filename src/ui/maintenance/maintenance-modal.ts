@@ -3,6 +3,7 @@ import {
   MAINTENANCE_STATUSES,
   type MaintenancePayload,
 } from "../../domain/types";
+import { MAX_MAINTENANCE_BATCH } from "../../domain/limits";
 import { el, icon, option } from "../dom";
 import { refreshIcons } from "../icons";
 
@@ -39,7 +40,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
 
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  const idInput = textInput("Nº / Identificador", "Ex.: 01", true, options.initial.equipmentId);
+  const idInput = textInput("Nº / Identificador", "Ex.: 01", true, options.initial.equipmentId, 60);
   const sortedTypeNames = [...options.devices].map((d) => d.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const typeNameSet = new Set(sortedTypeNames);
   const typeOpts: Array<{ value: string; label: string }> = [
@@ -50,10 +51,10 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
     typeOpts.push({ value: options.initial.type, label: `${options.initial.type} (legado)` });
   }
   const typeSelect = selectInput("Tipo *", typeOpts, options.initial.type ?? "");
-  const brandInput = textInput("Modelo", "Ex.: UL124", false, options.initial.brandModel);
-  const locationInput = textInput("Local", "Ex.: Sala 12, Lab. Informática", false, options.initial.location);
-  const problemInput = textInput("Problema principal", "Ex.: Não liga", true, options.initial.mainProblem);
-  const techArea = textArea("Descrição técnica", options.initial.technicalDescription);
+  const brandInput = textInput("Modelo", "Ex.: UL124", false, options.initial.brandModel, 80);
+  const locationInput = textInput("Local", "Ex.: Sala 12, Lab. Informática", false, options.initial.location, 80);
+  const problemInput = textInput("Problema principal", "Ex.: Não liga", true, options.initial.mainProblem, 200);
+  const techArea = textAreaWithMax("Descrição técnica", options.initial.technicalDescription, 500);
   const prioritySelect = selectInput(
     "Prioridade",
     MAINTENANCE_PRIORITIES.map((p) => ({ value: p.value, label: p.label })),
@@ -64,15 +65,16 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
     MAINTENANCE_STATUSES.map((s) => ({ value: s.value, label: s.label })),
     options.initial.status ?? "com-problema",
   );
-  const ticketInput = textInput("Número do chamado", "Ex.: 12345", false, options.initial.ticketNumber);
+  const ticketInput = textInput("Número do chamado", "Ex.: 12345", false, options.initial.ticketNumber, 30);
   const responsibleInput = textInput(
     "Responsável / contato",
     "Ex.: PROATEC – Maria",
     false,
     options.initial.responsibleContact,
+    80,
   );
-  const actionsArea = textArea("Ações realizadas", options.initial.actionsTaken);
-  const notesArea = textArea("Observações", options.initial.notes);
+  const actionsArea = textAreaWithMax("Ações realizadas", options.initial.actionsTaken, 500);
+  const notesArea = textAreaWithMax("Observações", options.initial.notes, 500);
 
   const feedback = el("p", { className: "form-feedback", attrs: { role: "alert" } });
 
@@ -219,9 +221,9 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
     MAINTENANCE_STATUSES.map((s) => ({ value: s.value, label: s.label })),
     "com-problema",
   );
-  const techArea = textArea("Descrição técnica (opcional)", "");
-  const actionsArea = textArea("Ações realizadas (opcional)", "");
-  const notesArea = textArea("Observações (opcional)", "");
+  const techArea = textAreaWithMax("Descrição técnica (opcional)", "", 500);
+  const actionsArea = textAreaWithMax("Ações realizadas (opcional)", "", 500);
+  const notesArea = textAreaWithMax("Observações (opcional)", "", 500);
 
   const devicesContainer = el("div", { className: "maintenance-bulk-devices" });
   const addDeviceBtn = el(
@@ -379,6 +381,9 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
 
     if (!mainProblem) errors.push("Informe o problema principal.");
     if (rows.length === 0) errors.push("Adicione ao menos um equipamento.");
+    if (rows.length > MAX_MAINTENANCE_BATCH) {
+      errors.push(`O lote pode ter no máximo ${MAX_MAINTENANCE_BATCH} equipamentos. Reduza para ${rows.length - MAX_MAINTENANCE_BATCH} item(s).`);
+    }
 
     const entries: MaintenancePayload[] = [];
     rows.forEach((row, idx) => {
@@ -418,6 +423,11 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   }
 
   addDeviceBtn.addEventListener("click", () => {
+    if (rows.length >= MAX_MAINTENANCE_BATCH) {
+      feedback.textContent = `Limite de ${MAX_MAINTENANCE_BATCH} equipamentos por lote atingido.`;
+      feedback.dataset.type = "error";
+      return;
+    }
     const row = addDeviceRow();
     row.equipmentId.focus();
   });
@@ -436,7 +446,7 @@ interface Field<T extends HTMLElement> {
   input: T;
 }
 
-function textInput(label: string, placeholder: string, required: boolean, value?: string): Field<HTMLInputElement> {
+function textInput(label: string, placeholder: string, required: boolean, value?: string, maxLength?: number): Field<HTMLInputElement> {
   const input = el("input", {
     className: "form-input",
     attrs: {
@@ -444,6 +454,7 @@ function textInput(label: string, placeholder: string, required: boolean, value?
       autocomplete: "off",
       placeholder,
       ...(required ? { required: "" } : {}),
+      ...(maxLength !== undefined ? { maxlength: String(maxLength) } : {}),
     },
   }) as HTMLInputElement;
   if (value) input.value = value;
@@ -454,10 +465,13 @@ function textInput(label: string, placeholder: string, required: boolean, value?
   return { wrap, input };
 }
 
-function textArea(label: string, value?: string): Field<HTMLTextAreaElement> {
+function textAreaWithMax(label: string, value?: string, maxLength?: number): Field<HTMLTextAreaElement> {
   const input = el("textarea", {
     className: "form-input",
-    attrs: { rows: "3" },
+    attrs: {
+      rows: "3",
+      ...(maxLength !== undefined ? { maxlength: String(maxLength) } : {}),
+    },
   }) as HTMLTextAreaElement;
   if (value) input.value = value;
   const wrap = el("label", { className: "maintenance-field maintenance-field-full" }, [

@@ -1,4 +1,5 @@
 import type { AppActions } from "../../app/controller";
+import { IMPORT_MAX_BYTES } from "../../domain/limits";
 import {
   filterMaintenance,
   formatDateTime,
@@ -432,6 +433,16 @@ export function createMaintenanceView({
     const input = event.target instanceof HTMLInputElement ? event.target : refs.maintenanceImportFile;
     const [file] = input.files ?? [];
     if (!file) return;
+
+    if (file.size > IMPORT_MAX_BYTES) {
+      toasts.show({
+        type: "error",
+        title: "Arquivo muito grande",
+        message: `Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`,
+      });
+      input.value = "";
+      return;
+    }
 
     const reader = new FileReader();
     reader.addEventListener("load", async () => {

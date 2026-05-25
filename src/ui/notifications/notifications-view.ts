@@ -1,7 +1,6 @@
 import type { AppActions } from "../../app/controller";
 import { formatDateTime, getTodayWeekdayId } from "../../domain/model";
 import {
-  buildNotificationId,
   formatIsoDate,
   getDueNotifications,
   getNotificationTypeLabel,
@@ -18,9 +17,15 @@ import {
   NOTIFICATION_SOUNDS,
   type AppState,
   type NotificationStatus,
-  type NotificationType,
   type Routine,
 } from "../../domain/types";
+import {
+  NOTIF_LEAD_MIN,
+  NOTIF_LEAD_MAX,
+  NOTIF_SNOOZE_MIN,
+  NOTIF_SNOOZE_MAX,
+  NOTIF_TICK_INTERVAL_S,
+} from "../../domain/limits";
 import { el, icon, replaceChildren, span } from "../dom";
 import { refreshIcons } from "../icons";
 import type { ToastManager } from "../toasts";
@@ -117,59 +122,23 @@ export function createNotificationsView({
   }
 
   function muteForToday(plan: NotificationPlan): void {
-    const todayDate = formatIsoDate(new Date());
-    const state = getState();
-    const ids = state.routines
-      .filter((routine) => plan.routineIds.includes(routine.id))
-      .flatMap((routine) => buildMuteIds(routine, todayDate));
-    if (ids.length === 0) return;
-    ids.forEach((entry) => {
-      actions.recordNotificationStatus(entry);
+    const allPlans = computePlans();
+    const affected = allPlans.filter((p) =>
+      p.routineIds.some((id) => plan.routineIds.includes(id)),
+    );
+    if (affected.length === 0) return;
+    affected.forEach((p) => {
+      actions.recordNotificationStatus({
+        id: p.id,
+        status: "ignorada",
+        date: p.date,
+        type: p.type,
+        time: p.time,
+        routineIds: p.routineIds,
+      });
     });
     refresh();
     toasts.show({ type: "info", title: "Silenciado", message: "Notificações dessa rotina hoje foram marcadas como vistas." });
-  }
-
-  function buildMuteIds(routine: Routine, todayDate: string) {
-    const result: {
-      id: string;
-      status: NotificationStatus;
-      date: string;
-      type: NotificationType;
-      time: string;
-      routineIds: string[];
-    }[] = [];
-    const settings = getState().settings.notifications;
-    const lead = routine.notification?.leadMinutes ?? settings.defaultLeadMinutes;
-    if (lead > 0) {
-      result.push({
-        id: buildNotificationId(todayDate, "aviso_antecipado", routine.startTime, [routine.id]),
-        status: "ignorada",
-        date: todayDate,
-        type: "aviso_antecipado",
-        time: routine.startTime,
-        routineIds: [routine.id],
-      });
-    }
-    result.push({
-      id: buildNotificationId(todayDate, "inicio", routine.startTime, [routine.id]),
-      status: "ignorada",
-      date: todayDate,
-      type: "inicio",
-      time: routine.startTime,
-      routineIds: [routine.id],
-    });
-    if (routine.endTime) {
-      result.push({
-        id: buildNotificationId(todayDate, "termino", routine.endTime, [routine.id]),
-        status: "ignorada",
-        date: todayDate,
-        type: "termino",
-        time: routine.endTime,
-        routineIds: [routine.id],
-      });
-    }
-    return result;
   }
 
   function bindEvents(): void {
@@ -275,8 +244,8 @@ export function createNotificationsView({
       className: "form-input notifications-lead-custom",
       attrs: {
         type: "number",
-        min: "0",
-        max: "240",
+        min: String(NOTIF_LEAD_MIN),
+        max: String(NOTIF_LEAD_MAX),
         step: "1",
         placeholder: "Minutos antes",
       },
@@ -298,8 +267,8 @@ export function createNotificationsView({
     });
     leadCustom.addEventListener("change", () => {
       const next = Number(leadCustom.value);
-      if (!Number.isFinite(next) || next < 0 || next > 240) {
-        toasts.show({ type: "error", title: "Valor inválido", message: "Use um número entre 0 e 240." });
+      if (!Number.isFinite(next) || next < NOTIF_LEAD_MIN || next > NOTIF_LEAD_MAX) {
+        toasts.show({ type: "error", title: "Valor inválido", message: `Use um número entre ${NOTIF_LEAD_MIN} e ${NOTIF_LEAD_MAX}.` });
         return;
       }
       actions.updateNotificationSettings({ defaultLeadMinutes: Math.round(next) });
@@ -333,13 +302,13 @@ export function createNotificationsView({
 
     const snoozeInput = el("input", {
       className: "form-input notifications-snooze-input",
-      attrs: { type: "number", min: "1", max: "120", step: "1" },
+      attrs: { type: "number", min: String(NOTIF_SNOOZE_MIN), max: String(NOTIF_SNOOZE_MAX), step: "1" },
     });
     snoozeInput.value = String(settings.defaultSnoozeMinutes);
     snoozeInput.addEventListener("change", () => {
       const next = Number(snoozeInput.value);
-      if (!Number.isFinite(next) || next < 1 || next > 120) {
-        toasts.show({ type: "error", title: "Valor inválido", message: "Use de 1 a 120 minutos." });
+      if (!Number.isFinite(next) || next < NOTIF_SNOOZE_MIN || next > NOTIF_SNOOZE_MAX) {
+        toasts.show({ type: "error", title: "Valor inválido", message: `Use de ${NOTIF_SNOOZE_MIN} a ${NOTIF_SNOOZE_MAX} minutos.` });
         return;
       }
       actions.updateNotificationSettings({ defaultSnoozeMinutes: Math.round(next) });
@@ -499,7 +468,7 @@ export function createNotificationsView({
   function start(): void {
     if (timerHandle !== null) return;
     tick();
-    timerHandle = window.setInterval(tick, 30_000);
+    timerHandle = window.setInterval(tick, NOTIF_TICK_INTERVAL_S * 1_000);
     window.addEventListener("focus", tick);
     handleMissedOnOpen();
   }

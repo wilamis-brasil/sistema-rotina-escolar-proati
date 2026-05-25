@@ -11,17 +11,7 @@
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
-    <script>
-      if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        document.write('<link rel="stylesheet" href="./assets/css/main.css">');
-      }
-    </script>
     <script type="module" src="./src/main.ts"></script>
-    <script type="module">
-      if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        import(/* @vite-ignore */ "./assets/index.js");
-      }
-    </script>
   </head>
   <body>
     <header class="app-header">
@@ -189,12 +179,12 @@
                 <div class="form-row form-row-4">
                   <label>
                     <span class="form-label">Aula</span>
-                    <input class="form-input" id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História...">
+                    <input class="form-input" id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História..." maxlength="80">
                     <datalist id="subjects-list"></datalist>
                   </label>
                   <label>
                     <span class="form-label">Professor</span>
-                    <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required>
+                    <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required maxlength="80">
                     <datalist id="teachers-list"></datalist>
                   </label>
                   <label>
@@ -214,7 +204,7 @@
                 <div id="routine-devices" class="check-grid"></div>
                 <div class="inline-add">
                   <label class="sr-only" for="routine-new-device">Outro dispositivo</label>
-                  <input class="form-input" id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo">
+                  <input class="form-input" id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo" maxlength="80">
                   <button class="button button-secondary button-small" type="button" id="add-device-to-routine">
                     <i data-lucide="plus" aria-hidden="true"></i>
                     <span>Adicionar</span>
@@ -226,7 +216,7 @@
                 <h3>Observações</h3>
                 <label>
                   <span>Observações</span>
-                  <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..."></textarea>
+                  <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..." maxlength="500"></textarea>
                 </label>
 
                 <div class="routine-footer-row">
@@ -340,7 +330,7 @@
             <input type="hidden" id="teacher-id">
             <label>
               <span>Nome</span>
-              <input id="teacher-name" type="text" autocomplete="off" placeholder="..." required>
+              <input id="teacher-name" type="text" autocomplete="off" placeholder="..." required maxlength="80">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>
@@ -396,7 +386,7 @@
             <input type="hidden" id="device-id">
             <label>
               <span>Dispositivo</span>
-              <input id="device-name" type="text" autocomplete="off" placeholder="..." required>
+              <input id="device-name" type="text" autocomplete="off" placeholder="..." required maxlength="80">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>

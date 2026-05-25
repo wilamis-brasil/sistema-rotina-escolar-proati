@@ -1,5 +1,13 @@
 import { failure } from "../domain/errors";
 import {
+  MAX_ROUTINES,
+  MAX_TEACHERS,
+  MAX_CLASSES,
+  MAX_DEVICES,
+  MAX_PASSWORDS,
+  MAX_MAINTENANCES,
+} from "../domain/limits";
+import {
   appendMaintenanceHistory,
   buildMaintenanceRecord,
   buildRoutine,
@@ -96,6 +104,9 @@ export function createAppController({
 
   const actions: AppActions = {
     addRoutine(payload) {
+      if (state.routines.length >= MAX_ROUTINES) {
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+      }
       const result = buildRoutine(payload);
       if (!result.ok) return result;
 
@@ -163,6 +174,15 @@ export function createAppController({
     },
 
     addCatalogItem(kind, payload) {
+      const limitMap: Record<string, number> = {
+        teachers: MAX_TEACHERS,
+        rooms: MAX_CLASSES,
+        devices: MAX_DEVICES,
+      };
+      const limit = limitMap[kind];
+      if (limit !== undefined && state[kind].length >= limit) {
+        return failure(`Limite de ${limit} itens atingido para este catálogo.`);
+      }
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
 
@@ -222,6 +242,9 @@ export function createAppController({
     },
 
     addPassword(payload) {
+      if (state.passwords.length >= MAX_PASSWORDS) {
+        return failure(`Limite de ${MAX_PASSWORDS} senhas atingido.`);
+      }
       const result = validatePasswordPayload(payload);
       if (!result.ok) return result;
       state.passwords.push(result.value);
@@ -275,6 +298,9 @@ export function createAppController({
     },
 
     addMaintenanceRecord(payload) {
+      if (state.maintenanceRecords.length >= MAX_MAINTENANCES) {
+        return failure(`Limite de ${MAX_MAINTENANCES} registros de manutenção atingido.`);
+      }
       const result = buildMaintenanceRecord(payload, state.maintenanceRecords);
       if (!result.ok) return result;
 

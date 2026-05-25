@@ -1,5 +1,16 @@
 import { failure } from "../domain/errors";
-import { createEmptyState, migrateState, nowIso } from "../domain/model";
+import { createEmptyState, migrateState, nowIso, pruneNotificationLog } from "../domain/model";
+import {
+  IMPORT_MAX_BYTES,
+  MAX_NOTIFICATION_LOG,
+  MAX_ROUTINES,
+  MAX_TEACHERS,
+  MAX_CLASSES,
+  MAX_DEVICES,
+  MAX_PASSWORDS,
+  MAX_MAINTENANCES,
+  MAX_MAINTENANCE_BATCH,
+} from "../domain/limits";
 import {
   LEGACY_STORAGE_KEYS,
   STORAGE_KEY,
@@ -22,6 +33,9 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
     const raw = storage.getItem(STORAGE_KEY);
     if (raw) {
       const migrated = migrateState(JSON.parse(raw));
+      if (migrated.notificationLog.length > MAX_NOTIFICATION_LOG) {
+        migrated.notificationLog = pruneNotificationLog(migrated.notificationLog);
+      }
       try {
         storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
       } catch (persistError) {
@@ -37,6 +51,9 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
 
     if (legacyEntry?.raw) {
       const migrated = migrateState(JSON.parse(legacyEntry.raw));
+      if (migrated.notificationLog.length > MAX_NOTIFICATION_LOG) {
+        migrated.notificationLog = pruneNotificationLog(migrated.notificationLog);
+      }
       try {
         storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
         storage.removeItem(legacyEntry.key);
@@ -92,9 +109,31 @@ export function exportState(state: AppState): string {
 }
 
 export function importStateFromText(rawText: string): Result<AppState> {
+  if (rawText.length > IMPORT_MAX_BYTES) {
+    return { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
+  }
   try {
     const parsed = JSON.parse(rawText);
-    return { ok: true, value: migrateState(parsed) };
+    const state = migrateState(parsed);
+    if (state.routines.length > MAX_ROUTINES) {
+      return { ok: false, errors: [`Importação contém muitas rotinas (máximo: ${MAX_ROUTINES}).`] };
+    }
+    if (state.teachers.length > MAX_TEACHERS) {
+      return { ok: false, errors: [`Importação contém muitos professores (máximo: ${MAX_TEACHERS}).`] };
+    }
+    if (state.rooms.length > MAX_CLASSES) {
+      return { ok: false, errors: [`Importação contém muitas turmas (máximo: ${MAX_CLASSES}).`] };
+    }
+    if (state.devices.length > MAX_DEVICES) {
+      return { ok: false, errors: [`Importação contém muitos dispositivos (máximo: ${MAX_DEVICES}).`] };
+    }
+    if (state.passwords.length > MAX_PASSWORDS) {
+      return { ok: false, errors: [`Importação contém muitas senhas (máximo: ${MAX_PASSWORDS}).`] };
+    }
+    if (state.maintenanceRecords.length > MAX_MAINTENANCES) {
+      return { ok: false, errors: [`Importação contém muitos registros de manutenção (máximo: ${MAX_MAINTENANCES}).`] };
+    }
+    return { ok: true, value: state };
   } catch (error) {
     return {
       ok: false,
@@ -104,6 +143,9 @@ export function importStateFromText(rawText: string): Result<AppState> {
 }
 
 export function importMaintenanceFromText(rawText: string): Result<MaintenanceRecord[]> {
+  if (rawText.length > IMPORT_MAX_BYTES) {
+    return { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
+  }
   try {
     const parsed = JSON.parse(rawText) as { maintenanceRecords?: unknown };
     const candidate = parsed && typeof parsed === "object" && Array.isArray(parsed.maintenanceRecords)
@@ -118,6 +160,12 @@ export function importMaintenanceFromText(rawText: string): Result<MaintenanceRe
       };
     }
     const migrated = migrateState({ maintenanceRecords: candidate.maintenanceRecords });
+    if (migrated.maintenanceRecords.length > MAX_MAINTENANCE_BATCH) {
+      return {
+        ok: false,
+        errors: [`O arquivo contém ${migrated.maintenanceRecords.length} registros. O limite por importação é ${MAX_MAINTENANCE_BATCH}.`],
+      };
+    }
     return { ok: true, value: migrated.maintenanceRecords };
   } catch (error) {
     return {

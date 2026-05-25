@@ -4,6 +4,7 @@ import {
   isCanonicalRoomName,
   normalizeText,
 } from "../../domain/model";
+import { MAX_DEVICES_PER_ROUTINE } from "../../domain/limits";
 import {
   CLASS_LETTERS,
   WEEKDAYS,
@@ -196,6 +197,7 @@ export function createRoutineForm({
   function addDeviceFromRoutineInput(): void {
     const name = normalizeText(refs.routineNewDevice.value);
     if (!name) return;
+    if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) return;
     selectedDevices.add(name);
     refs.routineNewDevice.value = "";
     renderDevices();

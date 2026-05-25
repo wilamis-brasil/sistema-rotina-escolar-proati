@@ -1,6 +1,16 @@
 import { z } from "zod";
 import { resultFailure } from "./errors";
 import {
+  MAX_DEVICES_PER_ROUTINE,
+  NOTIF_LEAD_MIN,
+  NOTIF_LEAD_MAX,
+  NOTIF_GROUP_MIN,
+  NOTIF_GROUP_MAX,
+  NOTIF_SNOOZE_MIN,
+  NOTIF_SNOOZE_MAX,
+  MAX_NOTIFICATION_LOG,
+} from "./limits";
+import {
   CLASS_LETTERS,
   CLASS_YEARS,
   DEFAULT_DEVICE_NAMES,
@@ -40,6 +50,23 @@ import {
   type Teacher,
   type WeekdayId,
 } from "./types";
+
+const ROUTINE_TEACHER_MAX = 80;
+const ROUTINE_SUBJECT_MAX = 80;
+const ROUTINE_NOTES_MAX = 500;
+const MAINTENANCE_ID_MAX = 60;
+const MAINTENANCE_SHORT_MAX = 80;
+const MAINTENANCE_TICKET_MAX = 30;
+const MAINTENANCE_MEDIUM_MAX = 200;
+const MAINTENANCE_LONG_MAX = 500;
+const PASSWORD_TITLE_MAX = 120;
+const PASSWORD_USERNAME_MAX = 80;
+const PASSWORD_SECRET_MAX = 200;
+const PASSWORD_DESCRIPTION_MAX = 500;
+
+function checkMaxLen(value: string, max: number, label: string): string | null {
+  return value.length > max ? `${label} deve ter no máximo ${max} caracteres.` : null;
+}
 
 const RawStateSchema = z
   .object({
@@ -291,10 +318,23 @@ export function buildRoutine(
 
   if (!teacher) {
     errors.push("Informe o professor responsável.");
+  } else {
+    const e = checkMaxLen(teacher, ROUTINE_TEACHER_MAX, "Nome do professor");
+    if (e) errors.push(e);
   }
 
   if (!room) {
     errors.push("Informe a turma.");
+  }
+
+  {
+    const e = checkMaxLen(subject, ROUTINE_SUBJECT_MAX, "Aula");
+    if (e) errors.push(e);
+  }
+
+  {
+    const e = checkMaxLen(notes, ROUTINE_NOTES_MAX, "Observações");
+    if (e) errors.push(e);
   }
 
   if (!Number.isInteger(studentCount) || studentCount < 1) {
@@ -303,6 +343,8 @@ export function buildRoutine(
 
   if (devices.length === 0) {
     errors.push("Selecione ou cadastre ao menos um dispositivo.");
+  } else if (devices.length > MAX_DEVICES_PER_ROUTINE) {
+    errors.push(`Selecione no máximo ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`);
   }
 
   if (errors.length > 0) {
@@ -344,7 +386,7 @@ export function normalizeRoutineNotification(value: unknown): RoutineNotificatio
     override.leadMinutes = null;
   } else if (record.leadMinutes !== undefined) {
     const lead = Number(record.leadMinutes);
-    if (Number.isFinite(lead) && lead >= 0 && lead <= 240) {
+    if (Number.isFinite(lead) && lead >= NOTIF_LEAD_MIN && lead <= NOTIF_LEAD_MAX) {
       override.leadMinutes = Math.round(lead);
     }
   }
@@ -653,7 +695,7 @@ function normalizeLeadMinutes(value: unknown, fallback: number): number {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
   const rounded = Math.round(number);
-  if (rounded < 0 || rounded > 240) return fallback;
+  if (rounded < NOTIF_LEAD_MIN || rounded > NOTIF_LEAD_MAX) return fallback;
   return rounded;
 }
 
@@ -661,7 +703,7 @@ function normalizeWindowMinutes(value: unknown, fallback: number): number {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
   const rounded = Math.round(number);
-  if (rounded < 0 || rounded > 60) return fallback;
+  if (rounded < NOTIF_GROUP_MIN || rounded > NOTIF_GROUP_MAX) return fallback;
   return rounded;
 }
 
@@ -669,8 +711,15 @@ function normalizeSnoozeMinutes(value: unknown, fallback: number): number {
   const number = Number(value);
   if (!Number.isFinite(number)) return fallback;
   const rounded = Math.round(number);
-  if (rounded < 1 || rounded > 120) return fallback;
+  if (rounded < NOTIF_SNOOZE_MIN || rounded > NOTIF_SNOOZE_MAX) return fallback;
   return rounded;
+}
+
+export function pruneNotificationLog(log: NotificationLogEntry[]): NotificationLogEntry[] {
+  if (log.length <= MAX_NOTIFICATION_LOG) return log;
+  return [...log]
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt))
+    .slice(0, MAX_NOTIFICATION_LOG);
 }
 
 function normalizeNotificationLog(value: unknown): NotificationLogEntry[] {
@@ -795,16 +844,38 @@ export function buildMaintenanceRecord(
 
   if (!equipmentId) {
     errors.push("Informe o número/identificador do equipamento.");
-  } else if (equipmentId.length > 60) {
-    errors.push("O identificador deve ter no máximo 60 caracteres.");
+  } else if (equipmentId.length > MAINTENANCE_ID_MAX) {
+    errors.push(`O identificador deve ter no máximo ${MAINTENANCE_ID_MAX} caracteres.`);
   }
 
   if (!type) {
     errors.push("Informe o tipo do equipamento.");
+  } else {
+    const e = checkMaxLen(type, MAINTENANCE_SHORT_MAX, "Tipo");
+    if (e) errors.push(e);
   }
 
   if (!mainProblem) {
     errors.push("Descreva o problema principal.");
+  } else {
+    const e = checkMaxLen(mainProblem, MAINTENANCE_MEDIUM_MAX, "Problema principal");
+    if (e) errors.push(e);
+  }
+
+  {
+    const fields: Array<[string, number, string]> = [
+      [brandModel, MAINTENANCE_SHORT_MAX, "Modelo"],
+      [location, MAINTENANCE_SHORT_MAX, "Local"],
+      [technicalDescription, MAINTENANCE_LONG_MAX, "Descrição técnica"],
+      [ticketNumber, MAINTENANCE_TICKET_MAX, "Número do chamado"],
+      [responsibleContact, MAINTENANCE_SHORT_MAX, "Responsável"],
+      [actionsTaken, MAINTENANCE_LONG_MAX, "Ações realizadas"],
+      [notes, MAINTENANCE_LONG_MAX, "Observações"],
+    ];
+    for (const [val, max, label] of fields) {
+      const e = checkMaxLen(val, max, label);
+      if (e) errors.push(e);
+    }
   }
 
   if (!isMaintenancePriority(priority)) {
@@ -1004,8 +1075,23 @@ export function validatePasswordPayload(
   const description = normalizeText(payload.description);
 
   if (!title) errors.push("Informe o título da senha.");
-  if (title.length > 120) errors.push("O título deve ter no máximo 120 caracteres.");
+  else {
+    const e = checkMaxLen(title, PASSWORD_TITLE_MAX, "Título");
+    if (e) errors.push(e);
+  }
   if (!secret) errors.push("Informe a senha.");
+  else {
+    const e = checkMaxLen(secret, PASSWORD_SECRET_MAX, "Senha");
+    if (e) errors.push(e);
+  }
+  {
+    const e = checkMaxLen(username, PASSWORD_USERNAME_MAX, "Usuário");
+    if (e) errors.push(e);
+  }
+  {
+    const e = checkMaxLen(description, PASSWORD_DESCRIPTION_MAX, "Descrição");
+    if (e) errors.push(e);
+  }
 
   if (errors.length > 0) return resultFailure(errors);
 

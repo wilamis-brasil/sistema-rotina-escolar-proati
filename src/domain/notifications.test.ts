@@ -1,16 +1,26 @@
 import { describe, expect, it } from "vitest";
 import {
   buildNotificationId,
+  getDueNotifications,
   getNotificationTypeLabel,
   planTodayNotifications,
   summarizeNotifications,
 } from "./notifications";
-import { normalizeState } from "./model";
+import { normalizeState, pruneNotificationLog } from "./model";
 import {
   DEFAULT_NOTIFICATION_SETTINGS,
+  type NotificationLogEntry,
   type NotificationSettings,
   type Routine,
 } from "./types";
+import {
+  MAX_NOTIFICATION_LOG,
+  NOTIF_LEAD_MAX,
+  NOTIF_SNOOZE_MAX,
+  NOTIF_GROUP_MAX,
+  NOTIF_RECENT_DELAY_WINDOW,
+  NOTIF_TRIGGER_WINDOW,
+} from "./limits";
 
 const baseRoutine: Routine = {
   id: "routine-1",
@@ -240,6 +250,152 @@ describe("state migration", () => {
     expect(state.settings.notifications.enabled).toBe(false);
     expect(state.settings.notifications.defaultLeadMinutes).toBe(20);
     expect(state.settings.notifications.soundName).toBe("bell");
+  });
+});
+
+describe("pruneNotificationLog", () => {
+  function makeEntry(id: string, updatedAt: string): NotificationLogEntry {
+    return {
+      id,
+      status: "vista",
+      date: "2026-05-25",
+      type: "inicio",
+      time: "08:00",
+      routineIds: ["r1"],
+      updatedAt,
+    };
+  }
+
+  it(`poda entradas acima de ${MAX_NOTIFICATION_LOG}, mantendo as mais recentes`, () => {
+    const entries = Array.from({ length: MAX_NOTIFICATION_LOG + 5 }, (_, i) =>
+      makeEntry(`notif-${i}`, new Date(2026, 4, 1, 0, 0, i).toISOString()),
+    );
+    const pruned = pruneNotificationLog(entries);
+    expect(pruned).toHaveLength(MAX_NOTIFICATION_LOG);
+    const oldest = entries.slice(0, 5).map((e) => e.id);
+    const prunedIds = pruned.map((e) => e.id);
+    for (const id of oldest) {
+      expect(prunedIds).not.toContain(id);
+    }
+  });
+
+  it("não altera listas abaixo do limite", () => {
+    const entries = Array.from({ length: 10 }, (_, i) => makeEntry(`notif-${i}`, new Date(2026, 4, 1, 0, 0, i).toISOString()));
+    expect(pruneNotificationLog(entries)).toHaveLength(10);
+  });
+
+  it(`resultado de pruneNotificationLog nunca excede ${MAX_NOTIFICATION_LOG}`, () => {
+    const entries = Array.from({ length: MAX_NOTIFICATION_LOG + 10 }, (_, i) =>
+      makeEntry(`notif-${i}`, new Date(2026, 4, 1, 0, 0, i).toISOString()),
+    );
+    const pruned = pruneNotificationLog(entries);
+    expect(pruned.length).toBeLessThanOrEqual(MAX_NOTIFICATION_LOG);
+    expect(pruned.length).toBe(MAX_NOTIFICATION_LOG);
+  });
+});
+
+describe("Silenciar hoje", () => {
+  it("marca todos os planos da rotina como ignorados, inclusive aviso antecipado", () => {
+    const todayDate = "2026-05-18";
+    const r = baseRoutine;
+    const plans = planTodayNotifications({
+      now: monday,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [r],
+      log: [],
+    });
+
+    const allIds = plans.map((p) => ({ id: p.id, status: "ignorada" as const, date: p.date, type: p.type, time: p.time, routineIds: p.routineIds }));
+    const logEntries: NotificationLogEntry[] = allIds.map((entry) => ({
+      ...entry,
+      updatedAt: new Date().toISOString(),
+    }));
+
+    const plansAfterMute = planTodayNotifications({
+      now: monday,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [r],
+      log: logEntries,
+    });
+
+    expect(plansAfterMute.every((p) => p.status === "ignorada")).toBe(true);
+    const aviso = plansAfterMute.find((p) => p.type === "aviso_antecipado");
+    expect(aviso?.status).toBe("ignorada");
+  });
+});
+
+describe("constantes de notificação produzem mesmo comportamento", () => {
+  it(`lead máximo (${NOTIF_LEAD_MAX} min) gera aviso antecipado correto`, () => {
+    const now = new Date(2026, 4, 18, 7, 0, 0);
+    const r = routine({ startTime: "08:00", endTime: "09:00" });
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate: "2026-05-18",
+      settings: settings({ defaultLeadMinutes: NOTIF_LEAD_MAX, groupingEnabled: false }),
+      routines: [r],
+      log: [],
+    });
+    const lead = plans.find((p) => p.type === "aviso_antecipado");
+    expect(lead).toBeDefined();
+    expect(lead?.fireMinutes).toBe(8 * 60 - NOTIF_LEAD_MAX);
+  });
+
+  it(`snooze máximo (${NOTIF_SNOOZE_MAX} min) é aceito nas configurações`, () => {
+    const s = settings({ defaultSnoozeMinutes: NOTIF_SNOOZE_MAX });
+    expect(s.defaultSnoozeMinutes).toBe(NOTIF_SNOOZE_MAX);
+  });
+
+  it(`janela de agrupamento máxima (${NOTIF_GROUP_MAX} min) agrupa rotinas distantes`, () => {
+    const r1 = routine({ id: "r1", startTime: "08:00", endTime: "09:00" });
+    const r2 = routine({ id: "r2", startTime: `${String(Math.floor((8 * 60 + NOTIF_GROUP_MAX) / 60)).padStart(2, "0")}:${String((8 * 60 + NOTIF_GROUP_MAX) % 60).padStart(2, "0")}`, endTime: "" });
+    const plans = planTodayNotifications({
+      now: monday,
+      weekday: "monday",
+      todayDate: "2026-05-18",
+      settings: settings({ groupingEnabled: true, groupingWindowMinutes: NOTIF_GROUP_MAX }),
+      routines: [r1, r2],
+      log: [],
+    });
+    const inicioPlan = plans.find((p) => p.type === "inicio");
+    expect(inicioPlan?.routineIds.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it(`NOTIF_RECENT_DELAY_WINDOW (${NOTIF_RECENT_DELAY_WINDOW}) determina isOverdue`, () => {
+    const todayDate = "2026-05-18";
+    const fireMinutes = 8 * 60;
+    const now = new Date(2026, 4, 18, Math.floor((fireMinutes + NOTIF_RECENT_DELAY_WINDOW) / 60), (fireMinutes + NOTIF_RECENT_DELAY_WINDOW) % 60, 0);
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({ startTime: "08:00", endTime: "09:00" })],
+      log: [],
+    });
+    const inicio = plans.find((p) => p.type === "inicio");
+    expect(inicio?.isOverdue).toBe(true);
+  });
+
+  it(`NOTIF_TRIGGER_WINDOW (${NOTIF_TRIGGER_WINDOW}) — plano além da janela não aparece em getDueNotifications`, () => {
+    const todayDate = "2026-05-18";
+    const fireMinutes = 8 * 60;
+    const nowMinutes = fireMinutes + NOTIF_TRIGGER_WINDOW + 1;
+    const now = new Date(2026, 4, 18, Math.floor(nowMinutes / 60), nowMinutes % 60, 0);
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({ startTime: "08:00", endTime: "09:00" })],
+      log: [],
+    });
+    const dueList = getDueNotifications(plans, now);
+    expect(dueList.find((p) => p.type === "inicio")).toBeUndefined();
   });
 });
 

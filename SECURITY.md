@@ -63,4 +63,4 @@ npm audit --audit-level=low
 - Limite de tamanho para importação JSON.
 - Workflow de CodeQL no GitHub Actions.
 - Aviso visível de privacidade na tela de configurações.
-- Testes executados no CI (hoje apenas typecheck e build).
+- Ampliar cobertura de testes de integração no CI.

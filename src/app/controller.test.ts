@@ -3,6 +3,7 @@ import { createAppController } from "./controller";
 import { createEmptyState } from "../domain/model";
 import { STORAGE_KEY } from "../domain/types";
 import { createMemoryStorage, importStateFromText } from "../persistence/store";
+import { IMPORT_MAX_BYTES, MAX_ROUTINES } from "../domain/limits";
 
 const validRoutinePayload = {
   weekday: "monday",
@@ -23,6 +24,42 @@ describe("importStateFromText", () => {
     expect(result.ok).toBe(false);
     if (!result.ok) {
       expect(result.errors.join(" ")).toContain("Arquivo JSON");
+    }
+  });
+
+  it(`rejeita payload acima de ${IMPORT_MAX_BYTES} bytes antes de parsear JSON`, () => {
+    const oversized = "x".repeat(IMPORT_MAX_BYTES + 1);
+    const result = importStateFromText(oversized);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/limite/i);
+    }
+  });
+
+  it(`rejeita importação com coleção de rotinas acima de MAX_ROUTINES (${MAX_ROUTINES})`, () => {
+    const routineTemplate = {
+      weekday: "monday",
+      startTime: "08:00",
+      endTime: "09:00",
+      subject: "Aula",
+      teacher: "Prof",
+      room: "1A",
+      studentCount: 30,
+      devices: ["Notebook"],
+      notes: "",
+    };
+    const oversizedState = JSON.stringify({
+      routines: Array.from({ length: MAX_ROUTINES + 1 }, (_, i) => ({
+        ...routineTemplate,
+        id: `routine-${i}`,
+        createdAt: "2026-01-01T00:00:00.000Z",
+        updatedAt: "2026-01-01T00:00:00.000Z",
+      })),
+    });
+    const result = importStateFromText(oversizedState);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/rotinas/i);
     }
   });
 });
@@ -126,6 +163,19 @@ describe("createAppController", () => {
       room: "Laboratório",
     });
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("importData — limites operacionais", () => {
+  it(`rejeita importação full-state acima de ${IMPORT_MAX_BYTES} bytes`, () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+    const oversized = "x".repeat(IMPORT_MAX_BYTES + 1);
+    const result = controller.actions.importData(oversized);
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toMatch(/limite/i);
+    }
   });
 });
 
