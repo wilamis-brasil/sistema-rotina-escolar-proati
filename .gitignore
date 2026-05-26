@@ -5,9 +5,6 @@ node_modules/
 dist/
 coverage/
 
-# Manual bundle artifact (generated, must not be committed)
-/assets/index.js
-
 # Local environment
 .env*.local
 .openclaude/
