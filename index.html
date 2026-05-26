@@ -11,17 +11,7 @@
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
     <link rel="manifest" href="./site.webmanifest">
-    <script>
-      if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        document.write('<link rel="stylesheet" crossorigin href="./assets/index.css">');
-      }
-    </script>
     <script type="module" src="./src/main.ts"></script>
-    <script type="module">
-      if (!["localhost", "127.0.0.1"].includes(window.location.hostname)) {
-        import(/* @vite-ignore */ "./assets/index.js");
-      }
-    </script>
   </head>
   <body>
     <header class="app-header">
