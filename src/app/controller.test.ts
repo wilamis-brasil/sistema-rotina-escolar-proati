@@ -378,7 +378,10 @@ describe("markAllNotificationsAsSeen", () => {
     const storage = createMemoryStorage();
     const controller = createAppController({ initialState, storage });
 
-    const result = controller.actions.markAllNotificationsAsSeen(["notif-1", "notif-2"]);
+    const result = controller.actions.markAllNotificationsAsSeen([
+      { id: "notif-1", date: "2026-05-25", type: "inicio", time: "08:00", routineIds: ["r1"] },
+      { id: "notif-2", date: "2026-05-25", type: "inicio", time: "09:00", routineIds: ["r2"] },
+    ]);
     expect(result.ok).toBe(true);
 
     const log = controller.getState().notificationLog;
@@ -390,32 +393,24 @@ describe("markAllNotificationsAsSeen", () => {
     expect(second?.status).toBe("vista");
   });
 
-  it("ignora IDs desconhecidos sem criar entradas novas", () => {
-    const existingLog = [
-      {
-        id: "notif-1",
-        status: "pendente" as const,
-        date: "2026-05-25",
-        type: "inicio" as const,
-        time: "08:00",
-        routineIds: ["r1"],
-        updatedAt: "2026-05-25T07:00:00.000Z",
-      },
-    ];
-    const initialState = { ...createEmptyState(), notificationLog: existingLog };
+  it("cria entradas no log para IDs ainda sem registro (pendente puro)", () => {
+    const initialState = createEmptyState();
     const storage = createMemoryStorage();
     const controller = createAppController({ initialState, storage });
 
-    const result = controller.actions.markAllNotificationsAsSeen(["notif-1", "notif-desconhecida"]);
+    const result = controller.actions.markAllNotificationsAsSeen([
+      { id: "notif-nova", date: "2026-05-25", type: "inicio", time: "08:00", routineIds: ["r1"] },
+    ]);
     expect(result.ok).toBe(true);
 
     const log = controller.getState().notificationLog;
     expect(log).toHaveLength(1);
-    expect(log[0]?.id).toBe("notif-1");
+    expect(log[0]?.id).toBe("notif-nova");
     expect(log[0]?.status).toBe("vista");
+    expect(log[0]?.snoozedUntil).toBeUndefined();
   });
 
-  it("retorna ok sem alterar log quando ids está vazio ou inválido", () => {
+  it("retorna ok sem alterar log quando lista vazia", () => {
     const existingLog = [
       {
         id: "notif-1",

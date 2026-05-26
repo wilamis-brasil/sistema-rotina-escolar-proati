@@ -5,6 +5,7 @@ import {
   filterRoutines,
   normalizeCatalogPayload,
   normalizeState,
+  removeLegacySeedPasswords,
   sortRoutines,
 } from "./model";
 import { MAX_DEVICES_PER_ROUTINE } from "./limits";
@@ -52,7 +53,43 @@ describe("buildRoutine", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors.join(" ")).toContain("anterior");
+      expect(result.errors.join(" ")).toContain("posterior");
+    }
+  });
+
+  it("rejects an end time equal to the start time (zero duration)", () => {
+    const result = buildRoutine({
+      ...validRoutinePayload,
+      startTime: "10:00",
+      endTime: "10:00",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.join(" ")).toContain("posterior");
+    }
+  });
+
+  it("accepts an end time strictly after the start time", () => {
+    const result = buildRoutine({
+      ...validRoutinePayload,
+      startTime: "08:00",
+      endTime: "08:01",
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("accepts a routine with empty end time", () => {
+    const result = buildRoutine({
+      ...validRoutinePayload,
+      startTime: "08:00",
+      endTime: "",
+    });
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value.endTime).toBe("");
     }
   });
 
@@ -217,5 +254,109 @@ describe("normalizeState with classLetters", () => {
       settings: {},
     });
     expect(state.routines[0]?.room).toBe("1A");
+  });
+});
+
+describe("senhas — remoção de seeds legados", () => {
+  // IDs que existiam como seeds hardcoded em versões anteriores
+  const legacySeedIds = [
+    "password-netbook-positivo-multilaser-sala",
+    "password-netbook-multilaser-m11w-formatacao",
+    "password-imagem-instalacao",
+    "password-lenovo-multilaser-ultra-administrador",
+    "password-lenovo-multilaser-ultra-proatec",
+    "password-tablet-positivo-quiosque",
+  ];
+
+  it("createEmptyState retorna passwords vazio", () => {
+    const state = createEmptyState();
+    expect(state.passwords).toEqual([]);
+  });
+
+  it("normalizeState sem passwords retorna passwords vazio", () => {
+    const state = normalizeState({ routines: [], settings: {} });
+    expect(state.passwords).toEqual([]);
+  });
+
+  it("normalizeState com lista de passwords vazia retorna passwords vazio", () => {
+    const state = normalizeState({ routines: [], settings: {}, passwords: [] });
+    expect(state.passwords).toEqual([]);
+  });
+
+  it("removeLegacySeedPasswords filtra todos os IDs legados", () => {
+    const legacyRecords = legacySeedIds.map((id) => ({
+      id,
+      title: "Legado",
+      username: "",
+      secret: "x",
+      description: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+    }));
+    expect(removeLegacySeedPasswords(legacyRecords)).toEqual([]);
+  });
+
+  it("removeLegacySeedPasswords preserva senhas manuais com ID diferente", () => {
+    const manual = {
+      id: "password-manual-usuario",
+      title: "Senha Manual",
+      username: "admin",
+      secret: "segredo",
+      description: "",
+      createdAt: "2025-01-01T00:00:00.000Z",
+      updatedAt: "2025-01-01T00:00:00.000Z",
+    };
+    const legacy = {
+      id: legacySeedIds[0]!,
+      title: "Legado",
+      username: "",
+      secret: "x",
+      description: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+    };
+    const result = removeLegacySeedPasswords([manual, legacy]);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe("password-manual-usuario");
+  });
+
+  it("normalizeState com IDs legados remove todos eles silenciosamente", () => {
+    const legacyRecords = legacySeedIds.map((id) => ({
+      id,
+      title: "Legado",
+      username: "",
+      secret: "x",
+      description: "",
+      createdAt: "2024-01-01T00:00:00.000Z",
+      updatedAt: "2024-01-01T00:00:00.000Z",
+    }));
+    const state = normalizeState({ routines: [], settings: {}, passwords: legacyRecords });
+    expect(state.passwords).toEqual([]);
+  });
+
+  it("normalizeState preserva senha manual mesmo que haja IDs legados na lista", () => {
+    const records = [
+      {
+        id: "password-manual-equipe",
+        title: "Cofre Equipe",
+        username: "equipe",
+        secret: "senha-manual",
+        description: "",
+        createdAt: "2025-06-01T00:00:00.000Z",
+        updatedAt: "2025-06-01T00:00:00.000Z",
+      },
+      ...legacySeedIds.map((id) => ({
+        id,
+        title: "Legado",
+        username: "",
+        secret: "x",
+        description: "",
+        createdAt: "2024-01-01T00:00:00.000Z",
+        updatedAt: "2024-01-01T00:00:00.000Z",
+      })),
+    ];
+    const state = normalizeState({ routines: [], settings: {}, passwords: records });
+    expect(state.passwords).toHaveLength(1);
+    expect(state.passwords[0]?.id).toBe("password-manual-equipe");
   });
 });

@@ -400,6 +400,79 @@ describe("constantes de notificação produzem mesmo comportamento", () => {
   });
 });
 
+describe("snooze e horário efetivo", () => {
+  it("notificação adiada para o passado recente volta a disparar mesmo com fireMinutes original distante", () => {
+    const todayDate = "2026-05-18";
+    const planId = buildNotificationId(todayDate, "inicio", "08:00", ["routine-1"]);
+    const now = new Date(2026, 4, 18, 13, 30, 0); // 13:30 — 5h30 depois do fireMinutes original (08:00)
+
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({})],
+      log: [
+        {
+          id: planId,
+          status: "adiada",
+          date: todayDate,
+          type: "inicio",
+          time: "08:00",
+          routineIds: ["routine-1"],
+          updatedAt: "2026-05-18T08:05:00.000Z",
+          snoozedUntil: "13:30",
+        },
+      ],
+    });
+
+    const inicio = plans.find((plan) => plan.id === planId);
+    expect(inicio).toBeDefined();
+    expect(inicio?.status).toBe("pendente");
+    expect(inicio?.snoozedUntilMinutes).toBe(13 * 60 + 30);
+
+    const due = getDueNotifications(plans, now);
+    expect(due.find((plan) => plan.id === planId)).toBeDefined();
+
+    // Sanidade: sem usar horário efetivo, o fireMinutes original (480) sozinho
+    // não cabe na NOTIF_TRIGGER_WINDOW (60), pois 13:30 - 08:00 = 330 min.
+    expect(now.getHours() * 60 + now.getMinutes() - 480).toBeGreaterThan(NOTIF_TRIGGER_WINDOW);
+  });
+
+  it("notificação adiada para o futuro continua como adiada e não dispara", () => {
+    const todayDate = "2026-05-18";
+    const planId = buildNotificationId(todayDate, "inicio", "08:00", ["routine-1"]);
+    const now = new Date(2026, 4, 18, 13, 30, 0); // 13:30
+
+    const plans = planTodayNotifications({
+      now,
+      weekday: "monday",
+      todayDate,
+      settings: settings({ groupingEnabled: false }),
+      routines: [routine({})],
+      log: [
+        {
+          id: planId,
+          status: "adiada",
+          date: todayDate,
+          type: "inicio",
+          time: "08:00",
+          routineIds: ["routine-1"],
+          updatedAt: "2026-05-18T08:05:00.000Z",
+          snoozedUntil: "15:00",
+        },
+      ],
+    });
+
+    const inicio = plans.find((plan) => plan.id === planId);
+    expect(inicio?.status).toBe("adiada");
+    expect(inicio?.snoozedUntilMinutes).toBe(15 * 60);
+
+    const due = getDueNotifications(plans, now);
+    expect(due.find((plan) => plan.id === planId)).toBeUndefined();
+  });
+});
+
 describe("getNotificationTypeLabel", () => {
   it("returns human labels", () => {
     expect(getNotificationTypeLabel("aviso_antecipado")).toBe("Aviso antecipado");

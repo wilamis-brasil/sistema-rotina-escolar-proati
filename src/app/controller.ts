@@ -86,8 +86,15 @@ export interface AppActions {
     routineIds: string[];
     snoozedUntil?: string;
   }): EmptyResult;
-  markAllNotificationsAsSeen(ids: string[]): EmptyResult;
-  clearOldNotificationLog(beforeDate: string): EmptyResult;
+  markAllNotificationsAsSeen(entries: MarkAsSeenEntry[]): EmptyResult;
+}
+
+export interface MarkAsSeenEntry {
+  id: string;
+  date: string;
+  type: NotificationType;
+  time: string;
+  routineIds: string[];
 }
 
 export function createAppController({
@@ -399,25 +406,30 @@ export function createAppController({
       return persist();
     },
 
-    markAllNotificationsAsSeen(ids) {
-      if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
+    markAllNotificationsAsSeen(entries) {
+      if (!Array.isArray(entries) || entries.length === 0) return { ok: true };
       const log = state.notificationLog ?? [];
-      ids.forEach((id) => {
-        const found = log.find((entry) => entry.id === id);
+      const timestamp = nowIso();
+      entries.forEach((entry) => {
+        if (!entry?.id) return;
+        const found = log.find((logEntry) => logEntry.id === entry.id);
         if (found) {
           found.status = "vista";
-          found.updatedAt = nowIso();
+          found.updatedAt = timestamp;
           delete found.snoozedUntil;
+          return;
         }
+        log.push({
+          id: entry.id,
+          status: "vista",
+          date: entry.date,
+          type: entry.type,
+          time: entry.time,
+          routineIds: entry.routineIds,
+          updatedAt: timestamp,
+        });
       });
-      state.notificationLog = log;
-      return persist();
-    },
-
-    clearOldNotificationLog(beforeDate) {
-      if (!beforeDate) return { ok: true };
-      const log = (state.notificationLog ?? []).filter((entry) => entry.date >= beforeDate);
-      state.notificationLog = log;
+      state.notificationLog = log.length > MAX_NOTIFICATION_LOG ? pruneNotificationLog(log) : log;
       return persist();
     },
   };

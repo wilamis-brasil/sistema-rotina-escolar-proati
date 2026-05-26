@@ -247,10 +247,11 @@ export function planTodayNotifications(context: NotificationContext): Notificati
       }
     }
 
+    const effectiveFireMinutes = snoozedUntilMinutes ?? plan.fireMinutes;
     const isOverdue =
       status === "pendente" &&
-      currentMinutes >= plan.fireMinutes &&
-      currentMinutes - plan.fireMinutes <= NOTIF_RECENT_DELAY_WINDOW;
+      currentMinutes >= effectiveFireMinutes &&
+      currentMinutes - effectiveFireMinutes <= NOTIF_RECENT_DELAY_WINDOW;
 
     return {
       ...plan,
@@ -259,6 +260,10 @@ export function planTodayNotifications(context: NotificationContext): Notificati
       isOverdue,
     };
   });
+}
+
+function effectiveFireMinutes(plan: NotificationPlan): number {
+  return plan.snoozedUntilMinutes ?? plan.fireMinutes;
 }
 
 export interface NotificationSummary {
@@ -281,14 +286,16 @@ export function summarizeNotifications(plans: NotificationPlan[], now: Date): No
   plans.forEach((plan) => {
     if (plan.status === "pendente" || plan.status === "adiada") pending += 1;
     if (plan.status === "exibida") unseen += 1;
+    const fire = effectiveFireMinutes(plan);
     if (plan.isOverdue) {
       overdue += 1;
-      if (currentMinutes - plan.fireMinutes <= NOTIF_RECENT_DELAY_WINDOW) {
+      if (currentMinutes - fire <= NOTIF_RECENT_DELAY_WINDOW) {
         recentMissed.push(plan);
       }
     }
-    if ((plan.status === "pendente" || plan.status === "adiada") && plan.fireMinutes >= currentMinutes) {
-      if (!nextPending || plan.fireMinutes < nextPending.fireMinutes) {
+    if ((plan.status === "pendente" || plan.status === "adiada") && fire >= currentMinutes) {
+      const nextFire = nextPending ? effectiveFireMinutes(nextPending) : Number.POSITIVE_INFINITY;
+      if (!nextPending || fire < nextFire) {
         nextPending = plan;
       }
     }
@@ -308,8 +315,9 @@ export function getDueNotifications(plans: NotificationPlan[], now: Date): Notif
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   return plans.filter((plan) => {
     if (plan.status !== "pendente") return false;
-    if (plan.fireMinutes > currentMinutes) return false;
-    return currentMinutes - plan.fireMinutes <= NOTIF_TRIGGER_WINDOW;
+    const fire = effectiveFireMinutes(plan);
+    if (fire > currentMinutes) return false;
+    return currentMinutes - fire <= NOTIF_TRIGGER_WINDOW;
   });
 }
 
@@ -317,8 +325,9 @@ export function getRecentMissed(plans: NotificationPlan[], now: Date, windowMinu
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
   return plans.filter((plan) => {
     if (plan.status !== "pendente") return false;
-    if (plan.fireMinutes >= currentMinutes) return false;
-    return currentMinutes - plan.fireMinutes <= windowMinutes;
+    const fire = effectiveFireMinutes(plan);
+    if (fire >= currentMinutes) return false;
+    return currentMinutes - fire <= windowMinutes;
   });
 }
 

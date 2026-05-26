@@ -160,16 +160,19 @@ export function createNotificationsView({
         toasts.show({ type: "info", title: "Nada para marcar", message: "Sem notificações pendentes hoje." });
         return;
       }
-      pending.forEach((plan) => {
-        actions.recordNotificationStatus({
+      const result = actions.markAllNotificationsAsSeen(
+        pending.map((plan) => ({
           id: plan.id,
-          status: "vista",
           date: plan.date,
           type: plan.type,
           time: plan.time,
           routineIds: plan.routineIds,
-        });
-      });
+        })),
+      );
+      if (!result.ok) {
+        toasts.show({ type: "error", title: "Falha", message: result.errors.join(" ") });
+        return;
+      }
       refresh();
       toasts.show({ type: "success", title: "Marcadas", message: `${pending.length} notificações marcadas como vistas.` });
     });

@@ -21,7 +21,6 @@ import { el, icon, option, replaceChildren, span } from "../dom";
 import { refreshIcons } from "../icons";
 import type { ToastManager } from "../toasts";
 import { iconButton } from "../ui-elements";
-import type { FeedbackPresenter } from "../ui-feedback";
 import type { UIRefs } from "../ui-refs";
 import {
   openMaintenanceBulkModal,
@@ -65,7 +64,6 @@ export function createMaintenanceView({
   actions,
   dialogs,
   toasts,
-  feedback,
   onChange,
 }: {
   refs: MaintenanceRefs;
@@ -73,7 +71,6 @@ export function createMaintenanceView({
   actions: AppActions;
   dialogs: DialogManager;
   toasts: ToastManager;
-  feedback: FeedbackPresenter;
   onChange: () => void;
 }): MaintenanceView {
   const filters: Filters = { query: "", type: "", status: "", priority: "" };
@@ -465,7 +462,14 @@ export function createMaintenanceView({
           message: result.errors.join(" "),
         });
       } else {
-        feedback.showResult(result, refs.maintenanceResultsCount, "Registros de manutenção importados.");
+        const total = getState().maintenanceRecords.length;
+        toasts.show({
+          type: "success",
+          title: "Importação concluída",
+          message: `${total} registro${total === 1 ? "" : "s"} de manutenção disponível${total === 1 ? "" : "is"} após a importação.`,
+          timeout: 3400,
+        });
+        refs.storageStatus.textContent = "Dados locais salvos.";
         onChange();
       }
       input.value = "";

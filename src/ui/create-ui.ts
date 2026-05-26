@@ -110,7 +110,6 @@ export function createUI({
       actions,
       dialogs,
       toasts,
-      feedback,
       onChange: render,
     });
     settingsView = createSettingsView({

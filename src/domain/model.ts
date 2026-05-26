@@ -81,65 +81,20 @@ const RawStateSchema = z
   })
   .passthrough();
 
-// AVISO DE SEGURANÇA: este arquivo contém credenciais em texto puro.
-// Mantenha o repositório PRIVADO ou substitua os valores de "secret" abaixo
-// antes de publicar uma build pública (ex.: GitHub Pages).
-const DEFAULT_PASSWORDS: Password[] = [
-  {
-    id: "password-netbook-positivo-multilaser-sala",
-    title: "Netbook Positivo/Multilaser – Sala de Aula",
-    username: ".\\suporte",
-    secret: "P@ssw0rd$eespW10",
-    description: "Credencial utilizada em netbooks Positivo/Multilaser de sala de aula.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "password-netbook-multilaser-m11w-formatacao",
-    title: "Netbook Multilaser M11W – Formação",
-    username: "",
-    secret: "1n0v@c@0",
-    description: "Senha utilizada no processo de formação do Netbook Multilaser M11W.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "password-imagem-instalacao",
-    title: "Imagem de Instalação",
-    username: "",
-    secret: "!m4gem@seduc",
-    description: "Senha da imagem de instalação.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "password-lenovo-multilaser-ultra-administrador",
-    title: "Notebooks/Desktop Lenovo, Netbook Multilaser Ultra – Administrador",
-    username: ".\\administrador",
-    secret: "1n0v@c@0$educ21",
-    description: "Credencial de administrador para notebooks/desktops Lenovo e Netbook Multilaser Ultra.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "password-lenovo-multilaser-ultra-proatec",
-    title: "Notebooks/Desktop Lenovo, Netbook Multilaser Ultra – Proatec",
-    username: ".\\proatec",
-    secret: "$educ_Pr0@t&c",
-    description: "Credencial PROATEC para notebooks/desktops Lenovo e Netbook Multilaser Ultra.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-  {
-    id: "password-tablet-positivo-quiosque",
-    title: "Sair do Modo Quiosque – Tablet Positivo",
-    username: "",
-    secret: "4920",
-    description: "Senha utilizada para sair do modo quiosque em Tablet Positivo.",
-    createdAt: "2024-01-01T00:00:00.000Z",
-    updatedAt: "2024-01-01T00:00:00.000Z",
-  },
-];
+// IDs das senhas que foram semeadas automaticamente em versões anteriores do app.
+// Usados apenas para limpeza silenciosa durante a migração — sem valores secretos aqui.
+const LEGACY_SEED_PASSWORD_IDS = new Set([
+  "password-netbook-positivo-multilaser-sala",
+  "password-netbook-multilaser-m11w-formatacao",
+  "password-imagem-instalacao",
+  "password-lenovo-multilaser-ultra-administrador",
+  "password-lenovo-multilaser-ultra-proatec",
+  "password-tablet-positivo-quiosque",
+]);
+
+export function removeLegacySeedPasswords(passwords: Password[]): Password[] {
+  return passwords.filter((p) => !LEGACY_SEED_PASSWORD_IDS.has(p.id));
+}
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -238,7 +193,7 @@ export function createEmptyState(): AppState {
     teachers: [],
     rooms: [],
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
-    passwords: DEFAULT_PASSWORDS.map((p) => ({ ...p })),
+    passwords: [],
     maintenanceRecords: [],
     notificationLog: [],
     settings: {
@@ -281,8 +236,8 @@ export function buildRoutine(
     errors.push("Informe o horário de término no formato HH:MM ou deixe em branco.");
   }
 
-  if (isValidTime(startTime) && isValidTime(endTime) && timeToMinutes(endTime)! < timeToMinutes(startTime)!) {
-    errors.push("O horário de término não pode ser anterior ao horário de retirada.");
+  if (isValidTime(startTime) && isValidTime(endTime) && timeToMinutes(endTime)! <= timeToMinutes(startTime)!) {
+    errors.push("O horário de término deve ser posterior ao horário de retirada.");
   }
 
   if (!teacher) {
@@ -462,7 +417,7 @@ export function normalizeState(candidate: unknown): AppState {
     teachers: normalizeCatalogCollection<Teacher>(raw.teachers, "teacher"),
     rooms: normalizeRoomCollection(raw.rooms),
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
-    passwords: normalizeAndSeedPasswords(raw.passwords),
+    passwords: removeLegacySeedPasswords(normalizePasswordCollection(raw.passwords)),
     maintenanceRecords: normalizeMaintenanceCollection(raw.maintenanceRecords),
     notificationLog: normalizeNotificationLog(raw.notificationLog),
     settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
@@ -739,13 +694,6 @@ function readObjectField(value: unknown, key: string): unknown {
 
 function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
-}
-
-function normalizeAndSeedPasswords(raw: unknown): Password[] {
-  const parsed = normalizePasswordCollection(raw);
-  const existingIds = new Set(parsed.map((p) => p.id));
-  const missing = DEFAULT_PASSWORDS.filter((seed) => !existingIds.has(seed.id));
-  return [...parsed, ...missing];
 }
 
 function normalizePasswordCollection(items: unknown): Password[] {

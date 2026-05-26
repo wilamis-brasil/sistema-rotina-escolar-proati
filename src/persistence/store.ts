@@ -32,14 +32,34 @@ function browserStorage(): StorageAdapter {
   return window.localStorage;
 }
 
+function quarantineCorruptedKey(storage: StorageAdapter, key: string, raw: string): void {
+  try {
+    const quarantineKey = `${key}-corrupted-${nowIso()}`;
+    storage.setItem(quarantineKey, raw);
+    storage.removeItem(key);
+  } catch (innerError) {
+    console.error("Falha ao quarentenar dados corrompidos.", innerError);
+  }
+}
+
 export function loadState(storage: StorageAdapter = browserStorage()): {
   state: AppState;
   notice: string;
 } {
+  let currentRaw: string | null = null;
   try {
-    const raw = storage.getItem(STORAGE_KEY);
-    if (raw) {
-      const migrated = migrateState(JSON.parse(raw));
+    currentRaw = storage.getItem(STORAGE_KEY);
+  } catch (readError) {
+    console.error("Falha ao acessar armazenamento local.", readError);
+    return {
+      state: createEmptyState(),
+      notice: "Não foi possível acessar os dados locais. Um estado limpo foi iniciado.",
+    };
+  }
+
+  if (currentRaw) {
+    try {
+      const migrated = migrateState(JSON.parse(currentRaw));
       if (migrated.notificationLog.length > MAX_NOTIFICATION_LOG) {
         migrated.notificationLog = pruneNotificationLog(migrated.notificationLog);
       }
@@ -48,37 +68,50 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
       } catch (persistError) {
         console.error("Falha ao atualizar dados locais migrados.", persistError);
       }
-
       return { state: migrated, notice: "Dados locais carregados." };
+    } catch (parseError) {
+      console.error("Dados locais corrompidos ou incompatíveis. Movendo para quarentena.", parseError);
+      quarantineCorruptedKey(storage, STORAGE_KEY, currentRaw);
+      return {
+        state: createEmptyState(),
+        notice: "Dados locais corrompidos foram movidos para quarentena. Um estado limpo foi iniciado.",
+      };
     }
+  }
 
-    const legacyEntry = LEGACY_STORAGE_KEYS
-      .map((key) => ({ key, raw: storage.getItem(key) }))
-      .find((entry) => Boolean(entry.raw));
+  for (const legacyKey of LEGACY_STORAGE_KEYS) {
+    let legacyRaw: string | null = null;
+    try {
+      legacyRaw = storage.getItem(legacyKey);
+    } catch (readError) {
+      console.error("Falha ao acessar chave legada.", readError);
+      continue;
+    }
+    if (!legacyRaw) continue;
 
-    if (legacyEntry?.raw) {
-      const migrated = migrateState(JSON.parse(legacyEntry.raw));
+    try {
+      const migrated = migrateState(JSON.parse(legacyRaw));
       if (migrated.notificationLog.length > MAX_NOTIFICATION_LOG) {
         migrated.notificationLog = pruneNotificationLog(migrated.notificationLog);
       }
       try {
         storage.setItem(STORAGE_KEY, JSON.stringify(migrated));
-        storage.removeItem(legacyEntry.key);
+        storage.removeItem(legacyKey);
       } catch (persistError) {
         console.error("Falha ao migrar dados locais para nova chave.", persistError);
       }
-
       return { state: migrated, notice: "Dados locais migrados para a nova chave de armazenamento." };
+    } catch (parseError) {
+      console.error("Dados legados corrompidos ou incompatíveis. Movendo para quarentena.", parseError);
+      quarantineCorruptedKey(storage, legacyKey, legacyRaw);
+      return {
+        state: createEmptyState(),
+        notice: "Dados legados corrompidos foram movidos para quarentena. Um estado limpo foi iniciado.",
+      };
     }
-
-    return { state: createEmptyState(), notice: "Novo armazenamento local criado neste navegador." };
-  } catch (error) {
-    console.error("Falha ao carregar dados locais.", error);
-    return {
-      state: createEmptyState(),
-      notice: "Não foi possível carregar os dados locais. Um estado limpo foi iniciado.",
-    };
   }
+
+  return { state: createEmptyState(), notice: "Novo armazenamento local criado neste navegador." };
 }
 
 export function saveState(
