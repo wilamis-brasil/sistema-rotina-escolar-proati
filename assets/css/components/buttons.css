@@ -2,8 +2,13 @@
   .button {
     min-height: var(--control-height);
     padding: 9px 14px;
-    font-weight: 900;
+    font-weight: 800;
     font-size: 0.9rem;
+  }
+
+  .button-primary,
+  .button-danger {
+    font-weight: 900;
   }
 
   .button-primary {
@@ -77,7 +82,7 @@
     background: var(--surface-soft);
     border-color: transparent;
     font-size: 0.82rem;
-    font-weight: 900;
+    font-weight: 700;
     white-space: nowrap;
   }
 

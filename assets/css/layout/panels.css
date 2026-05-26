@@ -28,6 +28,7 @@
   .panel-heading p {
     max-width: 520px;
     margin-top: 8px;
+    color: var(--muted);
     line-height: 1.52;
   }
 

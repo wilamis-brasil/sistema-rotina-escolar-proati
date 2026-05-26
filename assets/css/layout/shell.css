@@ -47,12 +47,12 @@
 
   .metric-item {
     display: grid;
-    min-height: 64px;
+    min-height: 60px;
     gap: 4px;
-    padding: 11px 14px;
-    background: var(--surface);
+    padding: 10px 14px;
+    background: var(--surface-soft);
     border-radius: var(--radius);
-    border: 1px solid var(--border);
+    border: 0;
   }
 
   .metric-item strong {
@@ -66,8 +66,9 @@
   .metric-item small {
     min-width: 0;
     overflow: hidden;
+    color: var(--muted);
     font-size: 0.75rem;
-    font-weight: 700;
+    font-weight: 600;
     line-height: 1.2;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -76,10 +77,10 @@
   .eyebrow {
     display: inline-flex;
     align-items: center;
-    color: var(--text);
+    color: var(--muted);
     font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0;
+    font-weight: 800;
+    letter-spacing: 0.02em;
     line-height: 1.2;
     text-transform: uppercase;
   }

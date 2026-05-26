@@ -83,7 +83,7 @@
   min-width: 0;
   color: var(--text);
   font-size: 1.12rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.05;
   overflow-wrap: anywhere;
 }
@@ -92,7 +92,7 @@
   min-width: 0;
   color: var(--muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25;
   overflow-wrap: anywhere;
 }
@@ -120,7 +120,7 @@
 .notifications-setting-title {
   color: var(--text);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.2;
 }
 
@@ -138,7 +138,7 @@
   color: var(--text);
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .notifications-toggle input[type="checkbox"] {
@@ -159,7 +159,7 @@
   gap: 8px;
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .notifications-inline-field input {
@@ -204,14 +204,15 @@
 .notifications-card {
   display: grid;
   gap: 10px;
-  padding: 16px;
-  background: var(--surface-soft);
-  border: 0;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
   border-radius: var(--radius);
 }
 
 .notifications-card:hover {
-  background: #ededec;
+  background: var(--surface-soft);
+  border-color: var(--border-strong);
 }
 
 .notifications-card.status-vista,
@@ -231,7 +232,7 @@
   min-width: 0;
   color: var(--text);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -240,7 +241,7 @@
   margin: 0;
   color: var(--text);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -249,7 +250,7 @@
   margin: 0;
   color: var(--muted);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -265,8 +266,10 @@
   border: 1px solid var(--border);
   border-radius: 4px;
   font-size: 0.74rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
 }
 
 .notifications-card.status-pendente .notifications-status-chip {
@@ -319,7 +322,7 @@
 .notifications-calendar-target strong {
   color: var(--text);
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 800;
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
@@ -327,7 +330,7 @@
 .notifications-calendar-target span {
   color: var(--muted);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.35;
   overflow-wrap: anywhere;
 }
@@ -350,7 +353,7 @@
   background: var(--warning-soft);
   border-radius: 999px;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
 }
 
 .routine-notification-pill i {
@@ -364,7 +367,7 @@
   gap: 0.3rem;
   color: var(--muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .schedule-notification-hint i {
@@ -541,7 +544,7 @@
   background: var(--warning-soft);
   border-radius: 4px;
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 700;
   line-height: 1.1;
 }
 
@@ -557,7 +560,7 @@
   border: 0;
   border-radius: var(--radius);
   font-size: 0.82rem;
-  font-weight: 900;
+  font-weight: 700;
   padding: 0.35rem 0.55rem;
   cursor: pointer;
 }

@@ -198,13 +198,33 @@
     }
 
     .toast-root {
-      top: 10px;
-      right: 10px;
-      width: calc(100vw - 20px);
+      top: 76px;
+      right: 8px;
+      left: 8px;
+      width: auto;
+      gap: 8px;
     }
 
     .toast {
-      grid-template-columns: 34px minmax(0, 1fr) 30px;
+      gap: 10px;
+      padding: 10px 12px;
+      grid-template-columns: 28px minmax(0, 1fr) 26px;
+      box-shadow: 0 8px 22px rgba(0, 0, 0, 0.12);
+    }
+
+    .toast-copy strong {
+      font-size: 0.88rem;
+    }
+
+    .toast-copy p {
+      margin-top: 2px;
+      font-size: 0.82rem;
+      line-height: 1.35;
+    }
+
+    .toast-close {
+      width: 26px;
+      height: 26px;
     }
 
     .dialog-backdrop {

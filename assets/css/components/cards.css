@@ -9,15 +9,16 @@
   .catalog-item {
     display: grid;
     gap: 12px;
-    padding: 16px;
-    background: var(--surface-soft);
-    border: 0;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
   }
 
   .routine-card:hover,
   .catalog-item:hover {
-    background: #ededec;
+    background: var(--surface-soft);
+    border-color: var(--border-strong);
   }
 
   .routine-card-top,

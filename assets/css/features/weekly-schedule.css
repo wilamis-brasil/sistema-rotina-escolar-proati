@@ -49,7 +49,8 @@
     display: block;
     color: var(--muted);
     font-size: 0.68rem;
-    font-weight: 900;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     line-height: 1;
     text-transform: uppercase;
   }
@@ -71,7 +72,7 @@
     border: 1px solid #d6dfba;
     border-radius: 4px;
     font-size: 0.74rem;
-    font-weight: 900;
+    font-weight: 700;
   }
 
   .schedule-table-wrap {
@@ -125,7 +126,8 @@
     z-index: 5;
     padding: 8px 7px;
     font-size: 0.72rem;
-    font-weight: 900;
+    font-weight: 800;
+    letter-spacing: 0.02em;
     line-height: 1.1;
     text-align: center;
     text-transform: uppercase;
@@ -160,7 +162,7 @@
     padding: 10px 8px;
     background: #fbfbfa;
     font-size: 0.78rem;
-    font-weight: 900;
+    font-weight: 800;
     white-space: nowrap;
   }
 
@@ -202,14 +204,14 @@
 
   .schedule-cell-entry strong {
     font-size: 0.76rem;
-    font-weight: 900;
+    font-weight: 800;
     line-height: 1.2;
   }
 
   .schedule-cell-entry small {
     color: var(--muted);
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.2;
   }
 

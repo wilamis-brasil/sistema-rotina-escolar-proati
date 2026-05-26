@@ -49,21 +49,21 @@
     justify-content: flex-start;
     width: var(--main-menu-button-width);
     flex: 0 0 var(--main-menu-button-width);
-    height: 48px;
-    min-height: 48px;
+    height: 44px;
+    min-height: 44px;
     padding: 0 10px;
-    color: #ffffff;
-    background: #000000;
-    border-color: #000000;
+    color: var(--text);
+    background: var(--surface-soft);
+    border-color: transparent;
     font-size: 0.86rem;
-    font-weight: 900;
+    font-weight: 700;
   }
 
   .menu-button:hover,
   .menu-button[aria-expanded="true"] {
-    color: #ffffff;
-    background: #1d1d1d;
-    border-color: #1d1d1d;
+    color: var(--text);
+    background: var(--surface-hover);
+    border-color: transparent;
   }
 
   .menu-button-copy {
@@ -76,9 +76,9 @@
   }
 
   .menu-button-label {
-    color: rgba(255, 255, 255, 0.72);
+    color: var(--muted);
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   #main-menu-current {
@@ -86,6 +86,7 @@
     max-width: 96px;
     overflow: hidden;
     font-size: 0.88rem;
+    font-weight: 800;
     line-height: 1.1;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -132,7 +133,7 @@
     color: var(--text);
     background: transparent;
     font-size: 0.88rem;
-    font-weight: 900;
+    font-weight: 700;
     text-align: left;
     white-space: normal;
   }
@@ -157,13 +158,13 @@
   }
 
   .nav-button-copy span {
-    font-weight: 900;
+    font-weight: 800;
   }
 
   .nav-button-copy small {
     color: var(--muted);
     font-size: 0.76rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .nav-button.is-active .nav-button-copy small {

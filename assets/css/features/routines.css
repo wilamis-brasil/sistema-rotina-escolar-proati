@@ -48,7 +48,7 @@
     margin-top: 6px;
     color: var(--muted);
     font-size: 0.82rem;
-    font-weight: 900;
+    font-weight: 700;
   }
 
   .routine-actions {
@@ -76,14 +76,15 @@
   .routine-group-badge {
     display: inline-flex;
     align-items: center;
-    min-height: 32px;
-    padding: 6px 9px;
+    min-height: 30px;
+    padding: 5px 9px;
     border-radius: 4px;
     background: #000000;
     color: #ffffff;
-    font-size: 0.75rem;
-    font-weight: 900;
+    font-size: 0.74rem;
+    font-weight: 800;
     line-height: 1;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
   }
 
@@ -95,7 +96,7 @@
     padding-top: 2px;
     color: var(--muted);
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 600;
     line-height: 1.4;
   }
 
@@ -132,7 +133,8 @@
     gap: 10px;
     flex-wrap: wrap;
     padding-top: 2px;
+    color: var(--muted);
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 600;
   }
 }

@@ -209,7 +209,7 @@ function todaySummaryText(
     return activeNow ? startMinutes > currentMinutes : startMinutes >= currentMinutes;
   });
   const cardsLabel =
-    visibleGroups.length === 1 ? "1 card inteligente agora." : `${visibleGroups.length} cards inteligentes agora.`;
+    visibleGroups.length === 1 ? "1 agrupamento ativo." : `${visibleGroups.length} agrupamentos ativos.`;
   const pendingLabel =
     pendingRoutines.length === 1 ? "1 retirada restante hoje." : `${pendingRoutines.length} retiradas restantes hoje.`;
   const nextLabel = activeNow
