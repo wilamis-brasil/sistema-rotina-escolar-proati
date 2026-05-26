@@ -68,7 +68,6 @@ export interface UIRefs {
   passwordDescription: HTMLInputElement;
   passwordFeedback: HTMLElement;
   passwordsListPanel: HTMLElement;
-  settingsForm: HTMLFormElement;
   settingsFeedback: HTMLElement;
   exportDataButton: HTMLButtonElement;
   importDataFile: HTMLInputElement;
@@ -167,7 +166,6 @@ export function bindRefs(): UIRefs {
     passwordDescription: qs("#password-description"),
     passwordFeedback: qs("#password-feedback"),
     passwordsListPanel: qs("#passwords-list-panel"),
-    settingsForm: qs("#settings-form"),
     settingsFeedback: qs("#settings-feedback"),
     exportDataButton: qs("#export-data-button"),
     importDataFile: qs("#import-data-file"),

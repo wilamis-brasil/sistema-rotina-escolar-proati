@@ -604,11 +604,12 @@ function csvEscape(value: unknown): string {
 
 function downloadBlob(content: string, type: string, filename: string): void {
   const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
+  link.href = url;
   link.download = filename;
   link.click();
-  URL.revokeObjectURL(link.href);
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 export type { MaintenancePayload };

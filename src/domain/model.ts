@@ -932,9 +932,6 @@ export function describeMaintenanceChanges(
     const after = next.ticketNumber || "sem chamado";
     messages.push(`Chamado alterado de "${before}" para "${after}".`);
   }
-  if (previous.status !== next.status && next.status === "resolvido") {
-    messages.push("Marcado como resolvido.");
-  }
 
   return messages;
 }

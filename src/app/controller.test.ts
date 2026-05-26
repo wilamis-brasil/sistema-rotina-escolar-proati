@@ -351,6 +351,91 @@ describe("catalog auto-creation — respeita limites", () => {
   });
 });
 
+describe("markAllNotificationsAsSeen", () => {
+  it("marca entradas existentes como vistas, atualiza updatedAt e remove snoozedUntil", () => {
+    const existingLog = [
+      {
+        id: "notif-1",
+        status: "pendente" as const,
+        date: "2026-05-25",
+        type: "inicio" as const,
+        time: "08:00",
+        routineIds: ["r1"],
+        updatedAt: "2026-05-25T07:00:00.000Z",
+        snoozedUntil: "08:10",
+      },
+      {
+        id: "notif-2",
+        status: "adiada" as const,
+        date: "2026-05-25",
+        type: "inicio" as const,
+        time: "09:00",
+        routineIds: ["r2"],
+        updatedAt: "2026-05-25T08:00:00.000Z",
+      },
+    ];
+    const initialState = { ...createEmptyState(), notificationLog: existingLog };
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState, storage });
+
+    const result = controller.actions.markAllNotificationsAsSeen(["notif-1", "notif-2"]);
+    expect(result.ok).toBe(true);
+
+    const log = controller.getState().notificationLog;
+    const first = log.find((e) => e.id === "notif-1");
+    const second = log.find((e) => e.id === "notif-2");
+    expect(first?.status).toBe("vista");
+    expect(first?.snoozedUntil).toBeUndefined();
+    expect(first?.updatedAt).not.toBe("2026-05-25T07:00:00.000Z");
+    expect(second?.status).toBe("vista");
+  });
+
+  it("ignora IDs desconhecidos sem criar entradas novas", () => {
+    const existingLog = [
+      {
+        id: "notif-1",
+        status: "pendente" as const,
+        date: "2026-05-25",
+        type: "inicio" as const,
+        time: "08:00",
+        routineIds: ["r1"],
+        updatedAt: "2026-05-25T07:00:00.000Z",
+      },
+    ];
+    const initialState = { ...createEmptyState(), notificationLog: existingLog };
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState, storage });
+
+    const result = controller.actions.markAllNotificationsAsSeen(["notif-1", "notif-desconhecida"]);
+    expect(result.ok).toBe(true);
+
+    const log = controller.getState().notificationLog;
+    expect(log).toHaveLength(1);
+    expect(log[0]?.id).toBe("notif-1");
+    expect(log[0]?.status).toBe("vista");
+  });
+
+  it("retorna ok sem alterar log quando ids está vazio ou inválido", () => {
+    const existingLog = [
+      {
+        id: "notif-1",
+        status: "pendente" as const,
+        date: "2026-05-25",
+        type: "inicio" as const,
+        time: "08:00",
+        routineIds: ["r1"],
+        updatedAt: "2026-05-25T07:00:00.000Z",
+      },
+    ];
+    const initialState = { ...createEmptyState(), notificationLog: existingLog };
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState, storage });
+
+    expect(controller.actions.markAllNotificationsAsSeen([]).ok).toBe(true);
+    expect(controller.getState().notificationLog[0]?.status).toBe("pendente");
+  });
+});
+
 describe("recordNotificationStatus — respeita MAX_NOTIFICATION_LOG", () => {
   it(`poda o log ao exceder ${MAX_NOTIFICATION_LOG} entradas`, () => {
     const existingLog = Array.from({ length: MAX_NOTIFICATION_LOG }, (_, i) => ({

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildMaintenanceRecord,
   createEmptyState,
+  describeMaintenanceChanges,
   filterMaintenance,
   normalizeState,
 } from "./model";
@@ -117,6 +118,34 @@ describe("normalização do estado", () => {
   it("não altera o estado inicial padrão", () => {
     const empty = createEmptyState();
     expect(empty.maintenanceRecords).toEqual([]);
+  });
+});
+
+describe("describeMaintenanceChanges", () => {
+  it("não duplica mensagem ao mudar status para resolvido", () => {
+    const previous = makeRecord({ status: "em-manutencao" });
+    const next = { ...previous, status: "resolvido" as const };
+
+    const messages = describeMaintenanceChanges(previous, next);
+
+    const resolvidoMessages = messages.filter((m) => /resolvido/i.test(m));
+    expect(resolvidoMessages).toHaveLength(1);
+    expect(messages).toContain('Status alterado de "Em manutenção" para "Resolvido".');
+    expect(messages).not.toContain("Marcado como resolvido.");
+  });
+
+  it("retorna mensagem genérica para mudanças de status diversas", () => {
+    const previous = makeRecord({ status: "com-problema" });
+    const next = { ...previous, status: "em-manutencao" as const };
+
+    const messages = describeMaintenanceChanges(previous, next);
+
+    expect(messages).toContain('Status alterado de "Com problema" para "Em manutenção".');
+  });
+
+  it("não gera mensagens quando nada muda", () => {
+    const record = makeRecord();
+    expect(describeMaintenanceChanges(record, record)).toEqual([]);
   });
 });
 

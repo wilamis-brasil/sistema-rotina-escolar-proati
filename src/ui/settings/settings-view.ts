@@ -6,7 +6,7 @@ import type { UIRefs } from "../ui-refs";
 
 type SettingsRefs = Pick<
   UIRefs,
-  "settingsForm" | "settingsFeedback" | "exportDataButton" | "importDataFile" | "resetDataButton"
+  "settingsFeedback" | "exportDataButton" | "importDataFile" | "resetDataButton"
 >;
 
 interface SettingsView {
@@ -29,23 +29,19 @@ export function createSettingsView({
   onImported: () => void;
 }): SettingsView {
   function bindEvents(): void {
-    refs.settingsForm.addEventListener("submit", handleSettingsSubmit);
     refs.exportDataButton.addEventListener("click", handleExport);
     refs.importDataFile.addEventListener("change", handleImport);
     refs.resetDataButton.addEventListener("click", handleResetData);
   }
 
-  function handleSettingsSubmit(event: SubmitEvent): void {
-    event.preventDefault();
-  }
-
   function handleExport(): void {
     const blob = new Blob([actions.exportData()], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `kickoff-proati-${new Date().toISOString().slice(0, 10)}.json`;
+    link.href = url;
+    link.download = `sistema-rotina-escolar-proati-${new Date().toISOString().slice(0, 10)}.json`;
     link.click();
-    URL.revokeObjectURL(link.href);
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   function handleImport(event: Event): void {
@@ -79,7 +75,9 @@ export function createSettingsView({
       const result = actions.importData(String(reader.result ?? ""));
       feedback.showResult(result, refs.settingsFeedback, "Dados importados.");
       input.value = "";
-      onImported();
+      if (result.ok) {
+        onImported();
+      }
     });
     reader.addEventListener("error", () => {
       feedback.showResult(

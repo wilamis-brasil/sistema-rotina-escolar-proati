@@ -11,15 +11,15 @@ import {
   type Routine,
   type RoutinePayload,
 } from "../../domain/types";
-
-export function buildRoomSelectOptions(rooms: Room[]): string[] {
-  return rooms.map((room) => room.name);
-}
 import { el, option, replaceChildren, span } from "../dom";
 import type { Navigation } from "../navigation";
 import { slug } from "../ui-elements";
 import type { FeedbackPresenter } from "../ui-feedback";
 import type { UIRefs } from "../ui-refs";
+
+export function buildRoomSelectOptions(rooms: Room[]): string[] {
+  return rooms.map((room) => room.name);
+}
 
 type RoutineFormRefs = Pick<
   UIRefs,

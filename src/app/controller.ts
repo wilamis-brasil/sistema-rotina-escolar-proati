@@ -402,15 +402,12 @@ export function createAppController({
     markAllNotificationsAsSeen(ids) {
       if (!Array.isArray(ids) || ids.length === 0) return { ok: true };
       const log = state.notificationLog ?? [];
-      const known = new Set(log.map((entry) => entry.id));
       ids.forEach((id) => {
         const found = log.find((entry) => entry.id === id);
         if (found) {
           found.status = "vista";
           found.updatedAt = nowIso();
           delete found.snoozedUntil;
-        } else if (!known.has(id)) {
-          known.add(id);
         }
       });
       state.notificationLog = log;
