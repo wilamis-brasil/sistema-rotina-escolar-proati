@@ -5,8 +5,8 @@ node_modules/
 dist/
 coverage/
 
-# Manual bundle artifact (generated, must not be committed)
-/assets/index.js
+# Static GitHub Pages fallback for branch-based Pages deploys:
+# /assets/index.js and /assets/index.css are intentionally committed.
 
 # Local environment
 .env*.local
