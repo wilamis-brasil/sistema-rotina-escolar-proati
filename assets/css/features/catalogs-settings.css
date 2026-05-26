@@ -19,10 +19,6 @@
     white-space: nowrap;
   }
 
-  #password-form {
-    grid-template-columns: 1fr;
-  }
-
   .catalog-item span:has(.icon-button) {
     display: flex;
     align-items: center;

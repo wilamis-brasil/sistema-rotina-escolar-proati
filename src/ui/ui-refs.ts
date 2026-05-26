@@ -59,15 +59,6 @@ export interface UIRefs {
   deviceName: HTMLInputElement;
   deviceFeedback: HTMLElement;
   devicesListPanel: HTMLElement;
-  passwordForm: HTMLFormElement;
-  passwordId: HTMLInputElement;
-  passwordTitle: HTMLInputElement;
-  passwordUsername: HTMLInputElement;
-  passwordSecret: HTMLInputElement;
-  passwordSecretToggle: HTMLButtonElement;
-  passwordDescription: HTMLInputElement;
-  passwordFeedback: HTMLElement;
-  passwordsListPanel: HTMLElement;
   settingsFeedback: HTMLElement;
   exportDataButton: HTMLButtonElement;
   importDataFile: HTMLInputElement;
@@ -157,15 +148,6 @@ export function bindRefs(): UIRefs {
     deviceName: qs("#device-name"),
     deviceFeedback: qs("#device-feedback"),
     devicesListPanel: qs("#devices-list-panel"),
-    passwordForm: qs("#password-form"),
-    passwordId: qs("#password-id"),
-    passwordTitle: qs("#password-title"),
-    passwordUsername: qs("#password-username"),
-    passwordSecret: qs("#password-secret"),
-    passwordSecretToggle: qs("#password-secret-toggle"),
-    passwordDescription: qs("#password-description"),
-    passwordFeedback: qs("#password-feedback"),
-    passwordsListPanel: qs("#passwords-list-panel"),
     settingsFeedback: qs("#settings-feedback"),
     exportDataButton: qs("#export-data-button"),
     importDataFile: qs("#import-data-file"),

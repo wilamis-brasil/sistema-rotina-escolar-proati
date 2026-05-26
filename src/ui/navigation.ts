@@ -8,7 +8,6 @@ const NAVIGATION_LABELS: Record<string, string> = {
   rooms: "Turmas",
   devices: "Dispositivos",
   maintenance: "Manutenção",
-  passwords: "Senhas",
   notifications: "Notificações",
   settings: "Configurações",
 };

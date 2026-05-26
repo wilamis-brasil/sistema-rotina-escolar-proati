@@ -4,7 +4,6 @@ import {
   MAX_TEACHERS,
   MAX_CLASSES,
   MAX_DEVICES,
-  MAX_PASSWORDS,
   MAX_MAINTENANCES,
   MAX_NOTIFICATION_LOG,
 } from "../domain/limits";
@@ -23,7 +22,6 @@ import {
   nowIso,
   pruneNotificationLog,
   singularKind,
-  validatePasswordPayload,
 } from "../domain/model";
 import {
   type AppState,
@@ -35,7 +33,6 @@ import {
   type NotificationSettings,
   type NotificationStatus,
   type NotificationType,
-  type PasswordPayload,
   type Routine,
   type RoutinePayload,
   type SortOption,
@@ -64,9 +61,6 @@ export interface AppActions {
   addCatalogItem(kind: CatalogKind, payload: CatalogPayload): EmptyResult;
   updateCatalogItem(kind: CatalogKind, id: string, payload: CatalogPayload): EmptyResult;
   deleteCatalogItem(kind: CatalogKind, id: string): EmptyResult;
-  addPassword(payload: PasswordPayload): EmptyResult;
-  updatePassword(id: string, payload: PasswordPayload): EmptyResult;
-  deletePassword(id: string): EmptyResult;
   updateUiFilters(payload: { filterText?: unknown; sortBy?: SortOption }): EmptyResult;
   exportData(): string;
   importData(rawText: string): EmptyResult;
@@ -252,33 +246,6 @@ export function createAppController({
       if (index === -1) return failure("Cadastro não encontrado.");
 
       collection.splice(index, 1);
-      return persist();
-    },
-
-    addPassword(payload) {
-      if (state.passwords.length >= MAX_PASSWORDS) {
-        return failure(`Limite de ${MAX_PASSWORDS} senhas atingido.`);
-      }
-      const result = validatePasswordPayload(payload);
-      if (!result.ok) return result;
-      state.passwords.push(result.value);
-      return persist();
-    },
-
-    updatePassword(id, payload) {
-      const index = state.passwords.findIndex((p) => p.id === id);
-      if (index === -1) return failure("Senha não encontrada.");
-      const existing = state.passwords[index]!;
-      const result = validatePasswordPayload(payload, existing.id, existing.createdAt);
-      if (!result.ok) return result;
-      state.passwords[index] = result.value;
-      return persist();
-    },
-
-    deletePassword(id) {
-      const index = state.passwords.findIndex((p) => p.id === id);
-      if (index === -1) return failure("Senha não encontrada.");
-      state.passwords.splice(index, 1);
       return persist();
     },
 

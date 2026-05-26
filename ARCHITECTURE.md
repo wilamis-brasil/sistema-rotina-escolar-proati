@@ -74,7 +74,7 @@ Chave de armazenamento:
 sistema-rotina-escolar-proati-state-v1
 ```
 
-Versão atual do schema: `7`. O código migra automaticamente estados salvos em versões anteriores.
+Versão atual do schema: `8`. O código migra automaticamente estados salvos em versões anteriores.
 
 Chave legada suportada: `kickoff-proati-state-v1`.
 
@@ -84,7 +84,6 @@ Entidades principais:
 - `MaintenanceRecord` — ocorrência de manutenção com status, prioridade e histórico automático;
 - `NotificationLogEntry` — log persistido de notificações disparadas, vistas, adiadas ou ignoradas;
 - `Teacher`, `Room`, `Device` — catálogos com consistência referencial;
-- `Password` — cofre local de credenciais de sistemas escolares;
 - `Settings` — preferências de UI e configurações globais de notificação.
 
 ## Engine de notificações
@@ -141,6 +140,6 @@ Os dados ficam no navegador. A decisão combina com o contexto de ferramenta loc
 
 ## Riscos conhecidos
 
-- `localStorage` não é cofre seguro — dados podem ser lidos por código na mesma origem.
+- `localStorage` não é armazenamento seguro para segredos — dados podem ser lidos por código na mesma origem.
 - GitHub Pages precisa publicar `dist/`, não os arquivos-fonte (TypeScript não compila no Pages).
 - Notificações param se a aba for fechada (sem Push API).

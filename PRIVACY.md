@@ -24,8 +24,7 @@ Dependendo do uso, o sistema pode armazenar:
 - horários de retirada e devolução;
 - dispositivos usados;
 - observações digitadas pelo usuário;
-- registros de manutenção com descrição de problemas;
-- credenciais de sistemas escolares (cofre de senhas local).
+- registros de manutenção com descrição de problemas.
 
 ## O que evitar
 
@@ -35,6 +34,7 @@ Evite colocar nas observações e descrições:
 - diagnósticos;
 - documentos pessoais;
 - telefones ou endereços;
+- senhas, tokens ou credenciais de acesso;
 - qualquer informação que não seja necessária para a rotina de equipamentos.
 
 ## Exportação JSON

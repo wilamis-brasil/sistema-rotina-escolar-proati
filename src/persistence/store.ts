@@ -14,7 +14,6 @@ import {
   MAX_TEACHERS,
   MAX_CLASSES,
   MAX_DEVICES,
-  MAX_PASSWORDS,
   MAX_MAINTENANCES,
   MAX_MAINTENANCE_BATCH,
 } from "../domain/limits";
@@ -120,7 +119,14 @@ export function saveState(
 ): EmptyResult & { state?: AppState } {
   try {
     const nextState: AppState = {
-      ...state,
+      schemaVersion: state.schemaVersion,
+      routines: state.routines,
+      teachers: state.teachers,
+      rooms: state.rooms,
+      devices: state.devices,
+      maintenanceRecords: state.maintenanceRecords,
+      notificationLog: state.notificationLog,
+      settings: state.settings,
       meta: {
         ...state.meta,
         updatedAt: nowIso(),
@@ -140,7 +146,15 @@ export function saveState(
 export function exportState(state: AppState): string {
   return JSON.stringify(
     {
-      ...state,
+      schemaVersion: state.schemaVersion,
+      routines: state.routines,
+      teachers: state.teachers,
+      rooms: state.rooms,
+      devices: state.devices,
+      maintenanceRecords: state.maintenanceRecords,
+      notificationLog: state.notificationLog,
+      settings: state.settings,
+      meta: state.meta,
       exportedAt: nowIso(),
     },
     null,
@@ -170,9 +184,6 @@ export function importStateFromText(rawText: string): Result<AppState> {
     }
     if (state.devices.length > MAX_DEVICES) {
       return { ok: false, errors: [`Importação contém muitos dispositivos (máximo: ${MAX_DEVICES}).`] };
-    }
-    if (state.passwords.length > MAX_PASSWORDS) {
-      return { ok: false, errors: [`Importação contém muitas senhas (máximo: ${MAX_PASSWORDS}).`] };
     }
     if (state.maintenanceRecords.length > MAX_MAINTENANCES) {
       return { ok: false, errors: [`Importação contém muitos registros de manutenção (máximo: ${MAX_MAINTENANCES}).`] };

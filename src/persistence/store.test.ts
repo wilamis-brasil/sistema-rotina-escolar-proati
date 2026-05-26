@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createMemoryStorage, loadState } from "./store";
+import { createMemoryStorage, exportState, importStateFromText, loadState } from "./store";
 import { LEGACY_STORAGE_KEYS, STORAGE_KEY, type StorageAdapter } from "../domain/types";
 
 const LEGACY_KEY = LEGACY_STORAGE_KEYS[0];
@@ -107,12 +107,11 @@ describe("loadState — quarentena de dados corrompidos", () => {
 
   it("carrega normalmente quando o JSON é válido", () => {
     const validState = JSON.stringify({
-      schemaVersion: 7,
+      schemaVersion: 8,
       routines: [],
       teachers: [],
       rooms: [],
       devices: [],
-      passwords: [],
       maintenanceRecords: [],
       notificationLog: [],
       settings: { sortBy: "weekday-time", filterText: "" },
@@ -123,6 +122,36 @@ describe("loadState — quarentena de dados corrompidos", () => {
     const { state, notice } = loadState(storage);
     expect(state.routines).toEqual([]);
     expect(notice).toMatch(/carregados/i);
+  });
+
+  it("descarta passwords legado ao importar e não exporta esse campo", () => {
+    const result = importStateFromText(JSON.stringify({
+      schemaVersion: 7,
+      routines: [],
+      teachers: [],
+      rooms: [],
+      devices: [],
+      passwords: [
+        {
+          id: "legacy-password",
+          title: "Registro legado",
+          username: "usuario-legado",
+          secret: "valor-legado",
+          description: "",
+        },
+      ],
+      maintenanceRecords: [],
+      notificationLog: [],
+      settings: {},
+    }));
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      const exported = exportState(result.value);
+      expect("passwords" in result.value).toBe(false);
+      expect(exported).not.toContain("passwords");
+      expect(exported).not.toContain("valor-legado");
+    }
   });
 
   it("retorna estado novo quando não há nada no storage", () => {

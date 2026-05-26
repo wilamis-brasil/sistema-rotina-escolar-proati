@@ -8,7 +8,6 @@ import { refreshIcons } from "./icons";
 import { createMaintenanceView } from "./maintenance/maintenance-view";
 import { createNavigation } from "./navigation";
 import { createNotificationsView } from "./notifications/notifications-view";
-import { createPasswordsView } from "./passwords/passwords-view";
 import { createRoutineActions } from "./routines/routine-actions";
 import { createRoutineForm } from "./routines/routine-form";
 import { createTodayView } from "./routines/today-view";
@@ -43,7 +42,6 @@ export function createUI({
   let todayView!: ReturnType<typeof createTodayView>;
   let weekView!: ReturnType<typeof createWeekView>;
   let catalogsView!: ReturnType<typeof createCatalogsView>;
-  let passwordsView!: ReturnType<typeof createPasswordsView>;
   let maintenanceView!: ReturnType<typeof createMaintenanceView>;
   let notificationsView!: ReturnType<typeof createNotificationsView>;
   let settingsView!: ReturnType<typeof createSettingsView>;
@@ -95,15 +93,6 @@ export function createUI({
       feedback,
       onChange: render,
     });
-    passwordsView = createPasswordsView({
-      refs,
-      getState,
-      actions,
-      dialogs,
-      toasts,
-      feedback,
-      onChange: render,
-    });
     maintenanceView = createMaintenanceView({
       refs,
       getState,
@@ -148,7 +137,6 @@ export function createUI({
     routineForm.bindEvents();
     weekView.bindEvents();
     catalogsView.bindEvents();
-    passwordsView.bindEvents();
     maintenanceView.bindEvents();
     settingsView.bindEvents();
     notificationsView.bindEvents();
@@ -187,7 +175,6 @@ export function createUI({
     todayView.render();
     weekView.render();
     catalogsView.render();
-    passwordsView.render();
     maintenanceView.render();
     notificationsView.render();
     refreshIcons();

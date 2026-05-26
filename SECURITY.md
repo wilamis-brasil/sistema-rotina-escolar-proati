@@ -38,7 +38,7 @@ Os dados ficam em:
 localStorage — chave: sistema-rotina-escolar-proati-state-v1
 ```
 
-Isso é suficiente para um app local de rotina, mas não deve ser tratado como cofre seguro. Qualquer script rodando na mesma origem pode acessar esses dados.
+Isso é suficiente para um app local de rotina, mas não deve ser usado para guardar segredos ou credenciais. Qualquer script rodando na mesma origem pode acessar esses dados.
 
 ## Recomendações para uso real
 

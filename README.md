@@ -51,11 +51,10 @@ Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma 
 - Exportação e importação separada dos registros de manutenção.
 
 **Outros**
-- Cofre de senhas local para credenciais de sistemas escolares.
 - Catálogos de professores, salas/turmas (com contagem de alunos) e dispositivos.
 - Editar um item do catálogo reflete automaticamente em todas as rotinas vinculadas.
 - Exportação e importação JSON com validação via Zod.
-- Migração automática de dados salvos (schema v7, compatível com chaves legadas).
+- Migração automática de dados salvos (schema v8, compatível com chaves legadas).
 
 ---
 
@@ -78,7 +77,7 @@ Este projeto nasceu dessa rotina real. Não é um exercício de CRUD — é uma 
 | O que demonstra | Como aparece no projeto |
 |---|---|
 | **Entendimento do problema** | O sistema foi desenhado a partir de uma necessidade operacional real, não de uma especificação genérica. |
-| **Modelagem de domínio** | Tipos explícitos para rotina, manutenção (10 status, histórico, prioridade) e notificação; schema versionado (v7) com migração de chaves legadas do `localStorage`. |
+| **Modelagem de domínio** | Tipos explícitos para rotina, manutenção (10 status, histórico, prioridade) e notificação; schema versionado (v8) com migração de chaves legadas do `localStorage`. |
 | **Validação de dados** | Zod nos pontos de entrada; `textContent` / DOM API em vez de `innerHTML` para dados do usuário; confirmação antes de reset ou importação. |
 | **Lógica não trivial** | Engine de planejamento de notificações: agrupamento por janela de tempo, cálculo de lead, detecção de overdue, snooze e log de status persistido. |
 | **Arquitetura em camadas** | Separação real entre domínio, persistência, controller e UI — responsabilidades definidas, não apenas pastas com nomes bonitos. |

@@ -79,7 +79,6 @@ describe("normalização do estado", () => {
       teachers: [],
       rooms: [],
       devices: [],
-      passwords: [],
       settings: {},
     });
     expect(state.maintenanceRecords).toEqual([]);

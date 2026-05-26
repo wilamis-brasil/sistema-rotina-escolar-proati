@@ -5,7 +5,6 @@ import {
   filterRoutines,
   normalizeCatalogPayload,
   normalizeState,
-  removeLegacySeedPasswords,
   sortRoutines,
 } from "./model";
 import { MAX_DEVICES_PER_ROUTINE } from "./limits";
@@ -257,106 +256,23 @@ describe("normalizeState with classLetters", () => {
   });
 });
 
-describe("senhas — remoção de seeds legados", () => {
-  // IDs que existiam como seeds hardcoded em versões anteriores
-  const legacySeedIds = [
-    "password-netbook-positivo-multilaser-sala",
-    "password-netbook-multilaser-m11w-formatacao",
-    "password-imagem-instalacao",
-    "password-lenovo-multilaser-ultra-administrador",
-    "password-lenovo-multilaser-ultra-proatec",
-    "password-tablet-positivo-quiosque",
-  ];
+describe("compatibilidade com dados legados", () => {
+  it("ignora o campo passwords legado sem incorporá-lo ao estado normalizado", () => {
+    const state = normalizeState({
+      routines: [],
+      settings: {},
+      passwords: [
+        {
+          id: "legacy-password",
+          title: "Registro legado",
+          username: "usuario-legado",
+          secret: "valor-legado",
+          description: "",
+        },
+      ],
+    });
 
-  it("createEmptyState retorna passwords vazio", () => {
-    const state = createEmptyState();
-    expect(state.passwords).toEqual([]);
-  });
-
-  it("normalizeState sem passwords retorna passwords vazio", () => {
-    const state = normalizeState({ routines: [], settings: {} });
-    expect(state.passwords).toEqual([]);
-  });
-
-  it("normalizeState com lista de passwords vazia retorna passwords vazio", () => {
-    const state = normalizeState({ routines: [], settings: {}, passwords: [] });
-    expect(state.passwords).toEqual([]);
-  });
-
-  it("removeLegacySeedPasswords filtra todos os IDs legados", () => {
-    const legacyRecords = legacySeedIds.map((id) => ({
-      id,
-      title: "Legado",
-      username: "",
-      secret: "x",
-      description: "",
-      createdAt: "2024-01-01T00:00:00.000Z",
-      updatedAt: "2024-01-01T00:00:00.000Z",
-    }));
-    expect(removeLegacySeedPasswords(legacyRecords)).toEqual([]);
-  });
-
-  it("removeLegacySeedPasswords preserva senhas manuais com ID diferente", () => {
-    const manual = {
-      id: "password-manual-usuario",
-      title: "Senha Manual",
-      username: "admin",
-      secret: "segredo",
-      description: "",
-      createdAt: "2025-01-01T00:00:00.000Z",
-      updatedAt: "2025-01-01T00:00:00.000Z",
-    };
-    const legacy = {
-      id: legacySeedIds[0]!,
-      title: "Legado",
-      username: "",
-      secret: "x",
-      description: "",
-      createdAt: "2024-01-01T00:00:00.000Z",
-      updatedAt: "2024-01-01T00:00:00.000Z",
-    };
-    const result = removeLegacySeedPasswords([manual, legacy]);
-    expect(result).toHaveLength(1);
-    expect(result[0]?.id).toBe("password-manual-usuario");
-  });
-
-  it("normalizeState com IDs legados remove todos eles silenciosamente", () => {
-    const legacyRecords = legacySeedIds.map((id) => ({
-      id,
-      title: "Legado",
-      username: "",
-      secret: "x",
-      description: "",
-      createdAt: "2024-01-01T00:00:00.000Z",
-      updatedAt: "2024-01-01T00:00:00.000Z",
-    }));
-    const state = normalizeState({ routines: [], settings: {}, passwords: legacyRecords });
-    expect(state.passwords).toEqual([]);
-  });
-
-  it("normalizeState preserva senha manual mesmo que haja IDs legados na lista", () => {
-    const records = [
-      {
-        id: "password-manual-equipe",
-        title: "Cofre Equipe",
-        username: "equipe",
-        secret: "senha-manual",
-        description: "",
-        createdAt: "2025-06-01T00:00:00.000Z",
-        updatedAt: "2025-06-01T00:00:00.000Z",
-      },
-      ...legacySeedIds.map((id) => ({
-        id,
-        title: "Legado",
-        username: "",
-        secret: "x",
-        description: "",
-        createdAt: "2024-01-01T00:00:00.000Z",
-        updatedAt: "2024-01-01T00:00:00.000Z",
-      })),
-    ];
-    const state = normalizeState({ routines: [], settings: {}, passwords: records });
-    expect(state.passwords).toHaveLength(1);
-    expect(state.passwords[0]?.id).toBe("password-manual-equipe");
+    expect("passwords" in state).toBe(false);
+    expect(JSON.stringify(state)).not.toContain("valor-legado");
   });
 });

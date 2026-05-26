@@ -252,7 +252,6 @@ describe("importData — campos com texto excedendo limite", () => {
       routines: [],
       rooms: [],
       devices: [],
-      passwords: [],
       maintenanceRecords: [],
     });
     const result = controller.actions.importData(json);

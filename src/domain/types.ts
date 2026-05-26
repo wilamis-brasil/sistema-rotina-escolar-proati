@@ -1,4 +1,4 @@
-export const SCHEMA_VERSION = 7;
+export const SCHEMA_VERSION = 8;
 export const STORAGE_KEY = "sistema-rotina-escolar-proati-state-v1";
 export const LEGACY_STORAGE_KEYS = ["kickoff-proati-state-v1"] as const;
 
@@ -69,16 +69,6 @@ export interface Room extends CatalogItem {
 }
 
 export type Device = CatalogItem;
-
-export interface Password {
-  id: string;
-  title: string;
-  username: string;
-  secret: string;
-  description: string;
-  createdAt: string;
-  updatedAt: string;
-}
 
 export interface RoutineNotificationOverride {
   enabled?: boolean;
@@ -196,7 +186,6 @@ export interface AppState {
   teachers: Teacher[];
   rooms: Room[];
   devices: Device[];
-  passwords: Password[];
   maintenanceRecords: MaintenanceRecord[];
   notificationLog: NotificationLogEntry[];
   settings: Settings;
@@ -225,13 +214,6 @@ export interface RoutinePayload {
 export interface CatalogPayload {
   name: unknown;
   studentCount?: unknown;
-}
-
-export interface PasswordPayload {
-  title: unknown;
-  username?: unknown;
-  secret: unknown;
-  description?: unknown;
 }
 
 export interface MaintenancePayload {

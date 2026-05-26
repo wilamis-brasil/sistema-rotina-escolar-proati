@@ -6,7 +6,6 @@ export const MAX_ROUTINES = 500;
 export const MAX_TEACHERS = 250;
 export const MAX_CLASSES = 320;
 export const MAX_DEVICES = 200;
-export const MAX_PASSWORDS = 100;
 export const MAX_MAINTENANCES = 500;
 export const MAX_NOTIFICATION_LOG = 1_000;
 export const MAX_DEVICES_PER_ROUTINE = 20;

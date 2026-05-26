@@ -35,8 +35,6 @@ import {
   type NotificationSoundId,
   type NotificationStatus,
   type NotificationType,
-  type Password,
-  type PasswordPayload,
   type Result,
   type Room,
   type Routine,
@@ -57,10 +55,6 @@ const MAINTENANCE_SHORT_MAX = 80;
 const MAINTENANCE_TICKET_MAX = 30;
 const MAINTENANCE_MEDIUM_MAX = 200;
 const MAINTENANCE_LONG_MAX = 500;
-const PASSWORD_TITLE_MAX = 120;
-const PASSWORD_USERNAME_MAX = 80;
-const PASSWORD_SECRET_MAX = 200;
-const PASSWORD_DESCRIPTION_MAX = 500;
 
 function checkMaxLen(value: string, max: number, label: string): string | null {
   return value.length > max ? `${label} deve ter no máximo ${max} caracteres.` : null;
@@ -73,28 +67,12 @@ const RawStateSchema = z
     teachers: z.array(z.unknown()).optional(),
     rooms: z.array(z.unknown()).optional(),
     devices: z.array(z.unknown()).optional(),
-    passwords: z.array(z.unknown()).optional(),
     maintenanceRecords: z.array(z.unknown()).optional(),
     notificationLog: z.array(z.unknown()).optional(),
     settings: z.unknown().optional(),
     meta: z.unknown().optional(),
   })
   .passthrough();
-
-// IDs das senhas que foram semeadas automaticamente em versões anteriores do app.
-// Usados apenas para limpeza silenciosa durante a migração — sem valores secretos aqui.
-const LEGACY_SEED_PASSWORD_IDS = new Set([
-  "password-netbook-positivo-multilaser-sala",
-  "password-netbook-multilaser-m11w-formatacao",
-  "password-imagem-instalacao",
-  "password-lenovo-multilaser-ultra-administrador",
-  "password-lenovo-multilaser-ultra-proatec",
-  "password-tablet-positivo-quiosque",
-]);
-
-export function removeLegacySeedPasswords(passwords: Password[]): Password[] {
-  return passwords.filter((p) => !LEGACY_SEED_PASSWORD_IDS.has(p.id));
-}
 
 export function nowIso(): string {
   return new Date().toISOString();
@@ -193,7 +171,6 @@ export function createEmptyState(): AppState {
     teachers: [],
     rooms: [],
     devices: DEFAULT_DEVICE_NAMES.map((name) => createCatalogItem(name, "device") as Device),
-    passwords: [],
     maintenanceRecords: [],
     notificationLog: [],
     settings: {
@@ -417,7 +394,6 @@ export function normalizeState(candidate: unknown): AppState {
     teachers: normalizeCatalogCollection<Teacher>(raw.teachers, "teacher"),
     rooms: normalizeRoomCollection(raw.rooms),
     devices: normalizeCatalogCollection<Device>(raw.devices, "device"),
-    passwords: removeLegacySeedPasswords(normalizePasswordCollection(raw.passwords)),
     maintenanceRecords: normalizeMaintenanceCollection(raw.maintenanceRecords),
     notificationLog: normalizeNotificationLog(raw.notificationLog),
     settings: normalizeSettings(raw.settings, base.settings, raw.schemaVersion),
@@ -696,30 +672,6 @@ function toRecord(value: unknown): Record<string, unknown> {
   return value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 }
 
-function normalizePasswordCollection(items: unknown): Password[] {
-  if (!Array.isArray(items)) return [];
-  const timestamp = nowIso();
-  const seenIds = new Set<string>();
-
-  return items.reduce<Password[]>((result, item) => {
-    const rec = toRecord(item);
-    const id = normalizeText(rec.id);
-    if (!id || seenIds.has(id)) return result;
-    seenIds.add(id);
-
-    result.push({
-      id,
-      title: normalizeText(rec.title),
-      username: normalizeText(rec.username),
-      secret: normalizeText(rec.secret),
-      description: normalizeText(rec.description),
-      createdAt: normalizeText(rec.createdAt) || timestamp,
-      updatedAt: normalizeText(rec.updatedAt) || timestamp,
-    });
-    return result;
-  }, []);
-}
-
 export function isMaintenancePriority(value: unknown): value is MaintenancePriority {
   return MAINTENANCE_PRIORITIES.some((p) => p.value === value);
 }
@@ -977,53 +929,6 @@ function normalizeMaintenanceHistory(value: unknown): MaintenanceHistoryEntry[] 
   return result;
 }
 
-export function validatePasswordPayload(
-  payload: PasswordPayload,
-  existingId?: string,
-  existingCreatedAt?: string,
-): Result<Password> {
-  const errors: string[] = [];
-  const title = normalizeText(payload.title);
-  const secret = normalizeText(payload.secret);
-  const username = normalizeText(payload.username);
-  const description = normalizeText(payload.description);
-
-  if (!title) errors.push("Informe o título da senha.");
-  else {
-    const e = checkMaxLen(title, PASSWORD_TITLE_MAX, "Título");
-    if (e) errors.push(e);
-  }
-  if (!secret) errors.push("Informe a senha.");
-  else {
-    const e = checkMaxLen(secret, PASSWORD_SECRET_MAX, "Senha");
-    if (e) errors.push(e);
-  }
-  {
-    const e = checkMaxLen(username, PASSWORD_USERNAME_MAX, "Usuário");
-    if (e) errors.push(e);
-  }
-  {
-    const e = checkMaxLen(description, PASSWORD_DESCRIPTION_MAX, "Descrição");
-    if (e) errors.push(e);
-  }
-
-  if (errors.length > 0) return resultFailure(errors);
-
-  const timestamp = nowIso();
-  return {
-    ok: true,
-    value: {
-      id: existingId ?? createId("password"),
-      title,
-      username,
-      secret,
-      description,
-      createdAt: existingCreatedAt ?? timestamp,
-      updatedAt: timestamp,
-    },
-  };
-}
-
 export function validateImportedMaintenanceLimits(records: MaintenanceRecord[]): string[] {
   const errors: string[] = [];
   const checks: Array<[(r: MaintenanceRecord) => string, number, string]> = [
@@ -1060,14 +965,6 @@ export function validateImportedStateLimits(state: AppState): string[] {
   }
   for (const d of state.devices) {
     if (d.name.length > 80) errors.push(`Dispositivo "${d.name.slice(0, 20)}" excede 80 caracteres.`);
-  }
-  for (const p of state.passwords) {
-    const e =
-      checkMaxLen(p.title, PASSWORD_TITLE_MAX, "Título da senha") ??
-      checkMaxLen(p.username, PASSWORD_USERNAME_MAX, "Usuário da senha") ??
-      checkMaxLen(p.secret, PASSWORD_SECRET_MAX, "Senha importada") ??
-      checkMaxLen(p.description, PASSWORD_DESCRIPTION_MAX, "Descrição da senha");
-    if (e) errors.push(e);
   }
   errors.push(...validateImportedMaintenanceLimits(state.maintenanceRecords));
   return errors;

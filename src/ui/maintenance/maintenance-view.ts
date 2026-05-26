@@ -446,7 +446,7 @@ export function createMaintenanceView({
       const confirmed = await dialogs.confirm({
         tone: "warning",
         title: "Importar registros de manutenção?",
-        message: "Os registros atuais de manutenção serão substituídos. Rotinas, catálogos e senhas não serão afetados.",
+        message: "Os registros atuais de manutenção serão substituídos. Rotinas e catálogos não serão afetados.",
         confirmLabel: "Importar",
       });
       if (!confirmed) {
