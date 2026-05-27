@@ -33,8 +33,8 @@
     padding: 22px;
     overflow-y: auto;
     color: var(--text);
-    background: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.6);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 8px;
     box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
   }
@@ -74,8 +74,8 @@
     margin-bottom: 4px;
     color: var(--muted);
     font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0;
+    font-weight: 700;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -89,7 +89,8 @@
   .dialog h2 {
     font-size: clamp(1.24rem, 1rem + 0.8vw, 1.72rem);
     line-height: 1.12;
-    font-weight: 900;
+    font-weight: 800;
+    letter-spacing: -0.005em;
   }
 
   .dialog-message {
@@ -116,20 +117,22 @@
 
   .dialog-details dt {
     color: var(--muted);
-    font-size: 0.78rem;
-    font-weight: 900;
+    font-size: 0.74rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
   }
 
   .dialog-details dd {
     overflow-wrap: anywhere;
-    font-weight: 900;
+    color: var(--text);
+    font-weight: 500;
   }
 
   .dialog-confirmation {
     display: grid;
     gap: 8px;
-    font-weight: 900;
+    font-weight: 700;
   }
 
   .dialog-confirmation input {

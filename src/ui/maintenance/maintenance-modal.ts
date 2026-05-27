@@ -345,7 +345,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
             el("h3", { className: "maintenance-bulk-section-title", text: "Equipamentos" }),
             el("p", {
               className: "maintenance-bulk-section-hint",
-              text: "Adicione quantos equipamentos forem necessários — eles podem ser de tipos e numerações diferentes.",
+              text: "Adicione um ou mais equipamentos. Tipos e identificadores podem variar.",
             }),
           ]),
           devicesContainer,

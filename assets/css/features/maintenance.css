@@ -12,44 +12,62 @@
     gap: 4px;
     padding: 10px 12px;
     background: var(--surface-soft);
-    border: 1px solid var(--border);
+    border: 1px solid transparent;
     border-radius: var(--radius);
     flex: 1 0 130px;
   }
 
   .maintenance-metric-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 800;
+    font-size: 0.7rem;
+    font-weight: 600;
     letter-spacing: 0.04em;
     text-transform: uppercase;
+  }
+
+  .maintenance-metric.is-warning .maintenance-metric-label::before,
+  .maintenance-metric.is-info .maintenance-metric-label::before,
+  .maintenance-metric.is-success .maintenance-metric-label::before,
+  .maintenance-metric.is-danger .maintenance-metric-label::before,
+  .maintenance-metric.is-neutral .maintenance-metric-label::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--metric-dot, var(--subtle));
   }
 
   .maintenance-metric-value {
     color: var(--text);
     font-size: 1.4rem;
-    font-weight: 900;
+    font-weight: 800;
     line-height: 1.1;
+    font-variant-numeric: tabular-nums;
   }
 
   .maintenance-metric.is-warning {
-    background: var(--warning-soft);
-    border-color: rgba(155, 100, 0, 0.18);
+    --metric-dot: var(--warning);
   }
 
   .maintenance-metric.is-info {
-    background: var(--info-soft);
-    border-color: rgba(21, 95, 138, 0.18);
+    --metric-dot: var(--info);
   }
 
   .maintenance-metric.is-success {
-    background: var(--success-soft);
-    border-color: rgba(15, 122, 69, 0.18);
+    --metric-dot: var(--success);
   }
 
   .maintenance-metric.is-danger {
-    background: var(--danger-soft);
-    border-color: rgba(255, 22, 31, 0.16);
+    --metric-dot: var(--accent);
+  }
+
+  .maintenance-metric.is-neutral {
+    --metric-dot: var(--subtle);
   }
 
   .filter-grid--maintenance {
@@ -83,8 +101,8 @@
 
   .maintenance-table-wrap {
     margin-top: 16px;
-    background: #ffffff;
-    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
     overflow: hidden;
   }
@@ -106,8 +124,8 @@
   .maintenance-table th,
   .maintenance-table td {
     padding: 10px 12px;
-    border-right: 1px solid var(--border-strong);
-    border-bottom: 1px solid var(--border-strong);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
     vertical-align: top;
     font-size: 0.82rem;
     line-height: 1.35;
@@ -123,51 +141,45 @@
     position: sticky;
     top: 0;
     z-index: 5;
-    padding: 8px 12px;
-    color: #1e2a10;
-    background: #b8cf65;
+    padding: 9px 12px;
+    color: #ffffff;
+    background: var(--text);
     text-align: left;
-    font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
+    border-right-color: rgba(255, 255, 255, 0.12);
+    border-bottom-color: var(--text);
   }
 
   .maintenance-table .maintenance-cell-id {
     position: sticky;
     left: 0;
     z-index: 3;
-    background: #fff8d6;
-    border-right: 2px solid var(--border-strong);
-    font-weight: 900;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
     text-align: left;
   }
 
   .maintenance-table .maintenance-cell-id strong {
     display: inline-block;
-    padding: 2px 8px;
-    background: #f6d447;
-    border: 1px solid #d6c142;
-    border-radius: 4px;
-    color: #000;
+    color: var(--text);
     font-size: 0.84rem;
-    font-weight: 900;
-    letter-spacing: 0.02em;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
   }
 
   .maintenance-table thead th.maintenance-col-id {
     left: 0;
     z-index: 8;
-    background: #b8cf65;
-    border-right: 2px solid var(--border-strong);
+    background: var(--text);
+    border-right: 1px solid rgba(255, 255, 255, 0.12);
   }
 
-  .maintenance-table tbody tr:hover .maintenance-cell-id {
-    background: #fff2b0;
-  }
-
+  .maintenance-table tbody tr:hover .maintenance-cell-id,
   .maintenance-table tbody tr:hover td {
-    background: #fbfbfa;
+    background: var(--surface-soft);
   }
 
   .maintenance-col-actions {
@@ -215,72 +227,76 @@
   .maintenance-badge {
     display: inline-flex;
     align-items: center;
-    padding: 2px 8px;
-    border-radius: 9999px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    line-height: 1.4;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    gap: 6px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: 0.01em;
     white-space: normal;
     word-break: break-word;
     max-width: 100%;
-    text-align: center;
-    border: 1px solid transparent;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .maintenance-badge::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--badge-dot, var(--subtle));
   }
 
   .maintenance-priority.is-baixa {
-    color: #1e3a8a;
-    background: #e0ecff;
-    border-color: rgba(30, 58, 138, 0.18);
+    --badge-dot: var(--info);
   }
 
   .maintenance-priority.is-media {
-    color: #1f2937;
-    background: var(--surface-soft);
-    border-color: var(--border);
+    --badge-dot: var(--muted);
   }
 
   .maintenance-priority.is-alta {
-    color: #7c2d12;
-    background: #fde7c6;
-    border-color: rgba(124, 45, 18, 0.22);
+    --badge-dot: var(--warning);
   }
 
   .maintenance-priority.is-urgente {
     color: #ffffff;
     background: var(--danger);
     border-color: var(--danger);
+    font-weight: 700;
+  }
+
+  .maintenance-priority.is-urgente::before {
+    display: none;
   }
 
   .maintenance-status.is-warning {
-    color: var(--warning);
-    background: var(--warning-soft);
-    border-color: rgba(155, 100, 0, 0.24);
+    --badge-dot: var(--warning);
   }
 
   .maintenance-status.is-info {
-    color: var(--info);
-    background: var(--info-soft);
-    border-color: rgba(21, 95, 138, 0.24);
+    --badge-dot: var(--info);
   }
 
   .maintenance-status.is-success {
-    color: var(--success);
-    background: var(--success-soft);
-    border-color: rgba(15, 122, 69, 0.24);
+    --badge-dot: var(--success);
   }
 
   .maintenance-status.is-danger {
-    color: var(--danger);
-    background: var(--danger-soft);
-    border-color: rgba(255, 22, 31, 0.24);
+    color: var(--accent);
+    background: var(--surface);
+    border-color: rgba(255, 22, 31, 0.32);
+    --badge-dot: var(--accent);
   }
 
   .maintenance-status.is-neutral {
     color: var(--muted);
-    background: var(--surface-soft);
-    border-color: var(--border);
+    --badge-dot: var(--subtle);
   }
 
   .maintenance-empty {
@@ -327,26 +343,36 @@
 
   .maintenance-field .form-label {
     color: var(--muted);
-    font-size: 0.72rem;
-    font-weight: 800;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   .maintenance-field .form-input {
     width: 100%;
     min-height: var(--control-height);
     padding: 8px 10px;
-    background: var(--surface-soft);
-    border: 1px solid var(--border-strong);
+    background-color: var(--surface-soft);
+    border: 0;
     border-radius: var(--radius);
     color: var(--text);
     font-size: 0.92rem;
   }
 
+  .maintenance-field .form-input:hover {
+    background-color: var(--surface-hover);
+  }
+
+  .maintenance-field .form-input:focus {
+    background-color: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px rgba(0, 0, 0, 0.18),
+      0 0 0 3px rgba(0, 0, 0, 0.04);
+  }
+
   .maintenance-field textarea.form-input {
     min-height: 80px;
-    resize: vertical;
+    resize: none;
   }
 
   .maintenance-bulk-dialog {
@@ -370,10 +396,9 @@
   .maintenance-bulk-section-title {
     margin: 0;
     color: var(--text);
-    font-size: 0.92rem;
-    font-weight: 900;
-    letter-spacing: 0.02em;
-    text-transform: uppercase;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0;
   }
 
   .maintenance-bulk-section-hint {
@@ -381,6 +406,24 @@
     color: var(--muted);
     font-size: 0.78rem;
     line-height: 1.4;
+  }
+
+  .maintenance-bulk-section > .maintenance-form-grid .maintenance-field .form-input,
+  .maintenance-bulk-section > .maintenance-field .form-input {
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+  }
+
+  .maintenance-bulk-section > .maintenance-form-grid .maintenance-field .form-input:hover,
+  .maintenance-bulk-section > .maintenance-field .form-input:hover {
+    background-color: #ffffff;
+    border-color: var(--border-strong);
+  }
+
+  .maintenance-bulk-section > .maintenance-form-grid .maintenance-field .form-input:focus,
+  .maintenance-bulk-section > .maintenance-field .form-input:focus {
+    background-color: #ffffff;
+    border-color: transparent;
   }
 
   .maintenance-bulk-devices {
@@ -392,8 +435,8 @@
     display: grid;
     gap: 8px;
     padding: 12px;
-    background: #ffffff;
-    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
   }
 
@@ -407,8 +450,8 @@
   .maintenance-bulk-device-index {
     color: var(--muted);
     font-size: 0.72rem;
-    font-weight: 900;
-    letter-spacing: 0.04em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 

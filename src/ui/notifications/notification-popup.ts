@@ -12,12 +12,19 @@ export interface NotificationPopupCallbacks {
   onView(plan: NotificationPlan): void;
   onSnooze(plan: NotificationPlan): void;
   onMute(plan: NotificationPlan): void;
+  canSnooze(): boolean;
 }
 
 export interface NotificationPopupManager {
   show(plan: NotificationPlan): void;
   closeAllFor(planId: string): void;
   hasOpen(planId: string): boolean;
+}
+
+interface MoreMenuItem {
+  iconName: string;
+  label: string;
+  onSelect(): void;
 }
 
 export function createNotificationPopupManager({
@@ -31,6 +38,46 @@ export function createNotificationPopupManager({
 
   function show(plan: NotificationPlan): void {
     if (openPopups.has(plan.id)) return;
+
+    const moreItems: MoreMenuItem[] = [];
+    if (callbacks.canSnooze()) {
+      moreItems.push({
+        iconName: "alarm-clock",
+        label: "Adiar",
+        onSelect: () => {
+          callbacks.onSnooze(plan);
+          removePopup(plan.id);
+        },
+      });
+    }
+    moreItems.push({
+      iconName: "bell-off",
+      label: "Silenciar hoje",
+      onSelect: () => {
+        callbacks.onMute(plan);
+        removePopup(plan.id);
+      },
+    });
+
+    const primaryAction = button("Marcar vista", "primary", () => {
+      callbacks.onSeen(plan);
+      removePopup(plan.id);
+    });
+
+    const secondaryAction =
+      plan.routines.length === 1
+        ? button("Ver rotina", "secondary", () => {
+            callbacks.onView(plan);
+            removePopup(plan.id);
+          })
+        : button("Marcar todas vistas", "secondary", () => {
+            callbacks.onSeen(plan);
+            removePopup(plan.id);
+          });
+
+    const trailing = moreItems.length === 1
+      ? trailingSingleAction(moreItems[0]!)
+      : moreMenu(plan.id, moreItems);
 
     const popup = el(
       "section",
@@ -72,29 +119,7 @@ export function createNotificationPopupManager({
             ? el("p", { className: "notification-popup-line", text: `Aula: ${plan.routines[0]?.subject}` })
             : null,
         ]),
-        el("footer", { className: "notification-popup-actions" }, [
-          button("Entendi", "primary", () => {
-            callbacks.onSeen(plan);
-            removePopup(plan.id);
-          }),
-          plan.routines.length === 1
-            ? button("Ver rotina", "secondary", () => {
-                callbacks.onView(plan);
-                removePopup(plan.id);
-              })
-            : button("Marcar todas como vistas", "secondary", () => {
-                callbacks.onSeen(plan);
-                removePopup(plan.id);
-              }),
-          button("Adiar", "ghost", () => {
-            callbacks.onSnooze(plan);
-            removePopup(plan.id);
-          }),
-          button("Silenciar hoje", "ghost", () => {
-            callbacks.onMute(plan);
-            removePopup(plan.id);
-          }),
-        ]),
+        el("footer", { className: "notification-popup-actions" }, [primaryAction, secondaryAction, trailing]),
         el("p", { className: "notification-popup-note", text: describePlanRoutines(plan) }),
       ].filter(Boolean) as Node[],
     );
@@ -164,13 +189,11 @@ function closeButton(onClick: () => void): HTMLButtonElement {
   return btn;
 }
 
-function button(label: string, variant: "primary" | "secondary" | "ghost", onClick: () => void): HTMLButtonElement {
+function button(label: string, variant: "primary" | "secondary", onClick: () => void): HTMLButtonElement {
   const className =
     variant === "primary"
       ? "button button-primary button-small"
-      : variant === "secondary"
-        ? "button button-secondary button-small"
-        : "notification-popup-ghost";
+      : "button button-secondary button-small";
   const btn = el(
     "button",
     {
@@ -181,4 +204,105 @@ function button(label: string, variant: "primary" | "secondary" | "ghost", onCli
   );
   btn.addEventListener("click", onClick);
   return btn;
+}
+
+function trailingSingleAction(item: MoreMenuItem): HTMLElement {
+  const btn = el(
+    "button",
+    {
+      className: "button button-secondary button-small",
+      attrs: { type: "button", title: item.label, "aria-label": item.label },
+    },
+    [icon(item.iconName), span(item.label)],
+  );
+  btn.style.marginLeft = "auto";
+  btn.addEventListener("click", item.onSelect);
+  return btn;
+}
+
+function moreMenu(planId: string, items: MoreMenuItem[]): HTMLElement {
+  const panelId = `notification-popup-more-${planId}`;
+
+  const trigger = el(
+    "button",
+    {
+      className: "notification-popup-more-button",
+      attrs: {
+        type: "button",
+        "aria-label": "Mais ações",
+        title: "Mais ações",
+        "aria-haspopup": "menu",
+        "aria-expanded": "false",
+        "aria-controls": panelId,
+      },
+    },
+    [icon("more-horizontal")],
+  );
+
+  const panel = el(
+    "div",
+    {
+      className: "notification-popup-more-panel",
+      attrs: { id: panelId, role: "menu", hidden: "" },
+    },
+    items.map((item) => {
+      const btn = el(
+        "button",
+        {
+          className: "notification-popup-more-item",
+          attrs: { type: "button", role: "menuitem" },
+        },
+        [icon(item.iconName), span(item.label)],
+      );
+      btn.addEventListener("click", () => {
+        closeMenu();
+        item.onSelect();
+      });
+      return btn;
+    }),
+  );
+
+  const container = el("div", { className: "notification-popup-more" }, [trigger, panel]);
+
+  let open = false;
+
+  function openMenu(): void {
+    if (open) return;
+    open = true;
+    panel.hidden = false;
+    trigger.setAttribute("aria-expanded", "true");
+    document.addEventListener("click", onDocumentClick, true);
+    document.addEventListener("keydown", onKeyDown);
+  }
+
+  function closeMenu({ focusTrigger = false }: { focusTrigger?: boolean } = {}): void {
+    if (!open) return;
+    open = false;
+    panel.hidden = true;
+    trigger.setAttribute("aria-expanded", "false");
+    document.removeEventListener("click", onDocumentClick, true);
+    document.removeEventListener("keydown", onKeyDown);
+    if (focusTrigger) trigger.focus();
+  }
+
+  function onDocumentClick(event: MouseEvent): void {
+    if (!(event.target instanceof Node)) return;
+    if (container.contains(event.target)) return;
+    closeMenu();
+  }
+
+  function onKeyDown(event: KeyboardEvent): void {
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMenu({ focusTrigger: true });
+    }
+  }
+
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    if (open) closeMenu({ focusTrigger: true });
+    else openMenu();
+  });
+
+  return container;
 }

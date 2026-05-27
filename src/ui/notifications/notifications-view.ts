@@ -81,6 +81,7 @@ export function createNotificationsView({
       },
       onSnooze: (plan) => snooze(plan),
       onMute: (plan) => muteForToday(plan),
+      canSnooze: () => getState().settings.notifications.allowSnooze,
     },
   });
   const sound = createSoundPlayer();
@@ -222,7 +223,7 @@ export function createNotificationsView({
     replaceChildren(refs.notificationsStatus, [
       statusCard("Próximo aviso", nextLabel, summary.nextPending ? formatDateTime(`${summary.nextPending.date}T${summary.nextPending.time}:00`) : "Sem retiradas pendentes."),
       statusCard("Pendentes hoje", String(summary.pending), summary.overdue ? `${summary.overdue} atrasada(s)` : "Sem atrasos"),
-      statusCard("Não vistas", String(summary.unseen), summary.unseen === 0 ? "Tudo conferido" : "Confira a lista abaixo"),
+      statusCard("Não vistas", String(summary.unseen), summary.unseen === 0 ? "Sem pendência" : "Confira a lista abaixo"),
     ]);
   }
 
@@ -320,11 +321,15 @@ export function createNotificationsView({
 
     replaceChildren(refs.notificationsSettings, [
       el("div", { className: "notifications-settings-grid" }, [
-        settingsRow("Estado", [enabledToggle]),
-        settingsRow("Antecedência padrão", [leadSelect, leadCustom]),
-        settingsRow("Som", [soundToggle, soundSelect]),
-        settingsRow("Agrupamento", [groupingToggle]),
-        settingsRow("Adiamento", [snoozeToggle, labeledInline("Padrão (min)", snoozeInput)]),
+        settingsGroup("Avisos", [
+          settingsRow("Estado", [enabledToggle]),
+          settingsRow("Antecedência padrão", [leadSelect, leadCustom]),
+          settingsRow("Agrupamento", [groupingToggle]),
+        ]),
+        settingsGroup("Resposta", [
+          settingsRow("Som", [soundToggle, soundSelect]),
+          settingsRow("Adiamento", [snoozeToggle, labeledInline("Padrão (min)", snoozeInput)]),
+        ]),
       ]),
     ]);
   }
@@ -355,7 +360,7 @@ export function createNotificationsView({
 
     if (recent.length === 0) {
       replaceChildren(refs.notificationsRecent, [
-        el("div", { className: "empty-state", text: "Sem registro de notificações disparadas hoje." }),
+        el("div", { className: "empty-state", text: "Nenhuma notificação disparada hoje." }),
       ]);
       return;
     }
@@ -488,8 +493,8 @@ export function createNotificationsView({
 
     toasts.show({
       type: "warning",
-      title: "Você perdeu notificações",
-      message: `${missed.length} aviso(s) interno(s) das últimas horas. Veja a Central.`,
+      title: "Avisos perdidos",
+      message: `${missed.length} aviso(s) das últimas horas. Veja a Central.`,
       timeout: 9000,
     });
   }
@@ -540,6 +545,13 @@ function settingsRow(title: string, controls: Node[]): HTMLElement {
   return el("div", { className: "notifications-setting" }, [
     el("strong", { className: "notifications-setting-title", text: title }),
     el("div", { className: "notifications-setting-controls" }, controls),
+  ]);
+}
+
+function settingsGroup(title: string, rows: HTMLElement[]): HTMLElement {
+  return el("div", { className: "notifications-settings-group" }, [
+    el("span", { className: "notifications-settings-group-title", text: title }),
+    ...rows,
   ]);
 }
 

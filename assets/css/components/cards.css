@@ -2,7 +2,7 @@
   .routine-list,
   .catalog-list {
     display: grid;
-    gap: 10px;
+    gap: 8px;
   }
 
   .routine-card,
@@ -10,15 +10,16 @@
     display: grid;
     gap: 12px;
     padding: 14px 16px;
-    background: var(--surface);
-    border: 1px solid var(--border);
+    background: var(--surface-soft);
+    border: 1px solid transparent;
     border-radius: var(--radius);
+    transition: background-color 120ms ease, border-color 120ms ease;
   }
 
   .routine-card:hover,
   .catalog-item:hover {
-    background: var(--surface-soft);
-    border-color: var(--border-strong);
+    background: var(--surface-hover);
+    border-color: var(--border);
   }
 
   .routine-card-top,

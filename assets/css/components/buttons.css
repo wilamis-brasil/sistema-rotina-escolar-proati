@@ -2,13 +2,13 @@
   .button {
     min-height: var(--control-height);
     padding: 9px 14px;
-    font-weight: 800;
+    font-weight: 700;
     font-size: 0.9rem;
   }
 
   .button-primary,
   .button-danger {
-    font-weight: 900;
+    font-weight: 800;
   }
 
   .button-primary {
@@ -63,11 +63,7 @@
     border-color: transparent;
   }
 
-  .icon-button:hover {
-    color: var(--text);
-    background: var(--surface-hover);
-    border-color: transparent;
-  }
+
 
   .icon-button.is-danger:hover {
     color: var(--danger);
@@ -82,14 +78,8 @@
     background: var(--surface-soft);
     border-color: transparent;
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
-  }
-
-  .action-button:hover {
-    color: var(--text);
-    background: var(--surface-hover);
-    border-color: transparent;
   }
 
   .action-button.is-danger:hover {

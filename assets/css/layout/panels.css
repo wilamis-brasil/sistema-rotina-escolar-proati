@@ -10,19 +10,25 @@
     min-height: 436px;
   }
 
+  .priority-panel .panel-heading {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
   .panel-heading {
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 16px;
-    margin-bottom: 24px;
+    margin-bottom: 20px;
   }
 
   .panel-heading h2 {
     margin-top: 6px;
     font-size: 1.42rem;
-    font-weight: 900;
+    font-weight: 800;
     line-height: 1.08;
+    letter-spacing: -0.005em;
   }
 
   .panel-heading p {

@@ -39,8 +39,10 @@
     display: block;
     color: var(--text);
     font-size: 1.72rem;
-    font-weight: 900;
+    font-weight: 800;
     line-height: 1;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 
   .routine-day {
@@ -48,7 +50,7 @@
     margin-top: 6px;
     color: var(--muted);
     font-size: 0.82rem;
-    font-weight: 700;
+    font-weight: 600;
   }
 
   .routine-actions {
@@ -76,15 +78,15 @@
   .routine-group-badge {
     display: inline-flex;
     align-items: center;
-    min-height: 30px;
-    padding: 5px 9px;
+    min-height: 26px;
+    padding: 4px 8px;
     border-radius: 4px;
-    background: #000000;
+    background: var(--text);
     color: #ffffff;
-    font-size: 0.74rem;
-    font-weight: 800;
+    font-size: 0.7rem;
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.04em;
     text-transform: uppercase;
   }
 
@@ -96,7 +98,7 @@
     padding-top: 2px;
     color: var(--muted);
     font-size: 0.82rem;
-    font-weight: 600;
+    font-weight: 500;
     line-height: 1.4;
   }
 
@@ -135,6 +137,6 @@
     padding-top: 2px;
     color: var(--muted);
     font-size: 0.78rem;
-    font-weight: 600;
+    font-weight: 500;
   }
 }
