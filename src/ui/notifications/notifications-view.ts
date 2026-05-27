@@ -5,7 +5,6 @@ import {
   getDueNotifications,
   getNotificationTypeLabel,
   getNotificationTypeShortLabel,
-  getPlanWeekdayLabel,
   getRecentMissed,
   planTodayNotifications,
   summarizeNotifications,
@@ -26,11 +25,18 @@ import {
   NOTIF_SNOOZE_MAX,
   NOTIF_TICK_INTERVAL_S,
 } from "../../domain/limits";
-import { el, icon, replaceChildren, span } from "../dom";
+import { el, icon, option, replaceChildren, span } from "../dom";
 import { refreshIcons } from "../icons";
 import type { ToastManager } from "../toasts";
 import type { UIRefs } from "../ui-refs";
-import { buildGoogleCalendarUrl, downloadIcsForRoutine } from "./calendar-export";
+import {
+  downloadIcsForRoutines,
+  getCalendarExportRoutines,
+  getDefaultCalendarExportRange,
+  isValidCalendarDateInput,
+  parseExcludedDatesInput,
+  type CalendarExportOptions,
+} from "./calendar-export";
 import { createNotificationPopupManager } from "./notification-popup";
 import { createSoundPlayer } from "./notification-sound";
 
@@ -86,6 +92,14 @@ export function createNotificationsView({
   });
   const sound = createSoundPlayer();
   const playedSoundFor = new Set<string>();
+  const defaultCalendarRange = getDefaultCalendarExportRange();
+  const calendarExportDraft = {
+    teacher: "",
+    room: "",
+    startDate: defaultCalendarRange.startDate,
+    endDate: defaultCalendarRange.endDate,
+    excludedDatesText: "",
+  };
   let timerHandle: number | null = null;
   let lastMissedNoticeDate = "";
 
@@ -201,7 +215,7 @@ export function createNotificationsView({
     renderSettings();
     renderUpcoming(plans, now);
     renderRecent(plans, now);
-    renderCalendar(plans);
+    renderCalendar();
     refreshIcons(refs.notificationsSettings);
     refreshIcons(refs.notificationsUpcoming);
     refreshIcons(refs.notificationsRecent);
@@ -374,37 +388,85 @@ export function createNotificationsView({
     );
   }
 
-  function renderCalendar(plans: NotificationPlan[]): void {
-    const target =
-      plans.find((plan) => plan.status === "pendente" || plan.status === "adiada") ??
-      plans[0];
-
-    if (!target) {
+  function renderCalendar(): void {
+    const state = getState();
+    if (state.routines.length === 0) {
       replaceChildren(refs.notificationsCalendar, [
-        el("p", { className: "notice-text", text: "Cadastre rotinas para gerar links de calendário." }),
+        el("p", { className: "notice-text", text: "Cadastre rotinas para gerar o arquivo de calendário." }),
       ]);
       return;
     }
 
-    const routine = target.routines[0];
-    if (!routine) {
-      replaceChildren(refs.notificationsCalendar, []);
-      return;
+    const teacherNames = uniqueSorted(state.routines.map((routine) => routine.teacher));
+    const roomNames = uniqueSorted(state.routines.map((routine) => routine.room));
+    if (calendarExportDraft.teacher && !teacherNames.includes(calendarExportDraft.teacher)) {
+      calendarExportDraft.teacher = "";
+    }
+    if (calendarExportDraft.room && !roomNames.includes(calendarExportDraft.room)) {
+      calendarExportDraft.room = "";
     }
 
-    const googleUrl = buildGoogleCalendarUrl(routine);
-    const googleLink = el(
-      "a",
-      {
-        className: "button button-secondary button-small",
-        attrs: {
-          href: googleUrl ?? "#",
-          target: "_blank",
-          rel: "noopener noreferrer",
-        },
-      },
-      [icon("calendar-days"), span("Google Calendar")],
+    const teacherSelect = el(
+      "select",
+      { className: "form-input", attrs: { "aria-label": "Filtrar professor para exportação" } },
+      [option("", "Todos os professores"), ...teacherNames.map((name) => option(name, name))],
     );
+    teacherSelect.value = calendarExportDraft.teacher;
+    teacherSelect.addEventListener("change", () => {
+      calendarExportDraft.teacher = teacherSelect.value;
+      renderCalendar();
+    });
+
+    const roomSelect = el(
+      "select",
+      { className: "form-input", attrs: { "aria-label": "Filtrar turma para exportação" } },
+      [option("", "Todas as turmas"), ...roomNames.map((name) => option(name, name))],
+    );
+    roomSelect.value = calendarExportDraft.room;
+    roomSelect.addEventListener("change", () => {
+      calendarExportDraft.room = roomSelect.value;
+      renderCalendar();
+    });
+
+    const startInput = el("input", {
+      className: "form-input",
+      attrs: { type: "date", "aria-label": "Data inicial da exportação" },
+    });
+    startInput.value = calendarExportDraft.startDate;
+    startInput.addEventListener("change", () => {
+      calendarExportDraft.startDate = startInput.value;
+      renderCalendar();
+    });
+
+    const endInput = el("input", {
+      className: "form-input",
+      attrs: { type: "date", "aria-label": "Data final da exportação" },
+    });
+    endInput.value = calendarExportDraft.endDate;
+    endInput.addEventListener("change", () => {
+      calendarExportDraft.endDate = endInput.value;
+      renderCalendar();
+    });
+
+    const excludedDates = el("textarea", {
+      className: "form-input notifications-calendar-exdates",
+      attrs: {
+        placeholder: "Datas sem rotina: 2026-07-09, 2026-10-12",
+        "aria-label": "Datas excluídas da recorrência",
+      },
+    });
+    excludedDates.value = calendarExportDraft.excludedDatesText;
+    excludedDates.addEventListener("input", () => {
+      calendarExportDraft.excludedDatesText = excludedDates.value;
+    });
+
+    const optionsResult = buildCalendarOptionsFromDraft(state);
+    const exportableCount = optionsResult.ok
+      ? getCalendarExportRoutines(state.routines, optionsResult.value).length
+      : 0;
+    const summaryText = optionsResult.ok
+      ? `${exportableCount} rotina${exportableCount === 1 ? "" : "s"} serão exportadas com recorrência semanal.`
+      : optionsResult.errors.join(" ");
 
     const icsButton = el(
       "button",
@@ -412,18 +474,81 @@ export function createNotificationsView({
       [icon("download"), span("Baixar .ics")],
     );
     icsButton.addEventListener("click", () => {
-      if (!downloadIcsForRoutine(routine)) {
-        toasts.show({ type: "error", title: "Falha", message: "Não foi possível gerar o arquivo." });
+      const result = buildCalendarOptionsFromDraft(state);
+      if (!result.ok) {
+        toasts.show({ type: "error", title: "Período inválido", message: result.errors.join(" ") });
+        return;
       }
+      const count = getCalendarExportRoutines(state.routines, result.value).length;
+      if (count === 0) {
+        toasts.show({ type: "info", title: "Nada a exportar", message: "Nenhuma rotina encontrada para esses filtros." });
+        return;
+      }
+      if (!downloadIcsForRoutines(state.routines, result.value)) {
+        toasts.show({ type: "error", title: "Falha", message: "Não foi possível gerar o arquivo .ics." });
+        return;
+      }
+      toasts.show({ type: "success", title: "Arquivo gerado", message: `${count} rotina${count === 1 ? "" : "s"} exportada${count === 1 ? "" : "s"}.` });
     });
 
     replaceChildren(refs.notificationsCalendar, [
       el("div", { className: "notifications-calendar-target" }, [
-        el("strong", { text: `${routine.subject || routine.teacher || routine.room}` }),
-        el("span", { text: `${target.time} · ${getPlanWeekdayLabel(target)}` }),
+        el("strong", { text: "Arquivo .ics com todas as rotinas" }),
+        el("span", {
+          text: "Baixe o arquivo e importe no Google Calendar pelo menu Configurações > Importar e exportar.",
+        }),
       ]),
-      el("div", { className: "notifications-calendar-actions" }, [googleLink, icsButton]),
+      el("div", { className: "notifications-calendar-form" }, [
+        labeledInline("Professor", teacherSelect),
+        labeledInline("Turma", roomSelect),
+        labeledInline("Início", startInput),
+        labeledInline("Fim", endInput),
+        el("label", { className: "notifications-calendar-exdates-field" }, [
+          el("span", { text: "Feriados/recessos" }),
+          excludedDates,
+        ]),
+      ]),
+      el("p", {
+        className: optionsResult.ok ? "notifications-calendar-summary" : "notifications-calendar-summary is-error",
+        text: summaryText,
+      }),
+      el("div", { className: "notifications-calendar-actions" }, [icsButton]),
     ]);
+  }
+
+  function buildCalendarOptionsFromDraft(state: AppState): { ok: true; value: CalendarExportOptions } | { ok: false; errors: string[] } {
+    const errors: string[] = [];
+    if (!isValidCalendarDateInput(calendarExportDraft.startDate)) {
+      errors.push("Informe uma data inicial válida.");
+    }
+    if (!isValidCalendarDateInput(calendarExportDraft.endDate)) {
+      errors.push("Informe uma data final válida.");
+    }
+    if (
+      isValidCalendarDateInput(calendarExportDraft.startDate) &&
+      isValidCalendarDateInput(calendarExportDraft.endDate) &&
+      calendarExportDraft.startDate > calendarExportDraft.endDate
+    ) {
+      errors.push("A data final deve ser igual ou posterior à inicial.");
+    }
+
+    const parsedExcludedDates = parseExcludedDatesInput(calendarExportDraft.excludedDatesText);
+    if (parsedExcludedDates.invalid.length > 0) {
+      errors.push(`Datas excluídas inválidas: ${parsedExcludedDates.invalid.join(", ")}.`);
+    }
+    if (errors.length > 0) return { ok: false, errors };
+
+    return {
+      ok: true,
+      value: {
+        startDate: calendarExportDraft.startDate,
+        endDate: calendarExportDraft.endDate,
+        teacher: calendarExportDraft.teacher,
+        room: calendarExportDraft.room,
+        excludedDates: parsedExcludedDates.dates,
+        notificationSettings: state.settings.notifications,
+      },
+    };
   }
 
   function planCard(plan: NotificationPlan, options: { upcoming: boolean }): HTMLElement {
@@ -572,6 +697,11 @@ function optionNode(value: string, label: string, selected = false): HTMLOptionE
 
 function labeledInline(label: string, control: HTMLElement): HTMLElement {
   return el("label", { className: "notifications-inline-field" }, [el("span", { text: label }), control]);
+}
+
+function uniqueSorted(values: string[]): string[] {
+  return [...new Set(values.map((value) => value.trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "pt-BR"));
 }
 
 function actionButtonInline(iconName: string, label: string, onClick: () => void): HTMLButtonElement {

@@ -368,6 +368,44 @@
   gap: 8px;
 }
 
+.notifications-calendar-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.notifications-calendar-form .notifications-inline-field {
+  min-width: 0;
+}
+
+.notifications-calendar-exdates-field {
+  grid-column: 1 / -1;
+  gap: 7px;
+  display: grid;
+}
+
+.notifications-calendar-exdates-field span {
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.notifications-calendar-exdates {
+  min-height: 74px;
+}
+
+.notifications-calendar-summary {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.86rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.notifications-calendar-summary.is-error {
+  color: var(--danger);
+}
+
 /* Selo discreto em rotinas e semana */
 .routine-notification-pill {
   display: inline-flex;
@@ -404,6 +442,10 @@
 
 @media (max-width: 760px) {
   .notifications-setting {
+    grid-template-columns: 1fr;
+  }
+
+  .notifications-calendar-form {
     grid-template-columns: 1fr;
   }
 
