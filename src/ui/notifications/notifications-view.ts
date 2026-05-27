@@ -215,7 +215,9 @@ export function createNotificationsView({
     renderSettings();
     renderUpcoming(plans, now);
     renderRecent(plans, now);
-    renderCalendar();
+    if (!isCalendarExportFocused()) {
+      renderCalendar();
+    }
     refreshIcons(refs.notificationsSettings);
     refreshIcons(refs.notificationsUpcoming);
     refreshIcons(refs.notificationsRecent);
@@ -549,6 +551,10 @@ export function createNotificationsView({
         notificationSettings: state.settings.notifications,
       },
     };
+  }
+
+  function isCalendarExportFocused(): boolean {
+    return document.activeElement instanceof Node && refs.notificationsCalendar.contains(document.activeElement);
   }
 
   function planCard(plan: NotificationPlan, options: { upcoming: boolean }): HTMLElement {

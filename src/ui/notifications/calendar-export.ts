@@ -278,8 +278,14 @@ function effectiveAlarmLeadMinutes(routine: Routine, settings: NotificationSetti
 }
 
 function buildEventUid(routine: Routine): string {
-  const safeId = routine.id.replace(/[^A-Za-z0-9._-]/g, "-") || "sem-id";
-  return `proati-${safeId}@sistema-rotina-escolar-proati`;
+  const encodedId = encodeUidComponent(routine.id || "sem-id");
+  return `proati-routine-${encodedId}@sistema-rotina-escolar-proati`;
+}
+
+function encodeUidComponent(value: string): string {
+  return Array.from(new TextEncoder().encode(value))
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 function readRoutineDate(value: string, fallback: Date): Date {

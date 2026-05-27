@@ -124,8 +124,28 @@ describe("calendar export", () => {
     const firstUid = first.match(/^UID:.+$/m)?.[0];
     const secondUid = second.match(/^UID:.+$/m)?.[0];
 
-    expect(firstUid).toBe("UID:proati-routine-stable@sistema-rotina-escolar-proati");
+    expect(firstUid).toBe("UID:proati-routine-726f7574696e652d737461626c65@sistema-rotina-escolar-proati");
     expect(secondUid).toBe(firstUid);
+  });
+
+  it("keeps UID unique for routine ids that would collide after character replacement", () => {
+    const content = unfold(
+      buildIcsContent(
+        [
+          routine({ id: "a/b" }),
+          routine({ id: "a:b", startTime: "09:00", endTime: "10:00" }),
+        ],
+        options(),
+      )!,
+    );
+
+    const uids = content.match(/^UID:.+$/gm) ?? [];
+
+    expect(uids).toEqual([
+      "UID:proati-routine-612f62@sistema-rotina-escolar-proati",
+      "UID:proati-routine-613a62@sistema-rotina-escolar-proati",
+    ]);
+    expect(new Set(uids).size).toBe(uids.length);
   });
 
   it("escapes text and folds physical lines to 75 octets", () => {
