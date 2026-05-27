@@ -61,6 +61,7 @@ export interface UIRefs {
   devicesListPanel: HTMLElement;
   settingsFeedback: HTMLElement;
   exportDataButton: HTMLButtonElement;
+  importDataTrigger: HTMLButtonElement;
   importDataFile: HTMLInputElement;
   resetDataButton: HTMLButtonElement;
   maintenanceResultsCount: HTMLElement;
@@ -150,6 +151,7 @@ export function bindRefs(): UIRefs {
     devicesListPanel: qs("#devices-list-panel"),
     settingsFeedback: qs("#settings-feedback"),
     exportDataButton: qs("#export-data-button"),
+    importDataTrigger: qs("#import-data-trigger"),
     importDataFile: qs("#import-data-file"),
     resetDataButton: qs("#reset-data-button"),
     maintenanceResultsCount: qs("#maintenance-results-count"),

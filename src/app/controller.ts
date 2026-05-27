@@ -63,6 +63,7 @@ export interface AppActions {
   deleteCatalogItem(kind: CatalogKind, id: string): EmptyResult;
   updateUiFilters(payload: { filterText?: unknown; sortBy?: SortOption }): EmptyResult;
   exportData(): string;
+  validateImportData(rawText: string): EmptyResult;
   importData(rawText: string): EmptyResult;
   resetData(): EmptyResult;
   addMaintenanceRecord(payload: MaintenancePayload): EmptyResult;
@@ -260,6 +261,11 @@ export function createAppController({
 
     exportData() {
       return exportState(state);
+    },
+
+    validateImportData(rawText) {
+      const result = importStateFromText(rawText);
+      return result.ok ? { ok: true } : result;
     },
 
     importData(rawText) {

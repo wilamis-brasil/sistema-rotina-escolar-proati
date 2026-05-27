@@ -1,5 +1,6 @@
 import {
   AlarmClock,
+  BellOff,
   BellRing,
   BookOpenCheck,
   CalendarDays,
@@ -21,6 +22,7 @@ import {
   MapPin,
   Menu,
   MessageSquare,
+  MoreHorizontal,
   Pencil,
   Plus,
   Save,
@@ -40,6 +42,7 @@ import {
 
 const icons = {
   AlarmClock,
+  BellOff,
   BellRing,
   BookOpenCheck,
   CalendarDays,
@@ -61,6 +64,7 @@ const icons = {
   MapPin,
   Menu,
   MessageSquare,
+  MoreHorizontal,
   Pencil,
   Plus,
   Save,

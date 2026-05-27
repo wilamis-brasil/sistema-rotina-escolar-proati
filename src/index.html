@@ -515,11 +515,11 @@
                   <i data-lucide="download" aria-hidden="true"></i>
                   <span>Exportar JSON</span>
                 </button>
-                <label class="button button-secondary import-button">
+                <button class="button button-secondary settings-import-trigger" type="button" id="import-data-trigger" aria-controls="import-data-file" aria-describedby="settings-feedback">
                   <i data-lucide="upload" aria-hidden="true"></i>
                   <span>Importar JSON</span>
-                  <input id="import-data-file" type="file" accept="application/json,.json">
-                </label>
+                </button>
+                <input class="settings-file-input" id="import-data-file" type="file" accept="application/json,.json" tabindex="-1" aria-hidden="true">
                 <button class="button button-danger" type="button" id="reset-data-button">
                   <i data-lucide="trash-2" aria-hidden="true"></i>
                   <span>Apagar dados locais</span>
