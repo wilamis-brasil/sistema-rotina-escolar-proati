@@ -335,75 +335,85 @@
 
 .notifications-calendar {
   display: grid;
+  gap: 12px;
+}
+
+.notifications-calendar-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  align-items: end;
   gap: 10px;
 }
 
-.notifications-calendar-target {
+.notifications-calendar-fields .notifications-inline-field {
   display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  background: var(--surface-soft);
-  border-radius: var(--radius);
-}
-
-.notifications-calendar-target strong {
-  color: var(--text);
-  font-size: 1rem;
-  font-weight: 700;
-  line-height: 1.2;
-  overflow-wrap: anywhere;
-}
-
-.notifications-calendar-target span {
+  min-width: 0;
+  align-items: stretch;
+  gap: 6px;
   color: var(--muted);
-  font-size: 0.86rem;
-  font-weight: 500;
-  line-height: 1.35;
-  overflow-wrap: anywhere;
+  font-size: 0.8rem;
+  font-weight: 700;
 }
 
-.notifications-calendar-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+.notifications-calendar-fields .notifications-inline-field span,
+.notifications-calendar-exdates-field span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  line-height: 1.2;
 }
 
-.notifications-calendar-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.notifications-calendar-form .notifications-inline-field {
+.notifications-calendar-fields .notifications-inline-field input,
+.notifications-calendar-fields .notifications-inline-field select {
+  width: 100%;
   min-width: 0;
 }
 
 .notifications-calendar-exdates-field {
-  grid-column: 1 / -1;
-  gap: 7px;
   display: grid;
-}
-
-.notifications-calendar-exdates-field span {
-  color: var(--muted);
-  font-size: 0.8rem;
-  font-weight: 800;
+  min-width: 0;
+  gap: 7px;
 }
 
 .notifications-calendar-exdates {
-  min-height: 74px;
-}
-
-.notifications-calendar-summary {
-  color: var(--muted);
-  margin: 0;
-  font-size: 0.86rem;
-  font-weight: 700;
+  min-height: 72px;
+  max-height: 120px;
   line-height: 1.4;
+  resize: vertical;
 }
 
-.notifications-calendar-summary.is-error {
+.notifications-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-top: 2px;
+}
+
+.notifications-calendar-count {
+  min-width: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.notifications-calendar-count.is-error {
   color: var(--danger);
+}
+
+.notifications-calendar-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.notifications-calendar-download {
+  white-space: nowrap;
 }
 
 /* Selo discreto em rotinas e semana */
@@ -445,8 +455,18 @@
     grid-template-columns: 1fr;
   }
 
-  .notifications-calendar-form {
+  .notifications-calendar-fields {
     grid-template-columns: 1fr;
+  }
+
+  .notifications-calendar-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .notifications-calendar-actions,
+  .notifications-calendar-download {
+    width: 100%;
   }
 
   .notifications-card-top {

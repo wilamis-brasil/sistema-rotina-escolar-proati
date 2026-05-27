@@ -472,7 +472,7 @@ export function createNotificationsView({
 
     const icsButton = el(
       "button",
-      { className: "button button-secondary button-small", attrs: { type: "button" } },
+      { className: "button button-primary button-small notifications-calendar-download", attrs: { type: "button" } },
       [icon("download"), span("Baixar .ics")],
     );
     icsButton.addEventListener("click", () => {
@@ -494,27 +494,23 @@ export function createNotificationsView({
     });
 
     replaceChildren(refs.notificationsCalendar, [
-      el("div", { className: "notifications-calendar-target" }, [
-        el("strong", { text: "Arquivo .ics com todas as rotinas" }),
-        el("span", {
-          text: "Baixe o arquivo e importe no Google Calendar pelo menu Configurações > Importar e exportar.",
-        }),
-      ]),
-      el("div", { className: "notifications-calendar-form" }, [
+      el("div", { className: "notifications-calendar-fields" }, [
         labeledInline("Professor", teacherSelect),
         labeledInline("Turma", roomSelect),
         labeledInline("Início", startInput),
         labeledInline("Fim", endInput),
-        el("label", { className: "notifications-calendar-exdates-field" }, [
-          el("span", { text: "Feriados/recessos" }),
-          excludedDates,
-        ]),
       ]),
-      el("p", {
-        className: optionsResult.ok ? "notifications-calendar-summary" : "notifications-calendar-summary is-error",
-        text: summaryText,
-      }),
-      el("div", { className: "notifications-calendar-actions" }, [icsButton]),
+      el("label", { className: "notifications-calendar-exdates-field" }, [
+        el("span", { text: "Feriados e recessos sem rotina" }),
+        excludedDates,
+      ]),
+      el("div", { className: "notifications-calendar-footer" }, [
+        el("p", {
+          className: optionsResult.ok ? "notifications-calendar-count" : "notifications-calendar-count is-error",
+          text: summaryText,
+        }),
+        el("div", { className: "notifications-calendar-actions" }, [icsButton]),
+      ]),
     ]);
   }
 
