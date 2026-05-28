@@ -243,9 +243,9 @@ export function buildRoutine(
   }
 
   if (devices.length === 0) {
-    errors.push("Selecione ou cadastre ao menos um dispositivo.");
+    errors.push("Selecione ou cadastre ao menos um equipamento.");
   } else if (devices.length > MAX_DEVICES_PER_ROUTINE) {
-    errors.push(`Selecione no máximo ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`);
+    errors.push(`Selecione no máximo ${MAX_DEVICES_PER_ROUTINE} equipamentos por rotina.`);
   }
 
   if (errors.length > 0) {
@@ -458,7 +458,7 @@ export function normalizeCatalogPayload(
   const labels = {
     teachers: "o nome do professor",
     rooms: "a turma",
-    devices: "o dispositivo",
+    devices: "o equipamento",
   };
   const name = validateCatalogName(payload.name, labels[kind] ?? "o cadastro");
   if (!name.ok) return name;
@@ -964,7 +964,7 @@ export function validateImportedStateLimits(state: AppState): string[] {
     if (r.name.length > 80) errors.push(`Turma "${r.name.slice(0, 20)}" excede 80 caracteres.`);
   }
   for (const d of state.devices) {
-    if (d.name.length > 80) errors.push(`Dispositivo "${d.name.slice(0, 20)}" excede 80 caracteres.`);
+    if (d.name.length > 80) errors.push(`Equipamento "${d.name.slice(0, 20)}" excede 80 caracteres.`);
   }
   errors.push(...validateImportedMaintenanceLimits(state.maintenanceRecords));
   return errors;

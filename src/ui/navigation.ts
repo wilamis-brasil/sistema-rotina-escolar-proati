@@ -2,13 +2,13 @@ import { refreshIcons } from "./icons";
 import type { UIRefs } from "./ui-refs";
 
 const NAVIGATION_LABELS: Record<string, string> = {
-  today: "Home",
-  week: "Semana",
+  today: "Hoje",
+  week: "Rotina semanal",
   teachers: "Professores",
   rooms: "Turmas",
-  devices: "Dispositivos",
+  devices: "Equipamentos",
   maintenance: "Manutenção",
-  notifications: "Notificações",
+  notifications: "Avisos",
   settings: "Configurações",
 };
 

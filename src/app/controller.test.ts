@@ -23,7 +23,7 @@ describe("importStateFromText", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors.join(" ")).toContain("Arquivo JSON");
+      expect(result.errors.join(" ")).toContain("Backup JSON");
     }
   });
 
@@ -173,6 +173,24 @@ describe("importData — limites operacionais", () => {
     if (!result.ok) {
       expect(result.errors.join(" ")).toMatch(/limite/i);
     }
+  });
+});
+
+describe("validateImportData", () => {
+  it("rejeita JSON inválido sem alterar estado ou storage", () => {
+    const storage = createMemoryStorage();
+    const controller = createAppController({ initialState: createEmptyState(), storage });
+    controller.actions.addCatalogItem("rooms", { name: "6A" });
+    expect(controller.actions.addRoutine(validRoutinePayload).ok).toBe(true);
+
+    const stateBefore = JSON.stringify(controller.getState());
+    const storageBefore = storage.getItem(STORAGE_KEY);
+
+    const result = controller.actions.validateImportData("{ invalid json");
+
+    expect(result.ok).toBe(false);
+    expect(JSON.stringify(controller.getState())).toBe(stateBefore);
+    expect(storage.getItem(STORAGE_KEY)).toBe(storageBefore);
   });
 });
 

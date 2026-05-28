@@ -12,7 +12,7 @@ export interface FeedbackPresenter {
   setFeedback(node: HTMLElement, message: string, type: string): void;
 }
 
-export function createFeedbackPresenter(toasts: ToastManager, storageStatus: HTMLElement): FeedbackPresenter {
+export function createFeedbackPresenter(toasts: ToastManager): FeedbackPresenter {
   function setFeedback(node: HTMLElement, message: string, type: string): void {
     node.textContent = message;
     node.dataset.type = type;
@@ -29,7 +29,7 @@ export function createFeedbackPresenter(toasts: ToastManager, storageStatus: HTM
       setFeedback(feedbackNode, message, "error");
       toasts.show({
         type: "error",
-        title: options.errorTitle ?? "Ação não concluída",
+        title: options.errorTitle ?? "Não foi possível concluir a ação",
         message,
         timeout: 6800,
       });
@@ -38,11 +38,10 @@ export function createFeedbackPresenter(toasts: ToastManager, storageStatus: HTM
     setFeedback(feedbackNode, successMessage, "success");
     toasts.show({
       type: "success",
-      title: options.successTitle ?? "Tudo certo",
+      title: options.successTitle ?? "Ação concluída",
       message: successMessage,
       timeout: 3600,
     });
-    storageStatus.textContent = "Dados locais salvos.";
   }
 
   return { showResult, setFeedback };

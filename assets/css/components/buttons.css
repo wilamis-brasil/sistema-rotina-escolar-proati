@@ -28,11 +28,6 @@
     border-color: transparent;
   }
 
-  .button-secondary:hover {
-    background: var(--surface-hover);
-    border-color: transparent;
-  }
-
   .button-danger {
     color: #ffffff;
     background: var(--danger);

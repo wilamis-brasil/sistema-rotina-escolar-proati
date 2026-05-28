@@ -6,12 +6,15 @@ import type { UIRefs } from "../ui-refs";
 
 type SettingsRefs = Pick<
   UIRefs,
-  "settingsFeedback" | "exportDataButton" | "importDataFile" | "resetDataButton"
+  "settingsFeedback" | "exportDataButton" | "importDataTrigger" | "importDataFile" | "resetDataButton"
 >;
 
 interface SettingsView {
   bindEvents(): void;
 }
+
+const JSON_MIME_TYPES = new Set(["application/json", "text/json"]);
+const IMPORT_SUCCESS_MESSAGE = "Backup importado. Dados locais atualizados.";
 
 export function createSettingsView({
   refs,
@@ -28,9 +31,14 @@ export function createSettingsView({
   onResetData: () => void;
   onImported: () => void;
 }): SettingsView {
+  let importInProgress = false;
+
   function bindEvents(): void {
     refs.exportDataButton.addEventListener("click", handleExport);
-    refs.importDataFile.addEventListener("change", handleImport);
+    refs.importDataTrigger.addEventListener("click", handleImportTrigger);
+    refs.importDataFile.addEventListener("change", (event) => {
+      void handleImport(event);
+    });
     refs.resetDataButton.addEventListener("click", handleResetData);
   }
 
@@ -44,66 +52,149 @@ export function createSettingsView({
     setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
-  function handleImport(event: Event): void {
+  function handleImportTrigger(): void {
+    if (importInProgress) return;
+    refs.importDataFile.click();
+  }
+
+  async function handleImport(event: Event): Promise<void> {
     const input = event.target instanceof HTMLInputElement ? event.target : refs.importDataFile;
     const [file] = input.files ?? [];
     if (!file) return;
 
-    if (file.size > IMPORT_MAX_BYTES) {
-      feedback.showResult(
-        { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] },
-        refs.settingsFeedback,
-        "Dados importados.",
-      );
+    if (importInProgress) {
       input.value = "";
       return;
     }
 
-    const reader = new FileReader();
-    reader.addEventListener("load", async () => {
-      const confirmed = await dialogs.confirm({
-        tone: "warning",
-        title: "Importar dados?",
-        message: "A importação substituirá as rotinas, catálogos e configurações locais deste navegador.",
-        confirmLabel: "Importar",
-      });
-      if (!confirmed) {
-        input.value = "";
+    const fileError = validateSelectedFile(file);
+    if (fileError) {
+      showImportError(fileError.message, fileError.title);
+      input.value = "";
+      return;
+    }
+
+    setImportState(true, "Lendo o backup selecionado...");
+    try {
+      const rawText = await readFileAsText(file);
+      feedback.setFeedback(refs.settingsFeedback, "Validando o backup (.json)...", "info");
+
+      const validation = actions.validateImportData(rawText);
+      if (!validation.ok) {
+        feedback.showResult(validation, refs.settingsFeedback, IMPORT_SUCCESS_MESSAGE, {
+          errorTitle: "Backup inválido",
+        });
         return;
       }
 
-      const result = actions.importData(String(reader.result ?? ""));
-      feedback.showResult(result, refs.settingsFeedback, "Dados importados.");
-      input.value = "";
+      feedback.setFeedback(
+        refs.settingsFeedback,
+        `${file.name} validado. Confirme para substituir os dados locais deste navegador.`,
+        "info",
+      );
+      const confirmed = await dialogs.confirm({
+        tone: "warning",
+        title: "Importar backup e substituir dados locais?",
+        message:
+          "Rotinas, catálogos e configurações deste navegador serão substituídos pelo conteúdo do arquivo. Exporte um backup atual antes de continuar se quiser preservá-lo.",
+        confirmLabel: "Importar backup",
+      });
+      if (!confirmed) {
+        feedback.setFeedback(refs.settingsFeedback, "Importação cancelada. Nenhum dado foi alterado.", "info");
+        return;
+      }
+
+      feedback.setFeedback(refs.settingsFeedback, "Aplicando o backup validado...", "info");
+      const result = actions.importData(rawText);
+      feedback.showResult(result, refs.settingsFeedback, IMPORT_SUCCESS_MESSAGE, {
+        errorTitle: "Não foi possível importar o backup",
+        successTitle: "Backup importado",
+      });
       if (result.ok) {
         onImported();
       }
-    });
-    reader.addEventListener("error", () => {
-      feedback.showResult(
-        { ok: false, errors: ["Não foi possível ler o arquivo selecionado."] },
-        refs.settingsFeedback,
-        "Dados importados.",
+    } catch {
+      showImportError(
+        "Não foi possível ler o backup selecionado. Verifique se o arquivo .json não está corrompido.",
+        "Não foi possível ler o backup",
       );
+    } finally {
       input.value = "";
-    });
-    reader.readAsText(file);
+      setImportState(false);
+    }
   }
 
   async function handleResetData(): Promise<void> {
     const confirmed = await dialogs.textConfirm({
-      title: "Apagar dados locais?",
+      title: "Apagar todos os dados locais?",
       message:
-        "Esta ação remove todas as rotinas, professores, turmas, dispositivos e configurações salvas neste navegador.",
+        "Rotinas, professores, turmas, equipamentos, manutenções e configurações deste navegador serão removidos. Essa ação não pode ser desfeita - exporte um backup antes de continuar.",
       expectedText: "APAGAR",
-      confirmLabel: "Apagar dados",
+      confirmLabel: "Apagar dados locais",
     });
     if (!confirmed) return;
 
     const result = actions.resetData();
-    feedback.showResult(result, refs.settingsFeedback, "Dados locais apagados.");
+    feedback.showResult(result, refs.settingsFeedback, "Dados locais apagados deste navegador.", {
+      successTitle: "Dados locais apagados",
+    });
     onResetData();
   }
 
+  function setImportState(active: boolean, message?: string): void {
+    importInProgress = active;
+    refs.importDataTrigger.disabled = active;
+    refs.importDataTrigger.classList.toggle("is-loading", active);
+    refs.importDataTrigger.setAttribute("aria-busy", active ? "true" : "false");
+    if (message) {
+      feedback.setFeedback(refs.settingsFeedback, message, "info");
+    }
+  }
+
+  function showImportError(message: string, title: string): void {
+    feedback.showResult(
+      { ok: false, errors: [message] },
+      refs.settingsFeedback,
+      IMPORT_SUCCESS_MESSAGE,
+      { errorTitle: title },
+    );
+  }
+
   return { bindEvents };
+}
+
+function validateSelectedFile(file: File): { title: string; message: string } | null {
+  if (!isJsonFile(file)) {
+    return {
+      title: "Formato não suportado",
+      message: "Selecione um arquivo de backup (.json) exportado pelo Sistema de Rotina Escolar PROATI.",
+    };
+  }
+  if (file.size === 0) {
+    return {
+      title: "Backup vazio",
+      message: "O arquivo selecionado está vazio. Exporte um novo backup e tente novamente.",
+    };
+  }
+  if (file.size > IMPORT_MAX_BYTES) {
+    return {
+      title: "Backup grande demais",
+      message: `O arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB. Reduza o backup e importe novamente.`,
+    };
+  }
+  return null;
+}
+
+function isJsonFile(file: File): boolean {
+  const name = file.name.trim().toLowerCase();
+  return name.endsWith(".json") || JSON_MIME_TYPES.has(file.type);
+}
+
+function readFileAsText(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.addEventListener("load", () => resolve(String(reader.result ?? "")));
+    reader.addEventListener("error", () => reject(reader.error ?? new Error("Falha ao ler arquivo.")));
+    reader.readAsText(file);
+  });
 }

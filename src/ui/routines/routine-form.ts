@@ -43,7 +43,6 @@ type RoutineFormRefs = Pick<
   | "saveRoutineButton"
   | "clearRoutineForm"
   | "addDeviceToRoutine"
-  | "storageStatus"
   | "teachersDatalist"
   | "subjectsDatalist"
 >;
@@ -93,17 +92,16 @@ export function createRoutineForm({
       : actions.addRoutine(payload);
 
     if (!result.ok) {
-      feedback.showResult(result, refs.routineFeedback, "Rotina salva.", {
-        errorTitle: "Revise a rotina",
+      feedback.showResult(result, refs.routineFeedback, "Rotina salva na agenda semanal.", {
+        errorTitle: "Revise os campos da rotina",
       });
       return;
     }
 
     reset();
-    feedback.showResult(result, refs.routineFeedback, "Rotina salva.", {
+    feedback.showResult(result, refs.routineFeedback, "Rotina salva na agenda semanal.", {
       successTitle: "Rotina salva",
     });
-    refs.storageStatus.textContent = "Dados locais salvos.";
     onChange();
   }
 
@@ -132,7 +130,7 @@ export function createRoutineForm({
     refs.routineForm.reset();
     refs.routineId.value = "";
     refs.routineFormTitle.textContent = "Nova rotina";
-    refs.routineFormModeLabel.textContent = "Cadastro rápido";
+    refs.routineFormModeLabel.textContent = "Cadastrar rotina";
     refs.routineFormPanel.dataset.mode = "create";
     refs.routineWeekday.value = getTodayWeekdayId() ?? WEEKDAYS[0].id;
     refs.routineSubject.value = "";
@@ -149,7 +147,7 @@ export function createRoutineForm({
     editingRoutineId = routine.id;
     selectedDevices = new Set(routine.devices);
     refs.routineFormTitle.textContent = "Editar rotina";
-    refs.routineFormModeLabel.textContent = "Atualizando cadastro";
+    refs.routineFormModeLabel.textContent = "Editar rotina";
     refs.routineFormPanel.dataset.mode = "edit";
     refs.routineId.value = routine.id;
     refs.routineWeekday.value = routine.weekday;
@@ -164,8 +162,8 @@ export function createRoutineForm({
     if (!roomInCatalog) {
       refs.routineRoomLegacyWarning.hidden = false;
       refs.routineRoomLegacyWarning.textContent =
-        `Esta rotina usa a turma "${routine.room}", que não está cadastrada no catálogo. ` +
-        `Cadastre ou selecione uma turma existente para salvar.`;
+        `A turma "${routine.room}" não está mais no cadastro. ` +
+        `Selecione uma turma existente ou cadastre-a antes de salvar.`;
       refs.routineRoom.value = "";
     } else {
       refs.routineRoomLegacyWarning.hidden = true;
@@ -196,7 +194,7 @@ export function createRoutineForm({
     const name = normalizeText(refs.routineNewDevice.value);
     if (!name) return;
     if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) {
-      feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`, "error");
+      feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} equipamentos por rotina.`, "error");
       return;
     }
     selectedDevices.add(name);
@@ -224,7 +222,7 @@ export function createRoutineForm({
           if (input.checked) {
             if (selectedDevices.size >= MAX_DEVICES_PER_ROUTINE) {
               input.checked = false;
-              feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} dispositivos por rotina.`, "error");
+              feedback.setFeedback(refs.routineFeedback, `Máximo de ${MAX_DEVICES_PER_ROUTINE} equipamentos por rotina.`, "error");
               return;
             }
             selectedDevices.add(name);
@@ -254,7 +252,7 @@ export function createRoutineForm({
   function renderRoomSelect(): void {
     const currentValue = refs.routineRoom.value;
     const roomOptions: HTMLOptionElement[] = [
-      option("", "Selecione a turma..."),
+      option("", "Selecione a turma"),
       ...buildRoomSelectOptions(getState().rooms).map((name) => option(name, name)),
     ];
 

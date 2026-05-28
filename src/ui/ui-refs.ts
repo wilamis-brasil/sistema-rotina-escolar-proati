@@ -7,7 +7,6 @@ export interface UIRefs {
   navButtons: NodeListOf<HTMLButtonElement>;
   views: NodeListOf<HTMLElement>;
   todayLabel: HTMLElement;
-  storageStatus: HTMLElement;
   todayMetrics: HTMLElement;
   undoDeleteButton: HTMLButtonElement;
   routineFormPanel: HTMLElement;
@@ -61,6 +60,7 @@ export interface UIRefs {
   devicesListPanel: HTMLElement;
   settingsFeedback: HTMLElement;
   exportDataButton: HTMLButtonElement;
+  importDataTrigger: HTMLButtonElement;
   importDataFile: HTMLInputElement;
   resetDataButton: HTMLButtonElement;
   maintenanceResultsCount: HTMLElement;
@@ -96,7 +96,6 @@ export function bindRefs(): UIRefs {
     navButtons: qsa<HTMLButtonElement>(".nav-button"),
     views: qsa<HTMLElement>(".view"),
     todayLabel: qs("#today-label"),
-    storageStatus: qs("#storage-status"),
     todayMetrics: qs("#today-metrics"),
     undoDeleteButton: qs("#undo-delete-button"),
     routineFormPanel: qs("#routine-form-panel"),
@@ -150,6 +149,7 @@ export function bindRefs(): UIRefs {
     devicesListPanel: qs("#devices-list-panel"),
     settingsFeedback: qs("#settings-feedback"),
     exportDataButton: qs("#export-data-button"),
+    importDataTrigger: qs("#import-data-trigger"),
     importDataFile: qs("#import-data-file"),
     resetDataButton: qs("#reset-data-button"),
     maintenanceResultsCount: qs("#maintenance-results-count"),

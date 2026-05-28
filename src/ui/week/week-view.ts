@@ -84,26 +84,26 @@ export function createWeekView({
 
     const prevTeacher = refs.filterTeacher.value;
     replaceChildren(refs.filterTeacher, [
-      option("", "Todos"),
+      option("", "Todos os professores"),
       ...state.teachers.map((t) => option(t.name, t.name)),
     ]);
     refs.filterTeacher.value = prevTeacher;
 
     const prevRoom = refs.filterRoom.value;
     replaceChildren(refs.filterRoom, [
-      option("", "Todas"),
+      option("", "Todas as turmas"),
       ...state.rooms.map((r) => option(r.name, r.name)),
     ]);
     refs.filterRoom.value = prevRoom;
 
     const startTimes = [...new Set(state.routines.map((r) => r.startTime))].filter(Boolean).sort();
     const prevStart = refs.filterTimeStart.value;
-    replaceChildren(refs.filterTimeStart, [option("", "Início"), ...startTimes.map((t) => option(t, t))]);
+    replaceChildren(refs.filterTimeStart, [option("", "Horário inicial"), ...startTimes.map((t) => option(t, t))]);
     refs.filterTimeStart.value = prevStart;
 
     const endTimes = [...new Set(state.routines.map((r) => r.endTime))].filter(Boolean).sort();
     const prevEnd = refs.filterTimeEnd.value;
-    replaceChildren(refs.filterTimeEnd, [option("", "Fim"), ...endTimes.map((t) => option(t, t))]);
+    replaceChildren(refs.filterTimeEnd, [option("", "Horário final"), ...endTimes.map((t) => option(t, t))]);
     refs.filterTimeEnd.value = prevEnd;
   }
 
@@ -164,7 +164,7 @@ export function createWeekView({
         ]),
         el("span", {
           className: "equipment-count",
-          text: section.routineCount === 1 ? "1 reserva" : `${section.routineCount} reservas`,
+          text: section.routineCount === 1 ? "1 retirada" : `${section.routineCount} retiradas`,
         }),
       ]),
       el("div", { className: "schedule-table-wrap" }, [
@@ -222,9 +222,23 @@ export function createWeekView({
   }
 
   function scheduleEntryActions(routine: Routine): HTMLElement {
-    const copyButton = iconButton("copy", "Duplicar reserva", () => callbacks.onDuplicate(routine.id));
-    const editButton = iconButton("pencil", "Editar reserva", () => callbacks.onEdit(routine));
-    const deleteButton = iconButton("trash-2", "Excluir reserva", () => callbacks.onDelete(routine.id), "danger");
+    const ariaContext = `${routine.startTime} · ${routine.room} · ${routine.teacher}`;
+    const copyButton = iconButton(
+      "copy",
+      `Duplicar rotina de ${ariaContext}`,
+      () => callbacks.onDuplicate(routine.id),
+    );
+    const editButton = iconButton(
+      "pencil",
+      `Editar rotina de ${ariaContext}`,
+      () => callbacks.onEdit(routine),
+    );
+    const deleteButton = iconButton(
+      "trash-2",
+      `Excluir rotina de ${ariaContext}`,
+      () => callbacks.onDelete(routine.id),
+      "danger",
+    );
 
     return el("div", { className: "schedule-entry-actions" }, [copyButton, editButton, deleteButton]);
   }
@@ -283,7 +297,7 @@ function buildNotificationHint(routine: Routine, globalEnabled: boolean, default
     typeof routine.notification?.leadMinutes === "number"
       ? routine.notification.leadMinutes
       : defaultLead;
-  const label = lead > 0 ? `${lead} min antes` : "Avisar no início";
+  const label = lead > 0 ? `Aviso ${lead} min antes` : "Aviso no início";
   return el("small", { className: "schedule-notification-hint" }, [
     el("i", { attrs: { "data-lucide": "bell-ring", "aria-hidden": "true" } }),
     el("span", { text: label }),
@@ -292,7 +306,7 @@ function buildNotificationHint(routine: Routine, globalEnabled: boolean, default
 
 function weeklyScheduleEmptyState(): HTMLElement {
   return el("div", { className: "weekly-schedule-empty" }, [
-    el("strong", { text: "Nenhuma reserva encontrada." }),
-    el("span", { text: "Ajuste o filtro ou cadastre uma rotina para montar a matriz semanal por equipamento." }),
+    el("strong", { text: "Nenhuma retirada encontrada." }),
+    el("span", { text: "Ajuste os filtros ou cadastre uma rotina para montar a agenda semanal por equipamento." }),
   ]);
 }

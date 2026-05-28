@@ -18,7 +18,7 @@ export const SORT_OPTIONS = [
   { value: "subject", label: "Aula" },
   { value: "teacher", label: "Professor" },
   { value: "room", label: "Turma" },
-  { value: "device", label: "Dispositivo" },
+  { value: "device", label: "Equipamento" },
 ] as const;
 
 export type SortOption = (typeof SORT_OPTIONS)[number]["value"];

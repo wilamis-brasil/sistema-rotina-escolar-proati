@@ -43,7 +43,6 @@ type MaintenanceRefs = Pick<
   | "maintenanceExportJson"
   | "maintenanceImportFile"
   | "maintenanceTableWrap"
-  | "storageStatus"
 >;
 
 interface MaintenanceView {
@@ -199,11 +198,15 @@ export function createMaintenanceView({
     refs.maintenanceFilterClear.hidden = !hasActiveFilters(filters);
 
     if (!total) {
-      replaceChildren(refs.maintenanceTableWrap, [emptyState("Nenhum registro de manutenção cadastrado.")]);
+      replaceChildren(refs.maintenanceTableWrap, [
+        emptyState("Sem manutenções cadastradas. Use “Cadastrar manutenção” para registrar o primeiro equipamento com problema."),
+      ]);
       return;
     }
     if (!shown) {
-      replaceChildren(refs.maintenanceTableWrap, [emptyState("Nenhum registro corresponde aos filtros.")]);
+      replaceChildren(refs.maintenanceTableWrap, [
+        emptyState("Nenhuma manutenção corresponde aos filtros atuais. Limpe os filtros para ver tudo."),
+      ]);
       return;
     }
 
@@ -257,11 +260,16 @@ export function createMaintenanceView({
   }
 
   function renderRowActions(record: MaintenanceRecord): HTMLElement {
+    const label = record.equipmentId || "registro";
     return el("div", { className: "maintenance-actions" }, [
-      iconButton("eye", "Ver detalhes", () => openDetails(record)),
-      iconButton("pencil", "Editar registro", () => openForm(record)),
-      iconButton("copy", "Duplicar registro", () => openForm(null, toFormInitial(record, { clearId: true }))),
-      iconButton("trash-2", "Excluir registro", () => confirmDelete(record), "danger"),
+      iconButton("eye", `Ver detalhes da manutenção ${label}`, () => openDetails(record)),
+      iconButton("pencil", `Editar manutenção ${label}`, () => openForm(record)),
+      iconButton(
+        "copy",
+        `Duplicar manutenção ${label}`,
+        () => openForm(null, toFormInitial(record, { clearId: true })),
+      ),
+      iconButton("trash-2", `Excluir manutenção ${label}`, () => confirmDelete(record), "danger"),
     ]);
   }
 
@@ -270,8 +278,8 @@ export function createMaintenanceView({
       ?? (record ? toFormInitial(record) : { status: "com-problema", priority: "media" });
 
     openMaintenanceFormModal({
-      title: record ? "Editar registro de manutenção" : "Novo registro de manutenção",
-      submitLabel: record ? "Atualizar registro" : "Salvar registro",
+      title: record ? "Editar manutenção" : "Cadastrar manutenção",
+      submitLabel: record ? "Salvar alterações" : "Salvar manutenção",
       initial,
       allowSaveAndAnother: !record,
       devices: getState().devices,
@@ -282,7 +290,7 @@ export function createMaintenanceView({
         if (!result.ok) {
           toasts.show({
             type: "error",
-            title: "Revise o registro",
+            title: "Revise os campos da manutenção",
             message: result.errors.join(" "),
             timeout: 6800,
           });
@@ -290,11 +298,10 @@ export function createMaintenanceView({
         }
         toasts.show({
           type: "success",
-          title: record ? "Registro atualizado" : "Registro salvo",
-          message: record ? "As alterações foram salvas." : "O registro foi cadastrado.",
+          title: record ? "Manutenção atualizada" : "Manutenção cadastrada",
+          message: record ? "As alterações foram salvas." : `${payload.equipmentId || "Equipamento"} adicionado ao controle de manutenção.`,
           timeout: 3400,
         });
-        refs.storageStatus.textContent = "Dados locais salvos.";
         onChange();
         return mode !== "save-and-new";
       },
@@ -320,7 +327,7 @@ export function createMaintenanceView({
         if (errors.length) {
           toasts.show({
             type: "error",
-            title: "Alguns registros não foram criados",
+            title: "Algumas manutenções não foram cadastradas",
             message: errors.join(" • "),
             timeout: 7800,
           });
@@ -328,11 +335,10 @@ export function createMaintenanceView({
         if (created.length) {
           toasts.show({
             type: "success",
-            title: "Registros criados em massa",
-            message: `${created.length} novo${created.length > 1 ? "s" : ""} registro${created.length > 1 ? "s" : ""}.`,
+            title: "Manutenções cadastradas em lote",
+            message: `${created.length} nova${created.length > 1 ? "s" : ""} manutenç${created.length > 1 ? "ões" : "ão"} no controle.`,
             timeout: 3400,
           });
-          refs.storageStatus.textContent = "Dados locais salvos.";
           onChange();
         }
 
@@ -343,13 +349,14 @@ export function createMaintenanceView({
 
   async function confirmDelete(record: MaintenanceRecord): Promise<void> {
     const confirmed = await dialogs.dangerConfirm({
-      title: "Excluir registro de manutenção?",
-      message: "Tem certeza que deseja excluir este registro de manutenção?",
+      title: "Excluir esta manutenção?",
+      message:
+        "A manutenção sairá do controle. O histórico técnico desta entrada será perdido. Essa ação não pode ser desfeita.",
       details: [
         { label: "Identificador", value: record.equipmentId },
         { label: "Status", value: getMaintenanceStatusLabel(record.status) },
       ],
-      confirmLabel: "Excluir",
+      confirmLabel: "Excluir manutenção",
     });
     if (!confirmed) return;
 
@@ -357,18 +364,17 @@ export function createMaintenanceView({
     if (!result.ok) {
       toasts.show({
         type: "error",
-        title: "Não foi possível excluir",
+        title: "Não foi possível excluir a manutenção",
         message: result.errors.join(" "),
       });
       return;
     }
     toasts.show({
       type: "success",
-      title: "Registro excluído",
-      message: `O registro ${record.equipmentId} foi removido.`,
+      title: "Manutenção excluída",
+      message: `${record.equipmentId} foi removida do controle de manutenção.`,
       timeout: 3400,
     });
-    refs.storageStatus.textContent = "Dados locais salvos.";
     onChange();
   }
 
@@ -398,8 +404,7 @@ export function createMaintenanceView({
 
     dialogs.alert({
       tone: "neutral",
-      title: `Registro ${record.equipmentId}`,
-      kicker: "Detalhes",
+      title: `Manutenção ${record.equipmentId}`,
       icon: "wrench",
       message: `Histórico técnico:\n${historyLines}`,
       details,
@@ -413,7 +418,7 @@ export function createMaintenanceView({
       toasts.show({
         type: "warning",
         title: "Nada a exportar",
-        message: "Não há registros visíveis para exportar.",
+        message: "Nenhuma manutenção visível com os filtros atuais. Ajuste os filtros e tente novamente.",
       });
       return;
     }
@@ -434,8 +439,8 @@ export function createMaintenanceView({
     if (file.size > IMPORT_MAX_BYTES) {
       toasts.show({
         type: "error",
-        title: "Arquivo muito grande",
-        message: `Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`,
+        title: "Arquivo grande demais",
+        message: `O backup excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB. Reduza o arquivo e importe novamente.`,
       });
       input.value = "";
       return;
@@ -445,9 +450,10 @@ export function createMaintenanceView({
     reader.addEventListener("load", async () => {
       const confirmed = await dialogs.confirm({
         tone: "warning",
-        title: "Importar registros de manutenção?",
-        message: "Os registros atuais de manutenção serão substituídos. Rotinas e catálogos não serão afetados.",
-        confirmLabel: "Importar",
+        title: "Importar backup de manutenções?",
+        message:
+          "As manutenções atuais serão substituídas pelas do arquivo. Rotinas e demais catálogos permanecem intactos.",
+        confirmLabel: "Importar manutenções",
       });
       if (!confirmed) {
         input.value = "";
@@ -458,18 +464,17 @@ export function createMaintenanceView({
       if (!result.ok) {
         toasts.show({
           type: "error",
-          title: "Não foi possível importar",
+          title: "Não foi possível importar o backup",
           message: result.errors.join(" "),
         });
       } else {
         const total = getState().maintenanceRecords.length;
         toasts.show({
           type: "success",
-          title: "Importação concluída",
-          message: `${total} registro${total === 1 ? "" : "s"} de manutenção disponível${total === 1 ? "" : "is"} após a importação.`,
+          title: "Backup de manutenções importado",
+          message: `${total} manutenç${total === 1 ? "ão" : "ões"} disponíve${total === 1 ? "l" : "is"} após a importação.`,
           timeout: 3400,
         });
-        refs.storageStatus.textContent = "Dados locais salvos.";
         onChange();
       }
       input.value = "";
@@ -477,8 +482,8 @@ export function createMaintenanceView({
     reader.addEventListener("error", () => {
       toasts.show({
         type: "error",
-        title: "Falha na leitura",
-        message: "Não foi possível ler o arquivo selecionado.",
+        title: "Não foi possível ler o arquivo",
+        message: "Verifique se o backup (.json) não está corrompido e tente novamente.",
       });
       input.value = "";
     });
