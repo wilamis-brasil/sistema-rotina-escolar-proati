@@ -112,7 +112,6 @@
         <div class="operations-copy">
           <span class="eyebrow">Painel operacional</span>
           <strong id="today-label">Hoje</strong>
-          <span id="storage-status">Dados locais carregados.</span>
         </div>
         <div class="operations-actions">
           <div id="today-metrics" class="today-metrics" aria-label="Resumo da rotina"></div>
@@ -141,7 +140,6 @@
               <div>
                 <span class="eyebrow" id="routine-form-mode-label">Cadastro rápido</span>
                 <h2 id="routine-form-title">Nova rotina</h2>
-                <p>Registre retirada, turma, professor e dispositivos.</p>
               </div>
               <button class="icon-button" type="button" id="clear-routine-form" aria-label="Limpar formulário" title="Limpar formulário">
                 <i data-lucide="eraser" aria-hidden="true"></i>
@@ -492,7 +490,7 @@
           </div>
           <div class="notifications-section">
             <h3>Exportar para calendário</h3>
-            <p class="notice-text">Exporte todas as rotinas em um arquivo .ics recorrente para importar no Google Calendar, Outlook ou Apple Calendar — sem login, sem backend.</p>
+            <p class="notice-text">Exporte todas as rotinas em um arquivo .ics recorrente para importar no Google Calendar, Outlook ou Apple Calendar.</p>
             <div id="notifications-calendar" class="notifications-calendar"></div>
           </div>
         </section>
@@ -503,12 +501,10 @@
           <div class="panel-heading">
             <div>
               <h2 id="settings-heading">Configurações locais</h2>
-              <p>Dados salvos neste navegador, sem login e sem servidor.</p>
             </div>
           </div>
 
           <div class="stacked-form">
-            <p class="notice-text">Os dados ficam somente neste navegador e dispositivo. Arquivos JSON exportados podem conter nomes de professores, turmas e horários; guarde-os com cuidado em computadores compartilhados.</p>
             <div class="settings-footer">
               <div class="settings-data-actions">
                 <button class="button button-secondary" type="button" id="export-data-button">

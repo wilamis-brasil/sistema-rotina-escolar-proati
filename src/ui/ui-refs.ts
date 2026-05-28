@@ -7,7 +7,6 @@ export interface UIRefs {
   navButtons: NodeListOf<HTMLButtonElement>;
   views: NodeListOf<HTMLElement>;
   todayLabel: HTMLElement;
-  storageStatus: HTMLElement;
   todayMetrics: HTMLElement;
   undoDeleteButton: HTMLButtonElement;
   routineFormPanel: HTMLElement;
@@ -97,7 +96,6 @@ export function bindRefs(): UIRefs {
     navButtons: qsa<HTMLButtonElement>(".nav-button"),
     views: qsa<HTMLElement>(".view"),
     todayLabel: qs("#today-label"),
-    storageStatus: qs("#storage-status"),
     todayMetrics: qs("#today-metrics"),
     undoDeleteButton: qs("#undo-delete-button"),
     routineFormPanel: qs("#routine-form-panel"),

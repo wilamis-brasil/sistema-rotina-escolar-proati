@@ -12,7 +12,7 @@ export interface FeedbackPresenter {
   setFeedback(node: HTMLElement, message: string, type: string): void;
 }
 
-export function createFeedbackPresenter(toasts: ToastManager, storageStatus: HTMLElement): FeedbackPresenter {
+export function createFeedbackPresenter(toasts: ToastManager): FeedbackPresenter {
   function setFeedback(node: HTMLElement, message: string, type: string): void {
     node.textContent = message;
     node.dataset.type = type;
@@ -42,7 +42,6 @@ export function createFeedbackPresenter(toasts: ToastManager, storageStatus: HTM
       message: successMessage,
       timeout: 3600,
     });
-    storageStatus.textContent = "Dados locais salvos.";
   }
 
   return { showResult, setFeedback };

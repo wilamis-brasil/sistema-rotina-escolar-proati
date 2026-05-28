@@ -25,11 +25,9 @@ interface UIApi {
 export function createUI({
   getState,
   actions,
-  initialNotice,
 }: {
   getState: () => AppState;
   actions: AppActions;
-  initialNotice: string;
 }): UIApi {
   let refs: UIRefs;
   const dialogs = createDialogManager();
@@ -48,7 +46,7 @@ export function createUI({
 
   function init(): void {
     refs = bindRefs();
-    feedback = createFeedbackPresenter(toasts, refs.storageStatus);
+    feedback = createFeedbackPresenter(toasts);
     navigation = createNavigation({ refs });
     routineActions = createRoutineActions({
       actions,
@@ -125,9 +123,6 @@ export function createUI({
     renderStaticOptions();
     navigation.setView("today");
     routineForm.reset();
-    if (initialNotice) {
-      refs.storageStatus.textContent = initialNotice;
-    }
     render();
     notificationsView.start();
   }

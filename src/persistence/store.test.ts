@@ -32,10 +32,9 @@ describe("loadState — quarentena de dados corrompidos", () => {
     const corrupted = "{ this is not valid json";
     const storage = memoryStorageWithSnapshot({ [STORAGE_KEY]: corrupted });
 
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
 
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/quarentena/i);
 
     const keys = listKeys(storage);
     expect(keys).not.toContain(STORAGE_KEY);
@@ -49,10 +48,9 @@ describe("loadState — quarentena de dados corrompidos", () => {
     const corrupted = "lixo-binario";
     const storage = memoryStorageWithSnapshot({ [LEGACY_KEY]: corrupted });
 
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
 
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/quarentena/i);
 
     const keys = listKeys(storage);
     expect(keys).not.toContain(LEGACY_KEY);
@@ -80,9 +78,8 @@ describe("loadState — quarentena de dados corrompidos", () => {
     };
 
     expect(() => loadState(storage)).not.toThrow();
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/quarentena/i);
     expect(setItemCalls).toBeGreaterThan(0);
   });
 
@@ -100,9 +97,8 @@ describe("loadState — quarentena de dados corrompidos", () => {
     };
 
     expect(() => loadState(storage)).not.toThrow();
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/não foi possível|estado limpo/i);
   });
 
   it("carrega normalmente quando o JSON é válido", () => {
@@ -119,9 +115,8 @@ describe("loadState — quarentena de dados corrompidos", () => {
     });
     const storage = createMemoryStorage({ [STORAGE_KEY]: validState });
 
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/carregados/i);
   });
 
   it("descarta passwords legado ao importar e não exporta esse campo", () => {
@@ -156,8 +151,7 @@ describe("loadState — quarentena de dados corrompidos", () => {
 
   it("retorna estado novo quando não há nada no storage", () => {
     const storage = createMemoryStorage();
-    const { state, notice } = loadState(storage);
+    const state = loadState(storage);
     expect(state.routines).toEqual([]);
-    expect(notice).toMatch(/novo armazenamento/i);
   });
 });

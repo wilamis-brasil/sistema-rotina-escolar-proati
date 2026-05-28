@@ -124,7 +124,7 @@ export function createSettingsView({
     const confirmed = await dialogs.textConfirm({
       title: "Apagar dados locais?",
       message:
-        "Esta ação remove todas as rotinas, professores, turmas, dispositivos e configurações salvas neste navegador.",
+        "Esta ação remove todas as rotinas, professores, turmas, dispositivos e configurações.",
       expectedText: "APAGAR",
       confirmLabel: "Apagar dados",
     });

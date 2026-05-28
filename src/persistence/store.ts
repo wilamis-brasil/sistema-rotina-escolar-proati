@@ -41,19 +41,13 @@ function quarantineCorruptedKey(storage: StorageAdapter, key: string, raw: strin
   }
 }
 
-export function loadState(storage: StorageAdapter = browserStorage()): {
-  state: AppState;
-  notice: string;
-} {
+export function loadState(storage: StorageAdapter = browserStorage()): AppState {
   let currentRaw: string | null = null;
   try {
     currentRaw = storage.getItem(STORAGE_KEY);
   } catch (readError) {
     console.error("Falha ao acessar armazenamento local.", readError);
-    return {
-      state: createEmptyState(),
-      notice: "Não foi possível acessar os dados locais. Um estado limpo foi iniciado.",
-    };
+    return createEmptyState();
   }
 
   if (currentRaw) {
@@ -67,14 +61,11 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
       } catch (persistError) {
         console.error("Falha ao atualizar dados locais migrados.", persistError);
       }
-      return { state: migrated, notice: "Dados locais carregados." };
+      return migrated;
     } catch (parseError) {
       console.error("Dados locais corrompidos ou incompatíveis. Movendo para quarentena.", parseError);
       quarantineCorruptedKey(storage, STORAGE_KEY, currentRaw);
-      return {
-        state: createEmptyState(),
-        notice: "Dados locais corrompidos foram movidos para quarentena. Um estado limpo foi iniciado.",
-      };
+      return createEmptyState();
     }
   }
 
@@ -99,18 +90,15 @@ export function loadState(storage: StorageAdapter = browserStorage()): {
       } catch (persistError) {
         console.error("Falha ao migrar dados locais para nova chave.", persistError);
       }
-      return { state: migrated, notice: "Dados locais migrados para a nova chave de armazenamento." };
+      return migrated;
     } catch (parseError) {
       console.error("Dados legados corrompidos ou incompatíveis. Movendo para quarentena.", parseError);
       quarantineCorruptedKey(storage, legacyKey, legacyRaw);
-      return {
-        state: createEmptyState(),
-        notice: "Dados legados corrompidos foram movidos para quarentena. Um estado limpo foi iniciado.",
-      };
+      return createEmptyState();
     }
   }
 
-  return { state: createEmptyState(), notice: "Novo armazenamento local criado neste navegador." };
+  return createEmptyState();
 }
 
 export function saveState(

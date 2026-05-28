@@ -43,7 +43,6 @@ type MaintenanceRefs = Pick<
   | "maintenanceExportJson"
   | "maintenanceImportFile"
   | "maintenanceTableWrap"
-  | "storageStatus"
 >;
 
 interface MaintenanceView {
@@ -294,7 +293,6 @@ export function createMaintenanceView({
           message: record ? "As alterações foram salvas." : "O registro foi cadastrado.",
           timeout: 3400,
         });
-        refs.storageStatus.textContent = "Dados locais salvos.";
         onChange();
         return mode !== "save-and-new";
       },
@@ -332,7 +330,6 @@ export function createMaintenanceView({
             message: `${created.length} novo${created.length > 1 ? "s" : ""} registro${created.length > 1 ? "s" : ""}.`,
             timeout: 3400,
           });
-          refs.storageStatus.textContent = "Dados locais salvos.";
           onChange();
         }
 
@@ -368,7 +365,6 @@ export function createMaintenanceView({
       message: `O registro ${record.equipmentId} foi removido.`,
       timeout: 3400,
     });
-    refs.storageStatus.textContent = "Dados locais salvos.";
     onChange();
   }
 
@@ -469,7 +465,6 @@ export function createMaintenanceView({
           message: `${total} registro${total === 1 ? "" : "s"} de manutenção disponível${total === 1 ? "" : "is"} após a importação.`,
           timeout: 3400,
         });
-        refs.storageStatus.textContent = "Dados locais salvos.";
         onChange();
       }
       input.value = "";

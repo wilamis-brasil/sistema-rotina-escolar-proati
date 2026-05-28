@@ -43,7 +43,6 @@ type RoutineFormRefs = Pick<
   | "saveRoutineButton"
   | "clearRoutineForm"
   | "addDeviceToRoutine"
-  | "storageStatus"
   | "teachersDatalist"
   | "subjectsDatalist"
 >;
@@ -103,7 +102,6 @@ export function createRoutineForm({
     feedback.showResult(result, refs.routineFeedback, "Rotina salva.", {
       successTitle: "Rotina salva",
     });
-    refs.storageStatus.textContent = "Dados locais salvos.";
     onChange();
   }
 
