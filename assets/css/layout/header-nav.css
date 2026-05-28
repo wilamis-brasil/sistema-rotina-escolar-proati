@@ -64,7 +64,11 @@
   .menu-button[aria-expanded="true"] {
     color: var(--text);
     background: var(--surface-soft);
-    border-color: var(--border-strong);
+    border-color: var(--accent-border);
+  }
+
+  .menu-button[aria-expanded="true"] .menu-button-label {
+    color: var(--accent);
   }
 
   .menu-button-copy {
@@ -132,6 +136,7 @@
   }
 
   .nav-button {
+    position: relative;
     justify-content: flex-start;
     width: 100%;
     height: var(--main-menu-item-height);
@@ -145,6 +150,16 @@
     white-space: normal;
   }
 
+  .nav-button::before {
+    content: "";
+    width: 3px;
+    height: 24px;
+    flex: 0 0 auto;
+    margin-left: -4px;
+    background: transparent;
+    border-radius: var(--radius-pill);
+  }
+
   .nav-button:hover {
     color: var(--text);
     background: var(--surface-soft);
@@ -152,9 +167,17 @@
   }
 
   .nav-button.is-active {
-    color: #ffffff;
-    background: #000000;
-    border-color: #000000;
+    color: var(--text);
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+  }
+
+  .nav-button.is-active::before {
+    background: var(--accent);
+  }
+
+  .nav-button.is-active svg {
+    color: var(--accent);
   }
 
   .nav-button-copy {
@@ -175,6 +198,6 @@
   }
 
   .nav-button.is-active .nav-button-copy small {
-    color: rgba(255, 255, 255, 0.74);
+    color: var(--muted);
   }
 }

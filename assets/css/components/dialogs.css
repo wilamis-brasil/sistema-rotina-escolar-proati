@@ -19,38 +19,38 @@
     z-index: 70;
     display: grid;
     place-items: center;
-    padding: 24px;
-    background: rgba(0, 0, 0, 0.46);
-    -webkit-backdrop-filter: blur(7px);
-    backdrop-filter: blur(7px);
+    padding: var(--space-6);
+    background: rgba(0, 0, 0, 0.42);
+    -webkit-backdrop-filter: blur(6px);
+    backdrop-filter: blur(6px);
   }
 
   .dialog {
     display: grid;
-    gap: 18px;
+    gap: var(--space-5);
     width: min(540px, 100%);
     max-height: min(720px, calc(100vh - 48px));
-    padding: 22px;
+    padding: var(--space-6);
     overflow-y: auto;
     color: var(--text);
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 8px;
-    box-shadow: 0 28px 90px rgba(0, 0, 0, 0.28);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-modal);
   }
 
   .dialog[data-tone="danger"] {
-    border-top: 5px solid var(--danger);
+    border-top: 3px solid var(--danger);
   }
 
   .dialog[data-tone="warning"] {
-    border-top: 5px solid var(--warning);
+    border-top: 3px solid var(--warning);
   }
 
   .dialog-header {
     display: grid;
     grid-template-columns: 44px minmax(0, 1fr);
-    gap: 14px;
+    gap: var(--space-3);
     align-items: center;
   }
 
@@ -71,9 +71,9 @@
 
   .dialog-kicker {
     display: block;
-    margin-bottom: 4px;
+    margin-bottom: var(--space-1);
     color: var(--muted);
-    font-size: 0.72rem;
+    font-size: var(--font-xs);
     font-weight: 700;
     letter-spacing: 0.04em;
     text-transform: uppercase;
@@ -87,8 +87,8 @@
   }
 
   .dialog h2 {
-    font-size: clamp(1.24rem, 1rem + 0.8vw, 1.72rem);
-    line-height: 1.12;
+    font-size: clamp(1.18rem, 1rem + 0.6vw, 1.5rem);
+    line-height: 1.18;
     font-weight: 800;
     letter-spacing: -0.005em;
   }
@@ -101,11 +101,11 @@
   .dialog-details {
     display: grid;
     grid-template-columns: minmax(96px, 0.38fr) minmax(0, 1fr);
-    gap: 8px 14px;
-    padding: 14px;
+    gap: var(--space-2) var(--space-3);
+    padding: var(--space-3) var(--space-4);
     background: var(--surface-soft);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: var(--radius-md);
   }
 
   .dialog-details dt,
@@ -117,7 +117,7 @@
 
   .dialog-details dt {
     color: var(--muted);
-    font-size: 0.74rem;
+    font-size: var(--font-xs);
     font-weight: 700;
     letter-spacing: 0.02em;
     text-transform: uppercase;
@@ -131,23 +131,14 @@
 
   .dialog-confirmation {
     display: grid;
-    gap: 8px;
+    gap: var(--space-2);
     font-weight: 700;
-  }
-
-  .dialog-confirmation input {
-    min-height: var(--control-height);
-    padding: 10px 12px;
-    color: var(--text);
-    background: var(--surface-soft);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius);
   }
 
   .dialog-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 10px;
+    gap: var(--space-2);
   }
 
   .dialog-actions .button {
