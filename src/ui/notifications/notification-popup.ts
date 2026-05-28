@@ -210,12 +210,11 @@ function trailingSingleAction(item: MoreMenuItem): HTMLElement {
   const btn = el(
     "button",
     {
-      className: "button button-secondary button-small",
+      className: "button button-secondary button-small notification-popup-trailing",
       attrs: { type: "button", title: item.label, "aria-label": item.label },
     },
     [icon(item.iconName), span(item.label)],
   );
-  btn.style.marginLeft = "auto";
   btn.addEventListener("click", item.onSelect);
   return btn;
 }

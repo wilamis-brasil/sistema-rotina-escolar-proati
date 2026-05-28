@@ -1,39 +1,34 @@
 @layer components {
   .empty-state {
     display: grid;
-    min-height: 118px;
+    min-height: 120px;
     place-items: center;
-    gap: 9px;
-    padding: 22px;
+    gap: var(--space-2);
+    padding: var(--space-6);
     text-align: center;
     background: var(--surface-soft);
-    border-radius: var(--radius);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius-md);
   }
 
   .empty-state strong {
     color: var(--text);
+    font-size: var(--font-md);
+    font-weight: 700;
   }
 
   .empty-state span {
     max-width: 420px;
+    color: var(--muted);
     line-height: 1.48;
   }
 
   .empty-state-action {
-    min-height: 210px;
+    min-height: 200px;
   }
 
   .empty-state-action .button-primary {
-    color: #ffffff;
-    background: var(--accent);
-    border-color: var(--accent);
     min-width: 180px;
     padding-inline: 18px;
-  }
-
-  .empty-state-action .button-primary:hover {
-    color: #ffffff;
-    background: #e60009;
-    border-color: #e60009;
   }
 }
