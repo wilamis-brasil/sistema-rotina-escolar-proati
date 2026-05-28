@@ -53,6 +53,7 @@ export function createDialogManager({
   function confirm(options: DialogOptions = {}): Promise<boolean> {
     return openDialog({
       tone: "neutral",
+      title: "Confirmar esta ação?",
       confirmLabel: "Confirmar",
       cancelLabel: "Cancelar",
       ...options,
@@ -62,8 +63,8 @@ export function createDialogManager({
   function dangerConfirm(options: DialogOptions = {}): Promise<boolean> {
     return openDialog({
       tone: "danger",
-      title: "Confirmar ação",
-      confirmLabel: "Confirmar",
+      title: "Confirmar exclusão?",
+      confirmLabel: "Excluir",
       cancelLabel: "Cancelar",
       closeOnBackdrop: false,
       ...options,
@@ -73,8 +74,8 @@ export function createDialogManager({
   function textConfirm(options: DialogOptions = {}): Promise<boolean> {
     return openDialog({
       tone: "danger",
-      title: "Confirmar ação",
-      confirmLabel: "Confirmar",
+      title: "Confirmar exclusão definitiva?",
+      confirmLabel: "Excluir",
       cancelLabel: "Cancelar",
       expectedText: "",
       closeOnBackdrop: false,
@@ -85,7 +86,8 @@ export function createDialogManager({
   function alert(options: DialogOptions = {}): Promise<boolean> {
     return openDialog({
       tone: "neutral",
-      confirmLabel: "Entendi",
+      title: "Mensagem do sistema",
+      confirmLabel: "Fechar",
       cancelLabel: null,
       role: "alertdialog",
       ...options,
@@ -121,7 +123,7 @@ export function createDialogManager({
               type: "text",
               autocomplete: "off",
               spellcheck: "false",
-              "aria-label": `Digite ${options.expectedText} para confirmar`,
+              "aria-label": `Digite ${options.expectedText} em letras maiúsculas para confirmar a exclusão`,
             },
           })
         : null;
@@ -150,7 +152,7 @@ export function createDialogManager({
             el("span", { className: "dialog-icon" }, [icon(options.icon ?? TONE_ICONS[tone] ?? "message-square")]),
             el("div", {}, [
               options.kicker ? el("span", { className: "dialog-kicker", text: options.kicker }) : null,
-              el("h2", { text: options.title ?? "Mensagem", attrs: { id: titleId } }),
+              el("h2", { text: options.title ?? "Mensagem do sistema", attrs: { id: titleId } }),
             ]),
           ]),
           options.message ? el("p", { className: "dialog-message", text: options.message, attrs: { id: messageId } }) : null,
@@ -231,7 +233,7 @@ function detailsList(details: DialogDetail[]): HTMLElement {
 
 function textConfirmation(expectedText: string, input: HTMLInputElement): HTMLLabelElement {
   return el("label", { className: "dialog-confirmation" }, [
-    el("span", { text: `Digite ${expectedText} para confirmar.` }),
+    el("span", { text: `Para confirmar, digite ${expectedText} em letras maiúsculas:` }),
     input,
   ]);
 }

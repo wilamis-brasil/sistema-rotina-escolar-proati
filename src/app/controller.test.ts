@@ -23,7 +23,7 @@ describe("importStateFromText", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) {
-      expect(result.errors.join(" ")).toContain("Arquivo JSON");
+      expect(result.errors.join(" ")).toContain("Backup JSON");
     }
   });
 

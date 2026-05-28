@@ -22,20 +22,25 @@ export function createRoutineActions({
 }): RoutineActions {
   function duplicateRoutine(routineId: string): void {
     const result = actions.duplicateRoutine(routineId);
-    feedback.showResult(result, feedbackNode, "Rotina duplicada.");
+    feedback.showResult(result, feedbackNode, "Rotina duplicada na agenda semanal.", {
+      successTitle: "Rotina duplicada",
+    });
     onChange();
   }
 
   async function confirmDeleteRoutine(routineId: string): Promise<void> {
     const confirmed = await dialogs.dangerConfirm({
-      title: "Excluir rotina?",
-      message: "A rotina será removida da agenda. Você ainda poderá usar Desfazer logo após a exclusão.",
-      confirmLabel: "Excluir",
+      title: "Excluir esta rotina?",
+      message:
+        "A rotina sairá da agenda semanal e dos avisos do dia. Use Desfazer logo após a exclusão para recuperá-la.",
+      confirmLabel: "Excluir rotina",
     });
     if (!confirmed) return;
 
     const result = actions.deleteRoutine(routineId);
-    feedback.showResult(result, feedbackNode, "Rotina excluída.");
+    feedback.showResult(result, feedbackNode, "Rotina excluída da agenda semanal.", {
+      successTitle: "Rotina excluída",
+    });
     onChange();
   }
 

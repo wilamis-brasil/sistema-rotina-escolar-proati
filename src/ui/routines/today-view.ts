@@ -47,7 +47,7 @@ export function createTodayView({
 
     if (!todayId) {
       refs.todaySummary.textContent = "Sábado e domingo ficam fora da rotina padrão.";
-      replaceChildren(refs.todayRoutines, [todayEmptyState("Sem rotina de dia útil para hoje.")]);
+      replaceChildren(refs.todayRoutines, [todayEmptyState("Nenhuma retirada para o fim de semana.")]);
       return;
     }
 
@@ -67,7 +67,9 @@ export function createTodayView({
         ? visibleGroups.map((group) => smartRoutineCard(group))
         : [
             todayEmptyState(
-              todayRoutines.length ? "Nenhuma retirada pendente para hoje." : "Nenhuma rotina cadastrada para hoje.",
+              todayRoutines.length
+                ? "Todas as retiradas de hoje já foram concluídas."
+                : "Nenhuma rotina cadastrada para hoje.",
             ),
           ],
     );
@@ -90,9 +92,21 @@ export function createTodayView({
       : pendingRoutines.find((routine) => (getRoutineStartMinutes(routine) ?? 0) >= currentMinutes);
 
     replaceChildren(refs.todayMetrics, [
-      metricItem("Hoje", pendingRoutines.length.toString(), pendingRoutines.length === 1 ? "pendente" : "pendentes"),
-      metricItem("Próxima", nextRoutine ? nextRoutine.startTime : "Livre", nextRoutine ? nextRoutine.room : "sem pendência"),
-      metricItem("Semana", state.routines.length.toString(), state.routines.length === 1 ? "rotina" : "rotinas"),
+      metricItem(
+        "Retiradas hoje",
+        pendingRoutines.length.toString(),
+        pendingRoutines.length === 1 ? "pendente" : "pendentes",
+      ),
+      metricItem(
+        "Próxima retirada",
+        nextRoutine ? nextRoutine.startTime : "Livre",
+        nextRoutine ? nextRoutine.room : "sem pendência",
+      ),
+      metricItem(
+        "Rotinas na semana",
+        state.routines.length.toString(),
+        state.routines.length === 1 ? "rotina" : "rotinas",
+      ),
     ]);
   }
 
@@ -115,7 +129,7 @@ export function createTodayView({
             el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
           ]),
           el("div", { className: "routine-group-status" }, [
-            el("span", { className: "routine-group-badge", text: "Agrupado" }),
+            el("span", { className: "routine-group-badge", text: "Retiradas agrupadas" }),
           ]),
         ]),
         detailLine("user", routine.teacher),
@@ -126,11 +140,11 @@ export function createTodayView({
         routine.notes ? detailLine("file-text", routine.notes) : null,
         el("div", { className: "routine-meta" }, [
           el("span", { text: groupedLabel }),
-          el("span", { text: `Atualizado: ${formatDateTime(latestRoutineUpdatedAt(group.routines))}` }),
+          el("span", { text: `Atualizado em ${formatDateTime(latestRoutineUpdatedAt(group.routines))}` }),
         ]),
         el("p", { className: "routine-group-note" }, [
           icon("info"),
-          span("Use a Rotina semanal para editar horários individuais."),
+          span("Abra a Rotina semanal para editar cada retirada individualmente."),
         ]),
       ].filter(Boolean),
     );
@@ -150,9 +164,15 @@ export function createTodayView({
             el("span", { className: "routine-day", text: getWeekdayLabel(routine.weekday) }),
           ]),
           el("div", { className: "routine-actions" }, [
-            actionButton("copy", "Duplicar", "Duplicar rotina", () => callbacks.onDuplicate(routine.id)),
-            actionButton("pencil", "Editar", "Editar rotina", () => callbacks.onEdit(routine)),
-            actionButton("trash-2", "Excluir", "Excluir rotina", () => callbacks.onDelete(routine.id), "danger"),
+            actionButton("copy", "Duplicar", "Duplicar esta rotina", () => callbacks.onDuplicate(routine.id)),
+            actionButton("pencil", "Editar", "Editar esta rotina", () => callbacks.onEdit(routine)),
+            actionButton(
+              "trash-2",
+              "Excluir",
+              "Excluir esta rotina",
+              () => callbacks.onDelete(routine.id),
+              "danger",
+            ),
           ]),
         ]),
         notificationBadge,
@@ -163,7 +183,7 @@ export function createTodayView({
         detailLine("laptop", routine.devices.join(", ")),
         routine.notes ? detailLine("file-text", routine.notes) : null,
         el("div", { className: "routine-meta" }, [
-          el("span", { text: `Atualizado: ${formatDateTime(routine.updatedAt)}` }),
+          el("span", { text: `Atualizado em ${formatDateTime(routine.updatedAt)}` }),
         ]),
       ].filter(Boolean),
     );
@@ -183,7 +203,7 @@ export function createTodayView({
     return el("div", { className: "empty-state empty-state-action" }, [
       el("strong", { text: message }),
       el("span", {
-        text: "Cadastre horário, professor, turma, alunos e dispositivos da retirada.",
+        text: "Informe horário, professor, turma, alunos e equipamentos da retirada.",
       }),
       button,
     ]);
@@ -199,7 +219,9 @@ function todaySummaryText(
   currentMinutes: number,
 ): string {
   if (pendingRoutines.length === 0) {
-    return totalTodayRoutines > 0 ? "Nenhuma retirada pendente para hoje." : "Nenhuma rotina cadastrada para hoje.";
+    return totalTodayRoutines > 0
+      ? "Todas as retiradas de hoje já foram concluídas."
+      : "Nenhuma rotina cadastrada para hoje.";
   }
 
   const activeNow = pendingRoutines.some((routine) => isRoutineActiveNow(routine, currentMinutes));
@@ -209,13 +231,13 @@ function todaySummaryText(
     return activeNow ? startMinutes > currentMinutes : startMinutes >= currentMinutes;
   });
   const cardsLabel =
-    visibleGroups.length === 1 ? "1 agrupamento ativo." : `${visibleGroups.length} agrupamentos ativos.`;
+    visibleGroups.length === 1 ? "1 retirada em destaque." : `${visibleGroups.length} retiradas em destaque.`;
   const pendingLabel =
     pendingRoutines.length === 1 ? "1 retirada restante hoje." : `${pendingRoutines.length} retiradas restantes hoje.`;
   const nextLabel = activeNow
     ? nextRoutine
-      ? `Há retirada em andamento. Próxima às ${nextRoutine.startTime}.`
-      : "Há retirada em andamento."
+      ? `Retirada em andamento. Próxima às ${nextRoutine.startTime}.`
+      : "Retirada em andamento."
     : nextRoutine
       ? `Próxima retirada às ${nextRoutine.startTime}.`
       : "";
@@ -241,11 +263,11 @@ function buildNotificationBadge(routine: Routine, globalEnabled: boolean, defaul
   const now = new Date();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();
 
-  let label = `Notificação ${lead > 0 ? `${lead} min antes` : "no início"}`;
+  let label = `Aviso ${lead > 0 ? `${lead} min antes` : "no início"}`;
   if (startMinutes !== null) {
     const fireMinutes = startMinutes - (lead > 0 ? lead : 0);
     if (currentMinutes >= startMinutes && (!routine.endTime || (timeToMinutes(routine.endTime) ?? startMinutes) > currentMinutes)) {
-      label = "Agora";
+      label = "Retirada em andamento";
     } else if (currentMinutes >= fireMinutes && currentMinutes < startMinutes) {
       label = "Aviso ativo";
     }

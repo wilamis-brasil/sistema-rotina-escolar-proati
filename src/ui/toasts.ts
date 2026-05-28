@@ -100,8 +100,8 @@ function closeButton(onClick: () => void): HTMLButtonElement {
       className: "toast-close",
       attrs: {
         type: "button",
-        "aria-label": "Fechar mensagem",
-        title: "Fechar mensagem",
+        "aria-label": "Fechar este aviso temporário",
+        title: "Fechar aviso",
       },
     },
     [icon("x")],

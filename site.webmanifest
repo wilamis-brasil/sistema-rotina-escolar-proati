@@ -1,7 +1,7 @@
 {
   "name": "Sistema de Rotina Escolar PROATI",
   "short_name": "PROATI",
-  "description": "Rotina local para retirada, uso e devolucao de dispositivos escolares.",
+  "description": "Agenda local da escola para retirada, uso e devolucao de equipamentos eletronicos.",
   "id": "./",
   "start_url": "./",
   "display": "standalone",

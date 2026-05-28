@@ -40,20 +40,20 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
 
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  const idInput = textInput("Nº / Identificador", "Ex.: 01", true, options.initial.equipmentId, 60);
+  const idInput = textInput("Identificador do equipamento", "Ex.: NB-014, CB-007", true, options.initial.equipmentId, 60);
   const sortedTypeNames = [...options.devices].map((d) => d.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
   const typeNameSet = new Set(sortedTypeNames);
   const typeOpts: Array<{ value: string; label: string }> = [
-    { value: "", label: "— selecione o tipo —" },
+    { value: "", label: "Selecione o tipo de equipamento" },
     ...sortedTypeNames.map((name) => ({ value: name, label: name })),
   ];
   if (options.initial.type && !typeNameSet.has(options.initial.type)) {
     typeOpts.push({ value: options.initial.type, label: `${options.initial.type} (legado)` });
   }
-  const typeSelect = selectInput("Tipo *", typeOpts, options.initial.type ?? "");
-  const brandInput = textInput("Modelo", "Ex.: UL124", false, options.initial.brandModel, 80);
-  const locationInput = textInput("Local", "Ex.: Sala 12, Lab. Informática", false, options.initial.location, 80);
-  const problemInput = textInput("Problema principal", "Ex.: Não liga", true, options.initial.mainProblem, 200);
+  const typeSelect = selectInput("Tipo de equipamento", typeOpts, options.initial.type ?? "", true);
+  const brandInput = textInput("Marca e modelo", "Ex.: Positivo UL124", false, options.initial.brandModel, 80);
+  const locationInput = textInput("Local atual", "Ex.: Sala 12, Lab. Informática", false, options.initial.location, 80);
+  const problemInput = textInput("Problema principal", "Ex.: Não liga, tela quebrada", true, options.initial.mainProblem, 200);
   const techArea = textAreaWithMax("Descrição técnica", options.initial.technicalDescription, 500);
   const prioritySelect = selectInput(
     "Prioridade",
@@ -67,8 +67,8 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
   );
   const ticketInput = textInput("Número do chamado", "Ex.: 12345", false, options.initial.ticketNumber, 30);
   const responsibleInput = textInput(
-    "Responsável / contato",
-    "Ex.: PROATEC – Maria",
+    "Responsável pelo acompanhamento",
+    "Ex.: PROATEC - Maria",
     false,
     options.initial.responsibleContact,
     80,
@@ -79,7 +79,7 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
   const feedback = el("p", { className: "form-feedback", attrs: { role: "alert" } });
 
   const cancelBtn = secondaryButton("Cancelar");
-  const saveAndNewBtn = options.allowSaveAndAnother ? secondaryButton("Salvar e adicionar outro") : null;
+  const saveAndNewBtn = options.allowSaveAndAnother ? secondaryButton("Salvar e cadastrar outra") : null;
   const submitBtn = primaryButton(options.submitLabel);
 
   const dialog = el(
@@ -96,7 +96,6 @@ export function openMaintenanceFormModal(options: MaintenanceFormOptions): void 
       el("div", { className: "dialog-header" }, [
         el("span", { className: "dialog-icon" }, [icon("wrench")]),
         el("div", {}, [
-          el("span", { className: "dialog-kicker", text: "Manutenção" }),
           el("h2", { text: options.title, attrs: { id: "maintenance-form-title" } }),
         ]),
       ]),
@@ -210,7 +209,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   container.appendChild(backdrop);
   const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
 
-  const problemInput = textInput("Problema principal", "Ex.: Não liga", true);
+  const problemInput = textInput("Problema principal", "Ex.: Não liga, tela quebrada", true);
   const prioritySelect = selectInput(
     "Prioridade",
     MAINTENANCE_PRIORITIES.map((p) => ({ value: p.value, label: p.label })),
@@ -222,14 +221,14 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
     "com-problema",
   );
   const techArea = textAreaWithMax("Descrição técnica (opcional)", "", 500);
-  const actionsArea = textAreaWithMax("Ações realizadas (opcional)", "", 500);
+  const actionsArea = textAreaWithMax("Ações já realizadas (opcional)", "", 500);
   const notesArea = textAreaWithMax("Observações (opcional)", "", 500);
 
   const devicesContainer = el("div", { className: "maintenance-bulk-devices" });
   const addDeviceBtn = el(
     "button",
     { className: "button button-secondary maintenance-bulk-add-device", attrs: { type: "button" } },
-    [icon("plus"), el("span", { text: "Adicionar equipamento" })],
+    [icon("plus"), el("span", { text: "Adicionar outro equipamento ao lote" })],
   ) as HTMLButtonElement;
 
   const rows: BulkDeviceRow[] = [];
@@ -244,25 +243,29 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   }
 
   function addDeviceRow(defaults: BulkDeviceDefaults = {}): BulkDeviceRow {
-    const equipmentId = textInput("Identificador / Número", "Ex.: TAB-003", true, defaults.equipmentId);
+    const equipmentId = textInput("Identificador do equipamento", "Ex.: TAB-003", true, defaults.equipmentId);
     const bulkSortedNames = [...options.devices].map((d) => d.name).sort((a, b) => a.localeCompare(b, "pt-BR"));
     const bulkNameSet = new Set(bulkSortedNames);
     const bulkTypeOpts: Array<{ value: string; label: string }> = [
-      { value: "", label: "— selecione o tipo —" },
+      { value: "", label: "Selecione o tipo de equipamento" },
       ...bulkSortedNames.map((name) => ({ value: name, label: name })),
     ];
     if (defaults.type && !bulkNameSet.has(defaults.type)) {
       bulkTypeOpts.push({ value: defaults.type, label: `${defaults.type} (legado)` });
     }
-    const type = selectInput("Tipo *", bulkTypeOpts, defaults.type ?? "");
-    const brandModel = textInput("Modelo", "Ex.: Positivo T1060", false, defaults.brandModel);
-    const location = textInput("Local", "Ex.: Sala 12", false, defaults.location);
+    const type = selectInput("Tipo de equipamento", bulkTypeOpts, defaults.type ?? "", true);
+    const brandModel = textInput("Marca e modelo", "Ex.: Positivo T1060", false, defaults.brandModel);
+    const location = textInput("Local atual", "Ex.: Sala 12", false, defaults.location);
 
     const removeBtn = el(
       "button",
       {
         className: "icon-button is-danger maintenance-bulk-device-remove",
-        attrs: { type: "button", "aria-label": "Remover equipamento", title: "Remover equipamento" },
+        attrs: {
+          type: "button",
+          "aria-label": "Remover este equipamento do lote",
+          title: "Remover do lote",
+        },
       },
       [icon("trash-2")],
     ) as HTMLButtonElement;
@@ -306,7 +309,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
   const feedback = el("p", { className: "form-feedback", attrs: { role: "alert" } });
 
   const cancelBtn = secondaryButton("Cancelar");
-  const submitBtn = primaryButton("Adicionar em massa");
+  const submitBtn = primaryButton("Cadastrar lote de manutenções");
 
   const dialog = el(
     "section",
@@ -318,8 +321,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
       el("div", { className: "dialog-header" }, [
         el("span", { className: "dialog-icon" }, [icon("list-plus")]),
         el("div", {}, [
-          el("span", { className: "dialog-kicker", text: "Manutenção" }),
-          el("h2", { text: "Adicionar registros em massa", attrs: { id: "maintenance-bulk-title" } }),
+          el("h2", { text: "Cadastrar manutenções em lote", attrs: { id: "maintenance-bulk-title" } }),
         ]),
       ]),
       el("form", { className: "maintenance-form" }, [
@@ -328,7 +330,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
             el("h3", { className: "maintenance-bulk-section-title", text: "Dados comuns do lote" }),
             el("p", {
               className: "maintenance-bulk-section-hint",
-              text: "Aplicado a todos os equipamentos abaixo.",
+              text: "Aplicados a todos os equipamentos do lote.",
             }),
           ]),
           el("div", { className: "maintenance-form-grid" }, [
@@ -342,10 +344,10 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
         ]),
         el("section", { className: "maintenance-bulk-section" }, [
           el("header", { className: "maintenance-bulk-section-header" }, [
-            el("h3", { className: "maintenance-bulk-section-title", text: "Equipamentos" }),
+            el("h3", { className: "maintenance-bulk-section-title", text: "Equipamentos do lote" }),
             el("p", {
               className: "maintenance-bulk-section-hint",
-              text: "Adicione um ou mais equipamentos. Tipos e identificadores podem variar.",
+              text: "Inclua um ou mais equipamentos. Tipos e identificadores podem variar.",
             }),
           ]),
           devicesContainer,
@@ -379,10 +381,12 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
     const mainProblem = problemInput.input.value.trim();
     const errors: string[] = [];
 
-    if (!mainProblem) errors.push("Informe o problema principal.");
-    if (rows.length === 0) errors.push("Adicione ao menos um equipamento.");
+    if (!mainProblem) errors.push("Informe o problema principal aplicado ao lote.");
+    if (rows.length === 0) errors.push("Adicione ao menos um equipamento ao lote.");
     if (rows.length > MAX_MAINTENANCE_BATCH) {
-      errors.push(`O lote pode ter no máximo ${MAX_MAINTENANCE_BATCH} equipamentos. Reduza para ${rows.length - MAX_MAINTENANCE_BATCH} item(s).`);
+      errors.push(
+        `O lote suporta até ${MAX_MAINTENANCE_BATCH} equipamentos. Remova ${rows.length - MAX_MAINTENANCE_BATCH} item(ns) para continuar.`,
+      );
     }
 
     const entries: MaintenancePayload[] = [];
@@ -390,7 +394,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
       const equipmentId = row.equipmentId.value.trim();
       const type = row.type.value.trim();
       if (!equipmentId) errors.push(`Equipamento #${idx + 1}: informe o identificador.`);
-      if (!type) errors.push(`Equipamento #${idx + 1}: informe o tipo.`);
+      if (!type) errors.push(`Equipamento #${idx + 1}: selecione o tipo.`);
       if (equipmentId && type) {
         entries.push({
           equipmentId,
@@ -424,7 +428,7 @@ export function openMaintenanceBulkModal(options: MaintenanceBulkOptions): void 
 
   addDeviceBtn.addEventListener("click", () => {
     if (rows.length >= MAX_MAINTENANCE_BATCH) {
-      feedback.textContent = `Limite de ${MAX_MAINTENANCE_BATCH} equipamentos por lote atingido.`;
+      feedback.textContent = `Limite de ${MAX_MAINTENANCE_BATCH} equipamentos por lote atingido. Cadastre os demais em um novo lote.`;
       feedback.dataset.type = "error";
       return;
     }
@@ -485,12 +489,16 @@ function selectInput(
   label: string,
   options: Array<{ value: string; label: string }>,
   value: string,
+  required = false,
 ): Field<HTMLSelectElement> {
-  const input = el("select", { className: "form-input" }) as HTMLSelectElement;
+  const input = el("select", {
+    className: "form-input",
+    attrs: { ...(required ? { required: "" } : {}) },
+  }) as HTMLSelectElement;
   options.forEach((opt) => input.appendChild(option(opt.value, opt.label)));
   input.value = value;
   const wrap = el("label", { className: "maintenance-field" }, [
-    el("span", { className: "form-label", text: label }),
+    el("span", { className: "form-label", text: required ? `${label} *` : label }),
     input,
   ]) as HTMLLabelElement;
   return { wrap, input };

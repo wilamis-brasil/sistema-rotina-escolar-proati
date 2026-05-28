@@ -4,30 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light">
-    <meta name="description" content="Kick OFF - Função Estagiário PROATI: rotina local para retirada, uso e devolução de dispositivos eletrônicos.">
+    <meta name="description" content="Sistema de Rotina Escolar PROATI: agenda local de retirada, uso e devolução de equipamentos eletrônicos da escola.">
     <meta name="application-name" content="Sistema de Rotina Escolar PROATI">
     <meta name="apple-mobile-web-app-title" content="PROATI">
-    <title>Sistema de Rotina Escolar para - PROATI</title>
+    <title>Sistema de Rotina Escolar PROATI</title>
     <link rel="icon" href="./favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
     <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-    <link rel="manifest" href="./site.webmanifest">
+    <link rel="manifest" href="./site.webmanifest">
     <script type="module" crossorigin src="./assets/index-DhvE-MNQ.js"></script>
     <link rel="stylesheet" crossorigin href="./assets/index-CfyXIxHq.css">
   </head>
   <body>
     <header class="app-header">
-      <a class="site-logo" href="./" aria-label="Kick OFF - Função Estagiário PROATI">
-        <img src="./logo-proati.png" alt="SP.PROATI">
+      <a class="site-logo" href="./" aria-label="Sistema de Rotina Escolar PROATI - Início">
+        <img src="./logo-proati.png" alt="Sistema de Rotina Escolar PROATI">
       </a>
       <nav class="main-nav" aria-label="Navegação principal">
         <button
           class="notification-bell-button"
           type="button"
           id="notification-bell-button"
-          aria-label="Abrir Central de Notificações"
-          title="Central de Notificações"
+          aria-label="Abrir central de avisos"
+          title="Central de avisos"
         >
           <i data-lucide="bell-ring" aria-hidden="true"></i>
           <span class="notification-bell-badge" id="notification-bell-badge" hidden>0</span>
@@ -38,12 +38,12 @@
           id="main-menu-button"
           aria-expanded="false"
           aria-controls="main-menu-panel"
-          aria-label="Abrir menu de navegação. Seção atual: Home."
+          aria-label="Abrir menu de navegação. Seção atual: Hoje."
         >
           <i data-lucide="menu" aria-hidden="true"></i>
           <span class="menu-button-copy">
             <span class="menu-button-label">Menu</span>
-            <strong id="main-menu-current">Home</strong>
+            <strong id="main-menu-current">Hoje</strong>
           </span>
           <i class="menu-button-chevron" data-lucide="chevron-down" aria-hidden="true"></i>
         </button>
@@ -51,15 +51,15 @@
           <button class="nav-button is-active" type="button" data-view="today" aria-current="page">
             <i data-lucide="house" aria-hidden="true"></i>
             <span class="nav-button-copy">
-              <span>Home</span>
-              <small>Painel do dia</small>
+              <span>Hoje</span>
+              <small>Retiradas do dia</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="week">
             <i data-lucide="calendar-days" aria-hidden="true"></i>
             <span class="nav-button-copy">
-              <span>Semana</span>
-              <small>Rotina completa</small>
+              <span>Rotina semanal</span>
+              <small>Agenda da semana</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="teachers">
@@ -79,8 +79,8 @@
           <button class="nav-button" type="button" data-view="devices">
             <i data-lucide="laptop" aria-hidden="true"></i>
             <span class="nav-button-copy">
-              <span>Dispositivos</span>
-              <small>Equipamentos usados</small>
+              <span>Equipamentos</span>
+              <small>Tipos disponíveis</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="maintenance">
@@ -93,8 +93,8 @@
           <button class="nav-button" type="button" data-view="notifications">
             <i data-lucide="bell-ring" aria-hidden="true"></i>
             <span class="nav-button-copy">
-              <span>Notificações</span>
-              <small>Avisos internos</small>
+              <span>Avisos</span>
+              <small>Central interna</small>
             </span>
           </button>
           <button class="nav-button" type="button" data-view="settings">
@@ -111,14 +111,13 @@
     <main class="app-shell">
       <section class="operations-bar" aria-live="polite">
         <div class="operations-copy">
-          <span class="eyebrow">Painel operacional</span>
           <strong id="today-label">Hoje</strong>
         </div>
         <div class="operations-actions">
-          <div id="today-metrics" class="today-metrics" aria-label="Resumo da rotina"></div>
+          <div id="today-metrics" class="today-metrics" aria-label="Resumo das retiradas de hoje"></div>
           <button class="button button-secondary button-small" type="button" id="undo-delete-button" hidden>
             <i data-lucide="undo-2" aria-hidden="true"></i>
-            <span>Desfazer</span>
+            <span>Desfazer exclusão</span>
           </button>
         </div>
       </section>
@@ -128,7 +127,6 @@
           <section class="panel today-panel priority-panel" aria-labelledby="today-heading">
             <div class="panel-heading">
               <div>
-                <span class="eyebrow">Próximas ações</span>
                 <h2 id="today-heading">Retiradas de hoje</h2>
                 <p id="today-summary">Carregando rotina.</p>
               </div>
@@ -139,10 +137,10 @@
           <section class="panel routine-panel" id="routine-form-panel" aria-labelledby="routine-form-title">
             <div class="panel-heading">
               <div>
-                <span class="eyebrow" id="routine-form-mode-label">Cadastro rápido</span>
+                <span class="eyebrow" id="routine-form-mode-label">Cadastrar rotina</span>
                 <h2 id="routine-form-title">Nova rotina</h2>
               </div>
-              <button class="icon-button" type="button" id="clear-routine-form" aria-label="Limpar formulário" title="Limpar formulário">
+              <button class="icon-button" type="button" id="clear-routine-form" aria-label="Limpar campos do formulário de rotina" title="Limpar campos">
                 <i data-lucide="eraser" aria-hidden="true"></i>
               </button>
             </div>
@@ -168,17 +166,17 @@
                 </div>
               </section>
 
-              <section class="form-block" aria-label="Quem usa os dispositivos">
-                <h3>Quem usa</h3>
+              <section class="form-block" aria-label="Professor e turma da retirada">
+                <h3>Professor e turma</h3>
                 <div class="form-row form-row-4">
                   <label>
                     <span class="form-label">Aula</span>
-                    <input class="form-input" id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História..." maxlength="80">
+                    <input class="form-input" id="routine-subject" name="subject" list="subjects-list" autocomplete="off" placeholder="Ex.: Matemática, Redação, História" maxlength="80">
                     <datalist id="subjects-list"></datalist>
                   </label>
                   <label>
                     <span class="form-label">Professor</span>
-                    <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="..." required maxlength="80">
+                    <input class="form-input" id="routine-teacher" name="teacher" list="teachers-list" autocomplete="off" placeholder="Ex.: Ana Souza" required maxlength="80">
                     <datalist id="teachers-list"></datalist>
                   </label>
                   <label>
@@ -194,21 +192,21 @@
               </section>
 
               <fieldset class="device-fieldset form-block">
-                <legend>Dispositivos necessários</legend>
+                <legend>Equipamentos necessários</legend>
                 <div id="routine-devices" class="check-grid"></div>
                 <div class="inline-add">
-                  <label class="sr-only" for="routine-new-device">Outro dispositivo</label>
-                  <input class="form-input" id="routine-new-device" type="text" autocomplete="off" placeholder="Outro dispositivo" maxlength="80">
+                  <label class="sr-only" for="routine-new-device">Adicionar outro equipamento</label>
+                  <input class="form-input" id="routine-new-device" type="text" autocomplete="off" placeholder="Ex.: Tablet, Caixa de som" maxlength="80">
                   <button class="button button-secondary button-small" type="button" id="add-device-to-routine">
                     <i data-lucide="plus" aria-hidden="true"></i>
-                    <span>Adicionar</span>
+                    <span>Adicionar equipamento</span>
                   </button>
                 </div>
               </fieldset>
 
               <section class="form-block" aria-label="Observações">
                 <h3 id="routine-notes-heading">Observações</h3>
-                <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro..." maxlength="500" aria-labelledby="routine-notes-heading"></textarea>
+                <textarea class="form-input" id="routine-notes" name="notes" rows="3" placeholder="Ex.: retirar no armário de carregamento, atividade na Sala do Futuro" maxlength="500" aria-labelledby="routine-notes-heading"></textarea>
 
                 <div class="routine-footer-row">
                   <div class="form-actions routine-save-actions">
@@ -231,7 +229,7 @@
             <div class="heading-row">
               <div>
                 <h2 id="week-heading">Rotina semanal</h2>
-                <p>Matriz semanal por equipamento, horário, turma, professor e aula.</p>
+                <p>Retiradas por equipamento, horário, turma, professor e aula.</p>
               </div>
               <div class="filter-summary">
                 <span id="filter-results-count"></span>
@@ -270,9 +268,9 @@
                 <div class="filter-group">
                   <span class="filter-group-label" id="label-time">Horário</span>
                   <div class="filter-time-row">
-                    <select id="filter-time-start" class="filter-select-input" aria-label="Das"></select>
+                    <select id="filter-time-start" class="filter-select-input" aria-label="Horário inicial da retirada"></select>
                     <span class="filter-time-sep" aria-hidden="true">até</span>
-                    <select id="filter-time-end" class="filter-select-input" aria-label="Às"></select>
+                    <select id="filter-time-end" class="filter-select-input" aria-label="Horário final da retirada"></select>
                   </div>
                 </div>
 
@@ -289,11 +287,11 @@
 
               <div class="filter-grid filter-grid--row2">
                 <div class="filter-group">
-                  <span class="filter-group-label" id="label-device">Dispositivo</span>
+                  <span class="filter-group-label" id="label-device">Equipamento</span>
                   <div class="filter-pills" id="filter-device-chips" role="group" aria-labelledby="label-device">
                     <label class="filter-pill"><input type="checkbox" value="Notebook"><span>Notebook</span></label>
                     <label class="filter-pill"><input type="checkbox" value="Chromebook"><span>Chromebook</span></label>
-                    <label class="filter-pill"><input type="checkbox" value="Notebook/Chromebook"><span>NB/CB</span></label>
+                    <label class="filter-pill"><input type="checkbox" value="Notebook/Chromebook"><span>Notebook ou Chromebook</span></label>
                   </div>
                 </div>
 
@@ -314,14 +312,14 @@
           <div class="panel-heading">
             <div>
               <h2 id="teachers-heading">Professores</h2>
-              <p>Cadastro reutilizável para várias rotinas.</p>
+              <p>Cadastros reutilizáveis nas rotinas semanais.</p>
             </div>
           </div>
           <form id="teacher-form" class="catalog-form" novalidate>
             <input type="hidden" id="teacher-id">
             <label>
-              <span>Nome</span>
-              <input id="teacher-name" type="text" autocomplete="off" placeholder="..." required maxlength="80">
+              <span>Nome completo</span>
+              <input id="teacher-name" type="text" autocomplete="off" placeholder="Ex.: Ana Souza" required maxlength="80">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>
@@ -338,18 +336,18 @@
           <div class="panel-heading">
             <div>
               <h2 id="rooms-heading">Turmas</h2>
-              <p>Salve turmas e quantidade padrão de alunos.</p>
+              <p>Salve turmas e a quantidade padrão de alunos.</p>
             </div>
           </div>
           <form id="room-form" class="catalog-form catalog-form-room" novalidate>
             <input type="hidden" id="room-id">
             <label>
-              <span>Turma</span>
+              <span>Identificação da turma</span>
               <input id="room-name" type="text" required maxlength="80" autocomplete="off" placeholder="Ex.: 6º ano EF - A, 1A, Sala 12">
             </label>
             <label>
-              <span>Quantidade alunos</span>
-              <input id="room-student-count" type="number" min="1" step="1" placeholder="...">
+              <span>Quantidade de alunos</span>
+              <input id="room-student-count" type="number" min="1" step="1" placeholder="Ex.: 32">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>
@@ -365,19 +363,19 @@
         <section class="panel catalog-panel">
           <div class="panel-heading">
             <div>
-              <h2 id="devices-heading">Dispositivos</h2>
-              <p>Tipos usados na retirada: notebooks, Chromebooks, tablets, headsets e outros.</p>
+              <h2 id="devices-heading">Equipamentos</h2>
+              <p>Tipos usados nas retiradas: notebooks, Chromebooks, tablets, headsets e outros.</p>
             </div>
           </div>
           <form id="device-form" class="catalog-form" novalidate>
             <input type="hidden" id="device-id">
             <label>
-              <span>Dispositivo</span>
-              <input id="device-name" type="text" autocomplete="off" placeholder="..." required maxlength="80">
+              <span>Nome do equipamento</span>
+              <input id="device-name" type="text" autocomplete="off" placeholder="Ex.: Tablet, Caixa de som" required maxlength="80">
             </label>
             <button class="button button-primary" type="submit">
               <i data-lucide="save" aria-hidden="true"></i>
-              <span>Salvar dispositivo</span>
+              <span>Salvar equipamento</span>
             </button>
           </form>
           <p id="device-feedback" class="form-feedback" role="alert"></p>
@@ -390,8 +388,8 @@
           <div class="panel-heading toolbar-heading">
             <div class="heading-row">
               <div>
-                <h2 id="maintenance-heading">Controle de Manutenção</h2>
-                <p>Gerencie equipamentos com problema, acompanhe chamados, prioridades e histórico técnico.</p>
+                <h2 id="maintenance-heading">Manutenção de equipamentos</h2>
+                <p>Acompanhe equipamentos com problema, chamados abertos, prioridades e histórico técnico.</p>
               </div>
               <div class="filter-summary">
                 <span id="maintenance-results-count"></span>
@@ -434,23 +432,23 @@
               <div class="maintenance-toolbar">
                 <button class="button button-primary" type="button" id="maintenance-new">
                   <i data-lucide="plus" aria-hidden="true"></i>
-                  <span>Novo registro</span>
+                  <span>Cadastrar manutenção</span>
                 </button>
                 <button class="button button-secondary" type="button" id="maintenance-bulk">
                   <i data-lucide="list-plus" aria-hidden="true"></i>
-                  <span>Adicionar em massa</span>
+                  <span>Cadastrar em lote</span>
                 </button>
                 <button class="button button-secondary" type="button" id="maintenance-export-csv">
                   <i data-lucide="file-text" aria-hidden="true"></i>
-                  <span>Exportar CSV</span>
+                  <span>Exportar planilha (.csv)</span>
                 </button>
                 <button class="button button-secondary" type="button" id="maintenance-export-json">
                   <i data-lucide="download" aria-hidden="true"></i>
-                  <span>Exportar JSON</span>
+                  <span>Exportar backup (.json)</span>
                 </button>
                 <label class="button button-secondary import-button">
                   <i data-lucide="upload" aria-hidden="true"></i>
-                  <span>Importar JSON</span>
+                  <span>Importar backup (.json)</span>
                   <input id="maintenance-import-file" type="file" accept="application/json,.json">
                 </label>
               </div>
@@ -464,9 +462,8 @@
         <section class="panel notifications-panel" aria-labelledby="notifications-heading">
           <div class="panel-heading">
             <div>
-              <span class="eyebrow">Central</span>
-              <h2 id="notifications-heading">Notificações internas</h2>
-              <p>Avisos por popup enquanto o site estiver aberto. Não há notificações nativas, e nada é enviado quando o sistema está fechado.</p>
+              <h2 id="notifications-heading">Central de avisos</h2>
+              <p>Avisos aparecem na tela enquanto o sistema estiver aberto. Não há envio quando a página está fechada.</p>
             </div>
           </div>
           <div id="notifications-status" class="notifications-status" aria-live="polite"></div>
@@ -474,15 +471,15 @@
           <div class="notifications-actions-row">
             <button class="button button-secondary button-small" type="button" id="notifications-test-sound">
               <i data-lucide="bell-ring" aria-hidden="true"></i>
-              <span>Testar som</span>
+              <span>Testar som do aviso</span>
             </button>
             <button class="button button-secondary button-small" type="button" id="notifications-mark-all">
               <i data-lucide="check-circle-2" aria-hidden="true"></i>
-              <span>Marcar todas como vistas</span>
+              <span>Marcar todos os avisos como vistos</span>
             </button>
           </div>
           <div class="notifications-section">
-            <h3>Próximas notificações</h3>
+            <h3>Próximos avisos</h3>
             <div id="notifications-upcoming" class="notifications-list" aria-live="polite"></div>
           </div>
           <div class="notifications-section">
@@ -491,7 +488,7 @@
           </div>
           <div class="notifications-section">
             <h3>Exportar para calendário</h3>
-            <p class="notice-text">Exporte todas as rotinas em um arquivo .ics recorrente para importar no Google Calendar, Outlook ou Apple Calendar.</p>
+            <p class="notice-text">Gere um arquivo .ics com recorrência semanal para importar no Google Calendar, Outlook ou Apple Calendar.</p>
             <div id="notifications-calendar" class="notifications-calendar"></div>
           </div>
         </section>
@@ -510,11 +507,11 @@
               <div class="settings-data-actions">
                 <button class="button button-secondary" type="button" id="export-data-button">
                   <i data-lucide="download" aria-hidden="true"></i>
-                  <span>Exportar JSON</span>
+                  <span>Exportar backup (.json)</span>
                 </button>
                 <button class="button button-secondary settings-import-trigger" type="button" id="import-data-trigger" aria-controls="import-data-file" aria-describedby="settings-feedback">
                   <i data-lucide="upload" aria-hidden="true"></i>
-                  <span>Importar JSON</span>
+                  <span>Importar backup (.json)</span>
                 </button>
                 <input class="settings-file-input" id="import-data-file" type="file" accept="application/json,.json" tabindex="-1" aria-hidden="true">
                 <button class="button button-danger" type="button" id="reset-data-button">

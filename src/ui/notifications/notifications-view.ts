@@ -114,7 +114,7 @@ export function createNotificationsView({
       ...(extra?.snoozedUntil ? { snoozedUntil: extra.snoozedUntil } : {}),
     });
     if (!result.ok) {
-      toasts.show({ type: "error", title: "Falha", message: result.errors.join(" ") });
+      toasts.show({ type: "error", title: "Não foi possível atualizar o aviso", message: result.errors.join(" ") });
       return;
     }
     refresh();
@@ -123,7 +123,11 @@ export function createNotificationsView({
   function snooze(plan: NotificationPlan): void {
     const settings = getState().settings.notifications;
     if (!settings.allowSnooze) {
-      toasts.show({ type: "info", title: "Adiamento desativado", message: "Ative o adiamento nas configurações." });
+      toasts.show({
+        type: "info",
+        title: "Adiamento desativado",
+        message: "Ative o adiamento de avisos nas configurações da central.",
+      });
       return;
     }
     const now = new Date();
@@ -133,7 +137,7 @@ export function createNotificationsView({
     const mm = String(safe % 60).padStart(2, "0");
     const snoozedUntil = `${hh}:${mm}`;
     markStatus(plan, "adiada", { snoozedUntil });
-    toasts.show({ type: "info", title: "Adiada", message: `Reaparece às ${snoozedUntil}.` });
+    toasts.show({ type: "info", title: "Aviso adiado", message: `Reaparece às ${snoozedUntil}.` });
   }
 
   function muteForToday(plan: NotificationPlan): void {
@@ -153,7 +157,11 @@ export function createNotificationsView({
       });
     });
     refresh();
-    toasts.show({ type: "info", title: "Silenciado", message: "Notificações dessa rotina hoje foram marcadas como vistas." });
+    toasts.show({
+      type: "info",
+      title: "Avisos silenciados hoje",
+      message: "Os próximos avisos desta rotina ficam marcados como vistos pelo restante do dia.",
+    });
   }
 
   function bindEvents(): void {
@@ -163,7 +171,11 @@ export function createNotificationsView({
     refs.notificationsTestSound.addEventListener("click", () => {
       const settings = getState().settings.notifications;
       if (!settings.soundEnabled || settings.soundName === "none") {
-        toasts.show({ type: "info", title: "Som desativado", message: "Ative o som para testar." });
+        toasts.show({
+          type: "info",
+          title: "Som desativado",
+          message: "Ative o som dos avisos nas configurações para ouvir o teste.",
+        });
         return;
       }
       void sound.play(settings.soundName);
@@ -172,7 +184,11 @@ export function createNotificationsView({
       const plans = computePlans();
       const pending = plans.filter((plan) => plan.status === "pendente" || plan.status === "exibida" || plan.status === "adiada");
       if (pending.length === 0) {
-        toasts.show({ type: "info", title: "Nada para marcar", message: "Sem notificações pendentes hoje." });
+        toasts.show({
+          type: "info",
+          title: "Nenhum aviso pendente",
+          message: "Não há avisos para marcar como vistos no momento.",
+        });
         return;
       }
       const result = actions.markAllNotificationsAsSeen(
@@ -185,11 +201,19 @@ export function createNotificationsView({
         })),
       );
       if (!result.ok) {
-        toasts.show({ type: "error", title: "Falha", message: result.errors.join(" ") });
+        toasts.show({
+          type: "error",
+          title: "Não foi possível atualizar os avisos",
+          message: result.errors.join(" "),
+        });
         return;
       }
       refresh();
-      toasts.show({ type: "success", title: "Marcadas", message: `${pending.length} notificações marcadas como vistas.` });
+      toasts.show({
+        type: "success",
+        title: "Avisos atualizados",
+        message: `${pending.length} aviso${pending.length === 1 ? "" : "s"} marcado${pending.length === 1 ? "" : "s"} como visto${pending.length === 1 ? "" : "s"}.`,
+      });
     });
   }
 
@@ -237,16 +261,30 @@ export function createNotificationsView({
       : "Sem próximo aviso";
 
     replaceChildren(refs.notificationsStatus, [
-      statusCard("Próximo aviso", nextLabel, summary.nextPending ? formatDateTime(`${summary.nextPending.date}T${summary.nextPending.time}:00`) : "Sem retiradas pendentes."),
-      statusCard("Pendentes hoje", String(summary.pending), summary.overdue ? `${summary.overdue} atrasada(s)` : "Sem atrasos"),
-      statusCard("Não vistas", String(summary.unseen), summary.unseen === 0 ? "Sem pendência" : "Confira a lista abaixo"),
+      statusCard(
+        "Próximo aviso",
+        nextLabel,
+        summary.nextPending
+          ? formatDateTime(`${summary.nextPending.date}T${summary.nextPending.time}:00`)
+          : "Sem retiradas pendentes hoje.",
+      ),
+      statusCard(
+        "Avisos pendentes hoje",
+        String(summary.pending),
+        summary.overdue ? `${summary.overdue} atrasado(s)` : "Nenhum em atraso",
+      ),
+      statusCard(
+        "Avisos não vistos",
+        String(summary.unseen),
+        summary.unseen === 0 ? "Tudo em dia" : "Veja a lista abaixo",
+      ),
     ]);
   }
 
   function renderSettings(): void {
     const settings = getState().settings.notifications;
 
-    const enabledToggle = toggleRow("Ativar notificações internas", settings.enabled, (value) => {
+    const enabledToggle = toggleRow("Ativar avisos na tela", settings.enabled, (value) => {
       actions.updateNotificationSettings({ enabled: value });
       refresh();
     });
@@ -268,6 +306,7 @@ export function createNotificationsView({
         max: String(NOTIF_LEAD_MAX),
         step: "1",
         placeholder: "Minutos antes",
+        "aria-label": "Antecedência personalizada do aviso, em minutos",
       },
     });
     leadCustom.value = String(settings.defaultLeadMinutes);
@@ -288,14 +327,18 @@ export function createNotificationsView({
     leadCustom.addEventListener("change", () => {
       const next = Number(leadCustom.value);
       if (!Number.isFinite(next) || next < NOTIF_LEAD_MIN || next > NOTIF_LEAD_MAX) {
-        toasts.show({ type: "error", title: "Valor inválido", message: `Use um número entre ${NOTIF_LEAD_MIN} e ${NOTIF_LEAD_MAX}.` });
+        toasts.show({
+          type: "error",
+          title: "Antecedência inválida",
+          message: `Informe um valor entre ${NOTIF_LEAD_MIN} e ${NOTIF_LEAD_MAX} minutos.`,
+        });
         return;
       }
       actions.updateNotificationSettings({ defaultLeadMinutes: Math.round(next) });
       refresh();
     });
 
-    const soundToggle = toggleRow("Tocar som ao notificar", settings.soundEnabled, (value) => {
+    const soundToggle = toggleRow("Tocar som ao exibir o aviso", settings.soundEnabled, (value) => {
       actions.updateNotificationSettings({ soundEnabled: value });
       refresh();
     });
@@ -310,25 +353,35 @@ export function createNotificationsView({
       refresh();
     });
 
-    const groupingToggle = toggleRow("Agrupar notificações próximas", settings.groupingEnabled, (value) => {
+    const groupingToggle = toggleRow("Agrupar avisos do mesmo horário", settings.groupingEnabled, (value) => {
       actions.updateNotificationSettings({ groupingEnabled: value });
       refresh();
     });
 
-    const snoozeToggle = toggleRow("Permitir adiamento (snooze)", settings.allowSnooze, (value) => {
+    const snoozeToggle = toggleRow("Permitir adiar avisos", settings.allowSnooze, (value) => {
       actions.updateNotificationSettings({ allowSnooze: value });
       refresh();
     });
 
     const snoozeInput = el("input", {
       className: "form-input notifications-snooze-input",
-      attrs: { type: "number", min: String(NOTIF_SNOOZE_MIN), max: String(NOTIF_SNOOZE_MAX), step: "1" },
+      attrs: {
+        type: "number",
+        min: String(NOTIF_SNOOZE_MIN),
+        max: String(NOTIF_SNOOZE_MAX),
+        step: "1",
+        "aria-label": "Tempo padrão de adiamento, em minutos",
+      },
     });
     snoozeInput.value = String(settings.defaultSnoozeMinutes);
     snoozeInput.addEventListener("change", () => {
       const next = Number(snoozeInput.value);
       if (!Number.isFinite(next) || next < NOTIF_SNOOZE_MIN || next > NOTIF_SNOOZE_MAX) {
-        toasts.show({ type: "error", title: "Valor inválido", message: `Use de ${NOTIF_SNOOZE_MIN} a ${NOTIF_SNOOZE_MAX} minutos.` });
+        toasts.show({
+          type: "error",
+          title: "Tempo de adiamento inválido",
+          message: `Informe um valor entre ${NOTIF_SNOOZE_MIN} e ${NOTIF_SNOOZE_MAX} minutos.`,
+        });
         return;
       }
       actions.updateNotificationSettings({ defaultSnoozeMinutes: Math.round(next) });
@@ -338,7 +391,7 @@ export function createNotificationsView({
     replaceChildren(refs.notificationsSettings, [
       el("div", { className: "notifications-settings-grid" }, [
         settingsGroup("Avisos", [
-          settingsRow("Estado", [enabledToggle]),
+          settingsRow("Estado dos avisos", [enabledToggle]),
           settingsRow("Antecedência padrão", [leadSelect, leadCustom]),
           settingsRow("Agrupamento", [groupingToggle]),
         ]),
@@ -359,7 +412,7 @@ export function createNotificationsView({
 
     if (upcoming.length === 0) {
       replaceChildren(refs.notificationsUpcoming, [
-        el("div", { className: "empty-state", text: "Sem próximas notificações hoje." }),
+        el("div", { className: "empty-state", text: "Nenhum próximo aviso para hoje." }),
       ]);
       return;
     }
@@ -376,7 +429,7 @@ export function createNotificationsView({
 
     if (recent.length === 0) {
       replaceChildren(refs.notificationsRecent, [
-        el("div", { className: "empty-state", text: "Nenhuma notificação disparada hoje." }),
+        el("div", { className: "empty-state", text: "Nenhum aviso foi exibido hoje." }),
       ]);
       return;
     }
@@ -394,7 +447,10 @@ export function createNotificationsView({
     const state = getState();
     if (state.routines.length === 0) {
       replaceChildren(refs.notificationsCalendar, [
-        el("p", { className: "notice-text", text: "Cadastre rotinas para gerar o arquivo de calendário." }),
+        el("p", {
+          className: "notice-text",
+          text: "Cadastre ao menos uma rotina semanal para gerar o arquivo .ics do calendário.",
+        }),
       ]);
       return;
     }
@@ -410,7 +466,10 @@ export function createNotificationsView({
 
     const teacherSelect = el(
       "select",
-      { className: "form-input", attrs: { "aria-label": "Filtrar professor para exportação" } },
+      {
+        className: "form-input",
+        attrs: { "aria-label": "Filtrar exportação por professor" },
+      },
       [option("", "Todos os professores"), ...teacherNames.map((name) => option(name, name))],
     );
     teacherSelect.value = calendarExportDraft.teacher;
@@ -421,7 +480,10 @@ export function createNotificationsView({
 
     const roomSelect = el(
       "select",
-      { className: "form-input", attrs: { "aria-label": "Filtrar turma para exportação" } },
+      {
+        className: "form-input",
+        attrs: { "aria-label": "Filtrar exportação por turma" },
+      },
       [option("", "Todas as turmas"), ...roomNames.map((name) => option(name, name))],
     );
     roomSelect.value = calendarExportDraft.room;
@@ -453,8 +515,8 @@ export function createNotificationsView({
     const excludedDates = el("textarea", {
       className: "form-input notifications-calendar-exdates",
       attrs: {
-        placeholder: "Datas sem rotina: 2026-07-09, 2026-10-12",
-        "aria-label": "Datas excluídas da recorrência",
+        placeholder: "Ex.: 2026-07-09, 2026-10-12",
+        "aria-label": "Datas sem rotina (feriados e recessos)",
       },
     });
     excludedDates.value = calendarExportDraft.excludedDatesText;
@@ -467,13 +529,13 @@ export function createNotificationsView({
       ? getCalendarExportRoutines(state.routines, optionsResult.value).length
       : 0;
     const summaryText = optionsResult.ok
-      ? `${exportableCount} rotina${exportableCount === 1 ? "" : "s"} serão exportadas com recorrência semanal.`
+      ? `${exportableCount} rotina${exportableCount === 1 ? "" : "s"} ser${exportableCount === 1 ? "á" : "ão"} exportada${exportableCount === 1 ? "" : "s"} com recorrência semanal.`
       : optionsResult.errors.join(" ");
 
     const icsButton = el(
       "button",
       { className: "button button-primary button-small notifications-calendar-download", attrs: { type: "button" } },
-      [icon("download"), span("Baixar .ics")],
+      [icon("download"), span("Baixar calendário (.ics)")],
     );
     icsButton.addEventListener("click", () => {
       const result = buildCalendarOptionsFromDraft(state);
@@ -483,14 +545,26 @@ export function createNotificationsView({
       }
       const count = getCalendarExportRoutines(state.routines, result.value).length;
       if (count === 0) {
-        toasts.show({ type: "info", title: "Nada a exportar", message: "Nenhuma rotina encontrada para esses filtros." });
+        toasts.show({
+          type: "info",
+          title: "Nada a exportar",
+          message: "Nenhuma rotina corresponde aos filtros selecionados. Ajuste-os e tente novamente.",
+        });
         return;
       }
       if (!downloadIcsForRoutines(state.routines, result.value)) {
-        toasts.show({ type: "error", title: "Falha", message: "Não foi possível gerar o arquivo .ics." });
+        toasts.show({
+          type: "error",
+          title: "Não foi possível gerar o calendário",
+          message: "Tente novamente em alguns instantes ou revise os filtros aplicados.",
+        });
         return;
       }
-      toasts.show({ type: "success", title: "Arquivo gerado", message: `${count} rotina${count === 1 ? "" : "s"} exportada${count === 1 ? "" : "s"}.` });
+      toasts.show({
+        type: "success",
+        title: "Calendário gerado",
+        message: `${count} rotina${count === 1 ? "" : "s"} exportada${count === 1 ? "" : "s"} no arquivo .ics.`,
+      });
     });
 
     replaceChildren(refs.notificationsCalendar, [
@@ -501,7 +575,7 @@ export function createNotificationsView({
         labeledInline("Fim", endInput),
       ]),
       el("label", { className: "notifications-calendar-exdates-field" }, [
-        el("span", { text: "Feriados e recessos sem rotina" }),
+        el("span", { text: "Datas sem rotina (feriados, recessos)" }),
         excludedDates,
       ]),
       el("div", { className: "notifications-calendar-footer" }, [
@@ -566,16 +640,16 @@ export function createNotificationsView({
       { className: "notifications-list-actions" },
       [
         plan.status === "pendente" || plan.status === "exibida" || plan.status === "adiada"
-          ? actionButtonInline("check-circle-2", "Marcar vista", () => markStatus(plan, "vista"))
+          ? actionButtonInline("check-circle-2", "Marcar como visto", () => markStatus(plan, "vista"))
           : null,
         options.upcoming && plan.routines[0]
-          ? actionButtonInline("pencil", "Editar rotina", () => {
+          ? actionButtonInline("pencil", "Editar rotina deste aviso", () => {
               const routine = plan.routines[0];
               if (routine) onEditRoutine(routine);
             })
           : null,
         getState().settings.notifications.allowSnooze && options.upcoming
-          ? actionButtonInline("alarm-clock", "Adiar", () => snooze(plan))
+          ? actionButtonInline("alarm-clock", "Adiar aviso", () => snooze(plan))
           : null,
       ].filter(Boolean) as HTMLElement[],
     );
@@ -593,7 +667,7 @@ export function createNotificationsView({
           ? el("p", { className: "notifications-card-extra", text: `+${plan.routines.length - 3} outras rotinas no mesmo horário` })
           : null,
         plan.snoozedUntilMinutes !== undefined
-          ? el("p", { className: "notifications-card-extra", text: `Adiada até ${formatMinutes(plan.snoozedUntilMinutes)}` })
+          ? el("p", { className: "notifications-card-extra", text: `Adiado até ${formatMinutes(plan.snoozedUntilMinutes)}` })
           : null,
         actionsRow,
       ].filter(Boolean) as Node[],
@@ -621,7 +695,7 @@ export function createNotificationsView({
     toasts.show({
       type: "warning",
       title: "Avisos perdidos",
-      message: `${missed.length} aviso(s) das últimas horas. Veja a Central.`,
+      message: `${missed.length} aviso${missed.length === 1 ? "" : "s"} das últimas horas. Veja a Central de avisos.`,
       timeout: 9000,
     });
   }
@@ -717,20 +791,20 @@ function actionButtonInline(iconName: string, label: string, onClick: () => void
 }
 
 function labelForStatus(plan: NotificationPlan): string {
-  if (plan.isOverdue && plan.status === "pendente") return "Atrasada";
+  if (plan.isOverdue && plan.status === "pendente") return "Em atraso";
   switch (plan.status) {
     case "pendente":
       return "Pendente";
     case "exibida":
-      return "Exibida";
+      return "Exibido";
     case "vista":
-      return "Vista";
+      return "Visto";
     case "adiada":
-      return "Adiada";
+      return "Adiado";
     case "ignorada":
-      return "Ignorada";
+      return "Silenciado";
     case "desativada":
-      return "Desativada";
+      return "Desativado";
     default:
       return plan.status;
   }

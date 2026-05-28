@@ -29,7 +29,7 @@ export function createFeedbackPresenter(toasts: ToastManager): FeedbackPresenter
       setFeedback(feedbackNode, message, "error");
       toasts.show({
         type: "error",
-        title: options.errorTitle ?? "Ação não concluída",
+        title: options.errorTitle ?? "Não foi possível concluir a ação",
         message,
         timeout: 6800,
       });
@@ -38,7 +38,7 @@ export function createFeedbackPresenter(toasts: ToastManager): FeedbackPresenter
     setFeedback(feedbackNode, successMessage, "success");
     toasts.show({
       type: "success",
-      title: options.successTitle ?? "Tudo certo",
+      title: options.successTitle ?? "Ação concluída",
       message: successMessage,
       timeout: 3600,
     });

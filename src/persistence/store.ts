@@ -126,7 +126,7 @@ export function saveState(
     console.error("Falha ao salvar dados locais.", error);
     return {
       ok: false,
-      errors: ["Não foi possível salvar no navegador. Verifique espaço disponível ou permissões do site."],
+      errors: ["Não foi possível salvar os dados locais. Verifique o espaço disponível no navegador ou as permissões do site."],
     };
   }
 }
@@ -152,7 +152,7 @@ export function exportState(state: AppState): string {
 
 export function importStateFromText(rawText: string): Result<AppState> {
   if (rawText.length > IMPORT_MAX_BYTES) {
-    return { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
+    return { ok: false, errors: [`O backup excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
   }
   try {
     const parsed = JSON.parse(rawText);
@@ -162,32 +162,32 @@ export function importStateFromText(rawText: string): Result<AppState> {
       return { ok: false, errors: fieldErrors };
     }
     if (state.routines.length > MAX_ROUTINES) {
-      return { ok: false, errors: [`Importação contém muitas rotinas (máximo: ${MAX_ROUTINES}).`] };
+      return { ok: false, errors: [`O backup tem rotinas demais (máximo: ${MAX_ROUTINES}).`] };
     }
     if (state.teachers.length > MAX_TEACHERS) {
-      return { ok: false, errors: [`Importação contém muitos professores (máximo: ${MAX_TEACHERS}).`] };
+      return { ok: false, errors: [`O backup tem professores demais (máximo: ${MAX_TEACHERS}).`] };
     }
     if (state.rooms.length > MAX_CLASSES) {
-      return { ok: false, errors: [`Importação contém muitas turmas (máximo: ${MAX_CLASSES}).`] };
+      return { ok: false, errors: [`O backup tem turmas demais (máximo: ${MAX_CLASSES}).`] };
     }
     if (state.devices.length > MAX_DEVICES) {
-      return { ok: false, errors: [`Importação contém muitos dispositivos (máximo: ${MAX_DEVICES}).`] };
+      return { ok: false, errors: [`O backup tem equipamentos demais (máximo: ${MAX_DEVICES}).`] };
     }
     if (state.maintenanceRecords.length > MAX_MAINTENANCES) {
-      return { ok: false, errors: [`Importação contém muitos registros de manutenção (máximo: ${MAX_MAINTENANCES}).`] };
+      return { ok: false, errors: [`O backup tem manutenções demais (máximo: ${MAX_MAINTENANCES}).`] };
     }
     return { ok: true, value: state };
   } catch (error) {
     return {
       ok: false,
-      errors: [`Arquivo JSON inválido ou incompatível: ${error instanceof Error ? error.message : String(error)}`],
+      errors: [`Backup JSON inválido ou incompatível: ${error instanceof Error ? error.message : String(error)}`],
     };
   }
 }
 
 export function importMaintenanceFromText(rawText: string): Result<MaintenanceRecord[]> {
   if (rawText.length > IMPORT_MAX_BYTES) {
-    return { ok: false, errors: [`Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
+    return { ok: false, errors: [`O backup excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`] };
   }
   try {
     const parsed = JSON.parse(rawText) as { maintenanceRecords?: unknown };
@@ -199,14 +199,14 @@ export function importMaintenanceFromText(rawText: string): Result<MaintenanceRe
     if (!candidate) {
       return {
         ok: false,
-        errors: ["Arquivo JSON inválido: nenhum registro de manutenção encontrado."],
+        errors: ["Backup inválido: nenhuma manutenção encontrada no arquivo selecionado."],
       };
     }
     const migrated = migrateState({ maintenanceRecords: candidate.maintenanceRecords });
     if (migrated.maintenanceRecords.length > MAX_MAINTENANCE_BATCH) {
       return {
         ok: false,
-        errors: [`O arquivo contém ${migrated.maintenanceRecords.length} registros. O limite por importação é ${MAX_MAINTENANCE_BATCH}.`],
+        errors: [`O backup contém ${migrated.maintenanceRecords.length} manutenções. O limite por importação é ${MAX_MAINTENANCE_BATCH}.`],
       };
     }
     const fieldErrors = validateImportedMaintenanceLimits(migrated.maintenanceRecords);
@@ -217,7 +217,7 @@ export function importMaintenanceFromText(rawText: string): Result<MaintenanceRe
   } catch (error) {
     return {
       ok: false,
-      errors: [`Arquivo JSON inválido ou incompatível: ${error instanceof Error ? error.message : String(error)}`],
+      errors: [`Backup JSON inválido ou incompatível: ${error instanceof Error ? error.message : String(error)}`],
     };
   }
 }
@@ -230,7 +230,7 @@ export function clearStoredState(storage: StorageAdapter = browserStorage()): Em
     }
     return { ok: true };
   } catch {
-    return failure("Não foi possível apagar os dados locais.");
+    return failure("Não foi possível apagar os dados locais. Verifique as permissões do navegador e tente novamente.");
   }
 }
 

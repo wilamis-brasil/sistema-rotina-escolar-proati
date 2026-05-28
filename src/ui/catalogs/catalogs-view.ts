@@ -69,7 +69,7 @@ export function createCatalogsView({
     container: HTMLElement,
   ): void {
     if (!items.length) {
-      replaceChildren(container, [emptyState("Nenhum cadastro ainda.")]);
+      replaceChildren(container, [emptyState(catalogEmptyMessage(kind))]);
       return;
     }
 
@@ -84,21 +84,21 @@ export function createCatalogsView({
         return el("article", { className: "catalog-item" }, [
           el("div", {}, [el("strong", { text: item.name }), el("span", { text: caption })]),
           el("div", { className: "routine-actions" }, [
-            iconButton("pencil", "Editar", () => startCatalogEdit(kind, item)),
+            iconButton("pencil", `Editar ${catalogItemLabel(kind)} ${item.name}`, () => startCatalogEdit(kind, item)),
             iconButton(
               "trash-2",
-              "Excluir",
+              `Excluir ${catalogItemLabel(kind)} ${item.name}`,
               async () => {
                 const confirmed = await dialogs.dangerConfirm({
-                  title: "Excluir cadastro?",
+                  title: catalogDeleteTitle(kind),
                   message:
-                    "As rotinas já salvas continuarão com o texto atual. Apenas o item do catálogo será removido.",
-                  confirmLabel: "Excluir",
+                    "As rotinas já salvas mantêm o nome atual nesse item. Apenas o cadastro será removido do catálogo.",
+                  confirmLabel: catalogDeleteConfirmLabel(kind),
                 });
                 if (!confirmed) return;
 
                 const result = actions.deleteCatalogItem(kind, item.id);
-                showCatalogResult(kind, result, "Cadastro excluído.");
+                showCatalogResult(kind, result, catalogDeleteSuccess(kind));
                 onChange();
               },
               "danger",
@@ -146,7 +146,7 @@ export function createCatalogsView({
       ? actions.updateCatalogItem("teachers", refs.teacherId.value, { name: refs.teacherName.value })
       : actions.addCatalogItem("teachers", { name: refs.teacherName.value });
 
-    showCatalogResult("teachers", result, "Professor salvo.");
+    showCatalogResult("teachers", result, "Professor salvo no cadastro.");
     if (result.ok) refs.teacherForm.reset();
     onChange();
   }
@@ -158,7 +158,7 @@ export function createCatalogsView({
       ? actions.updateCatalogItem("rooms", refs.roomId.value, payload)
       : actions.addCatalogItem("rooms", payload);
 
-    showCatalogResult("rooms", result, "Turma salva.");
+    showCatalogResult("rooms", result, "Turma salva no cadastro.");
     if (result.ok) {
       refs.roomForm.reset();
       refs.roomId.value = "";
@@ -173,7 +173,7 @@ export function createCatalogsView({
       ? actions.updateCatalogItem("devices", refs.deviceId.value, { name: refs.deviceName.value })
       : actions.addCatalogItem("devices", { name: refs.deviceName.value });
 
-    showCatalogResult("devices", result, "Dispositivo salvo.");
+    showCatalogResult("devices", result, "Equipamento salvo no cadastro.");
     if (result.ok) refs.deviceForm.reset();
     onChange();
   }
@@ -188,4 +188,34 @@ export function createCatalogsView({
   }
 
   return { bindEvents, render };
+}
+
+function catalogItemLabel(kind: CatalogKind): string {
+  if (kind === "teachers") return "professor";
+  if (kind === "rooms") return "turma";
+  return "equipamento";
+}
+
+function catalogEmptyMessage(kind: CatalogKind): string {
+  if (kind === "teachers") return "Nenhum professor cadastrado. Salve o primeiro nome para reutilizar nas rotinas.";
+  if (kind === "rooms") return "Nenhuma turma cadastrada. Salve a primeira turma para vincular às rotinas.";
+  return "Nenhum equipamento cadastrado. Salve o primeiro tipo para selecionar nas rotinas.";
+}
+
+function catalogDeleteTitle(kind: CatalogKind): string {
+  if (kind === "teachers") return "Excluir este professor do catálogo?";
+  if (kind === "rooms") return "Excluir esta turma do catálogo?";
+  return "Excluir este equipamento do catálogo?";
+}
+
+function catalogDeleteConfirmLabel(kind: CatalogKind): string {
+  if (kind === "teachers") return "Excluir professor";
+  if (kind === "rooms") return "Excluir turma";
+  return "Excluir equipamento";
+}
+
+function catalogDeleteSuccess(kind: CatalogKind): string {
+  if (kind === "teachers") return "Professor removido do catálogo.";
+  if (kind === "rooms") return "Turma removida do catálogo.";
+  return "Equipamento removido do catálogo.";
 }

@@ -14,7 +14,7 @@ interface SettingsView {
 }
 
 const JSON_MIME_TYPES = new Set(["application/json", "text/json"]);
-const IMPORT_SUCCESS_MESSAGE = "Dados importados.";
+const IMPORT_SUCCESS_MESSAGE = "Backup importado. Dados locais atualizados.";
 
 export function createSettingsView({
   refs,
@@ -74,46 +74,50 @@ export function createSettingsView({
       return;
     }
 
-    setImportState(true, "Lendo arquivo selecionado...");
+    setImportState(true, "Lendo o backup selecionado...");
     try {
       const rawText = await readFileAsText(file);
-      feedback.setFeedback(refs.settingsFeedback, "Validando arquivo JSON...", "info");
+      feedback.setFeedback(refs.settingsFeedback, "Validando o backup (.json)...", "info");
 
       const validation = actions.validateImportData(rawText);
       if (!validation.ok) {
         feedback.showResult(validation, refs.settingsFeedback, IMPORT_SUCCESS_MESSAGE, {
-          errorTitle: "Arquivo inválido",
+          errorTitle: "Backup inválido",
         });
         return;
       }
 
       feedback.setFeedback(
         refs.settingsFeedback,
-        `${file.name} validado. Confirme para substituir os dados locais.`,
+        `${file.name} validado. Confirme para substituir os dados locais deste navegador.`,
         "info",
       );
       const confirmed = await dialogs.confirm({
         tone: "warning",
-        title: "Importar dados?",
-        message: "A importação substituirá as rotinas, catálogos e configurações locais deste navegador.",
-        confirmLabel: "Importar",
+        title: "Importar backup e substituir dados locais?",
+        message:
+          "Rotinas, catálogos e configurações deste navegador serão substituídos pelo conteúdo do arquivo. Exporte um backup atual antes de continuar se quiser preservá-lo.",
+        confirmLabel: "Importar backup",
       });
       if (!confirmed) {
         feedback.setFeedback(refs.settingsFeedback, "Importação cancelada. Nenhum dado foi alterado.", "info");
         return;
       }
 
-      feedback.setFeedback(refs.settingsFeedback, "Importando dados validados...", "info");
+      feedback.setFeedback(refs.settingsFeedback, "Aplicando o backup validado...", "info");
       const result = actions.importData(rawText);
       feedback.showResult(result, refs.settingsFeedback, IMPORT_SUCCESS_MESSAGE, {
-        errorTitle: "Não foi possível importar",
-        successTitle: "Importação concluída",
+        errorTitle: "Não foi possível importar o backup",
+        successTitle: "Backup importado",
       });
       if (result.ok) {
         onImported();
       }
     } catch {
-      showImportError("Não foi possível ler o arquivo selecionado.", "Falha na leitura");
+      showImportError(
+        "Não foi possível ler o backup selecionado. Verifique se o arquivo .json não está corrompido.",
+        "Não foi possível ler o backup",
+      );
     } finally {
       input.value = "";
       setImportState(false);
@@ -122,16 +126,18 @@ export function createSettingsView({
 
   async function handleResetData(): Promise<void> {
     const confirmed = await dialogs.textConfirm({
-      title: "Apagar dados locais?",
+      title: "Apagar todos os dados locais?",
       message:
-        "Esta ação remove todas as rotinas, professores, turmas, dispositivos e configurações.",
+        "Rotinas, professores, turmas, equipamentos, manutenções e configurações deste navegador serão removidos. Essa ação não pode ser desfeita - exporte um backup antes de continuar.",
       expectedText: "APAGAR",
-      confirmLabel: "Apagar dados",
+      confirmLabel: "Apagar dados locais",
     });
     if (!confirmed) return;
 
     const result = actions.resetData();
-    feedback.showResult(result, refs.settingsFeedback, "Dados locais apagados.");
+    feedback.showResult(result, refs.settingsFeedback, "Dados locais apagados deste navegador.", {
+      successTitle: "Dados locais apagados",
+    });
     onResetData();
   }
 
@@ -160,20 +166,20 @@ export function createSettingsView({
 function validateSelectedFile(file: File): { title: string; message: string } | null {
   if (!isJsonFile(file)) {
     return {
-      title: "Formato inválido",
-      message: "Selecione um arquivo JSON (.json) exportado pelo sistema.",
+      title: "Formato não suportado",
+      message: "Selecione um arquivo de backup (.json) exportado pelo Sistema de Rotina Escolar PROATI.",
     };
   }
   if (file.size === 0) {
     return {
-      title: "Arquivo vazio",
-      message: "O arquivo selecionado está vazio.",
+      title: "Backup vazio",
+      message: "O arquivo selecionado está vazio. Exporte um novo backup e tente novamente.",
     };
   }
   if (file.size > IMPORT_MAX_BYTES) {
     return {
-      title: "Arquivo muito grande",
-      message: `Arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB permitido para importação.`,
+      title: "Backup grande demais",
+      message: `O arquivo excede o limite de ${IMPORT_MAX_BYTES / 1_048_576} MB. Reduza o backup e importe novamente.`,
     };
   }
   return null;

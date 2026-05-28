@@ -43,7 +43,7 @@ export function createNotificationPopupManager({
     if (callbacks.canSnooze()) {
       moreItems.push({
         iconName: "alarm-clock",
-        label: "Adiar",
+        label: "Adiar este aviso",
         onSelect: () => {
           callbacks.onSnooze(plan);
           removePopup(plan.id);
@@ -52,25 +52,25 @@ export function createNotificationPopupManager({
     }
     moreItems.push({
       iconName: "bell-off",
-      label: "Silenciar hoje",
+      label: "Silenciar avisos desta rotina hoje",
       onSelect: () => {
         callbacks.onMute(plan);
         removePopup(plan.id);
       },
     });
 
-    const primaryAction = button("Marcar vista", "primary", () => {
+    const primaryAction = button("Marcar como visto", "primary", () => {
       callbacks.onSeen(plan);
       removePopup(plan.id);
     });
 
     const secondaryAction =
       plan.routines.length === 1
-        ? button("Ver rotina", "secondary", () => {
+        ? button("Abrir rotina", "secondary", () => {
             callbacks.onView(plan);
             removePopup(plan.id);
           })
-        : button("Marcar todas vistas", "secondary", () => {
+        : button("Marcar todos como vistos", "secondary", () => {
             callbacks.onSeen(plan);
             removePopup(plan.id);
           });
@@ -103,7 +103,10 @@ export function createNotificationPopupManager({
         ]),
         el("div", { className: "notification-popup-body" }, [
           plan.routines.length > 1
-            ? el("p", { className: "notification-popup-grouped", text: `${plan.routines.length} rotinas agrupadas` })
+            ? el("p", {
+                className: "notification-popup-grouped",
+                text: `${plan.routines.length} rotinas agrupadas neste horário`,
+              })
             : null,
           ...plan.routines.slice(0, 4).map((routine) =>
             el("p", { className: "notification-popup-line" }, [
@@ -179,8 +182,8 @@ function closeButton(onClick: () => void): HTMLButtonElement {
       className: "notification-popup-close",
       attrs: {
         type: "button",
-        "aria-label": "Fechar notificação",
-        title: "Fechar notificação",
+        "aria-label": "Fechar aviso e marcar como visto",
+        title: "Fechar aviso",
       },
     },
     [icon("x")],
@@ -229,7 +232,7 @@ function moreMenu(planId: string, items: MoreMenuItem[]): HTMLElement {
       className: "notification-popup-more-button",
       attrs: {
         type: "button",
-        "aria-label": "Mais ações",
+        "aria-label": "Mais ações para este aviso",
         title: "Mais ações",
         "aria-haspopup": "menu",
         "aria-expanded": "false",

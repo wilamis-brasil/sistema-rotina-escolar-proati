@@ -107,13 +107,13 @@ export function createAppController({
   const actions: AppActions = {
     addRoutine(payload) {
       if (state.routines.length >= MAX_ROUTINES) {
-        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido. Exclua rotinas antigas antes de adicionar novas.`);
       }
       const result = buildRoutine(payload);
       if (!result.ok) return result;
 
       if (!catalogHasName("rooms", result.value.room)) {
-        return failure("Cadastre a turma antes de usá-la em uma rotina.");
+        return failure("Cadastre a turma em “Turmas” antes de usá-la em uma rotina.");
       }
 
       const capacityError = checkCatalogCapacity(result.value);
@@ -126,13 +126,13 @@ export function createAppController({
 
     updateRoutine(id, payload) {
       const index = state.routines.findIndex((routine) => routine.id === id);
-      if (index === -1) return failure("Rotina não encontrada.");
+      if (index === -1) return failure("Rotina não encontrada. Atualize a página e tente novamente.");
 
       const result = buildRoutine(payload, state.routines[index]);
       if (!result.ok) return result;
 
       if (!catalogHasName("rooms", result.value.room)) {
-        return failure("Cadastre a turma antes de usá-la em uma rotina.");
+        return failure("Cadastre a turma em “Turmas” antes de usá-la em uma rotina.");
       }
 
       const capacityError = checkCatalogCapacity(result.value);
@@ -145,7 +145,7 @@ export function createAppController({
 
     deleteRoutine(id) {
       const index = state.routines.findIndex((routine) => routine.id === id);
-      if (index === -1) return failure("Rotina não encontrada.");
+      if (index === -1) return failure("Rotina não encontrada. Atualize a página e tente novamente.");
 
       lastDeletedRoutine = state.routines[index] ?? null;
       state.routines.splice(index, 1);
@@ -154,10 +154,10 @@ export function createAppController({
 
     duplicateRoutine(id) {
       if (state.routines.length >= MAX_ROUTINES) {
-        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido. Exclua rotinas antigas antes de duplicar.`);
       }
       const routine = state.routines.find((item) => item.id === id);
-      if (!routine) return failure("Rotina não encontrada.");
+      if (!routine) return failure("Rotina não encontrada. Atualize a página e tente novamente.");
 
       const duplicated = {
         ...routine,
@@ -178,9 +178,9 @@ export function createAppController({
     },
 
     undoDeleteRoutine() {
-      if (!lastDeletedRoutine) return failure("Não há exclusão recente para desfazer.");
+      if (!lastDeletedRoutine) return failure("Nenhuma exclusão recente para desfazer.");
       if (state.routines.length >= MAX_ROUTINES) {
-        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido.`);
+        return failure(`Limite de ${MAX_ROUTINES} rotinas atingido. Exclua rotinas antigas para restaurar a anterior.`);
       }
       state.routines.push({
         ...lastDeletedRoutine,
@@ -198,13 +198,13 @@ export function createAppController({
       };
       const limit = limitMap[kind];
       if (limit !== undefined && state[kind].length >= limit) {
-        return failure(`Limite de ${limit} itens atingido para este catálogo.`);
+        return failure(`Limite de ${limit} cadastros atingido neste catálogo. Remova itens não utilizados para liberar espaço.`);
       }
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
 
       if (catalogHasName(kind, normalized.value.name)) {
-        return failure("Já existe um cadastro com esse nome.");
+        return failure("Já existe um cadastro com esse nome neste catálogo.");
       }
 
       const item = createCatalogItem(
@@ -219,7 +219,7 @@ export function createAppController({
     updateCatalogItem(kind, id, payload) {
       const collection = state[kind];
       const index = collection.findIndex((item) => item.id === id);
-      if (index === -1) return failure("Cadastro não encontrado.");
+      if (index === -1) return failure("Cadastro não encontrado. Atualize a página e tente novamente.");
 
       const normalized = normalizeCatalogPayload(kind, payload);
       if (!normalized.ok) return normalized;
@@ -227,7 +227,7 @@ export function createAppController({
       const duplicate = collection.some(
         (item) => item.id !== id && normalizeCase(item.name) === normalizeCase(normalized.value.name),
       );
-      if (duplicate) return failure("Já existe um cadastro com esse nome.");
+      if (duplicate) return failure("Já existe um cadastro com esse nome neste catálogo.");
 
       const previousName = collection[index]!.name;
       collection[index] = {
@@ -244,7 +244,7 @@ export function createAppController({
     deleteCatalogItem(kind, id) {
       const collection = state[kind];
       const index = collection.findIndex((item) => item.id === id);
-      if (index === -1) return failure("Cadastro não encontrado.");
+      if (index === -1) return failure("Cadastro não encontrado. Atualize a página e tente novamente.");
 
       collection.splice(index, 1);
       return persist();
@@ -286,14 +286,14 @@ export function createAppController({
 
     addMaintenanceRecord(payload) {
       if (state.maintenanceRecords.length >= MAX_MAINTENANCES) {
-        return failure(`Limite de ${MAX_MAINTENANCES} registros de manutenção atingido.`);
+        return failure(`Limite de ${MAX_MAINTENANCES} manutenções atingido. Conclua ou remova registros antigos antes de cadastrar novos.`);
       }
       const result = buildMaintenanceRecord(payload, state.maintenanceRecords);
       if (!result.ok) return result;
 
       const created = appendMaintenanceHistory(
         result.value,
-        `Registro criado com status "${getMaintenanceStatusLabel(result.value.status)}".`,
+        `Manutenção cadastrada com status "${getMaintenanceStatusLabel(result.value.status)}".`,
       );
       state.maintenanceRecords.push(created);
       return persist();
@@ -301,7 +301,7 @@ export function createAppController({
 
     updateMaintenanceRecord(id, payload) {
       const index = state.maintenanceRecords.findIndex((record) => record.id === id);
-      if (index === -1) return failure("Registro de manutenção não encontrado.");
+      if (index === -1) return failure("Manutenção não encontrada. Atualize a página e tente novamente.");
 
       const previous = state.maintenanceRecords[index]!;
       const result = buildMaintenanceRecord(payload, state.maintenanceRecords, previous);
@@ -318,7 +318,7 @@ export function createAppController({
 
     deleteMaintenanceRecord(id) {
       const index = state.maintenanceRecords.findIndex((record) => record.id === id);
-      if (index === -1) return failure("Registro de manutenção não encontrado.");
+      if (index === -1) return failure("Manutenção não encontrada. Atualize a página e tente novamente.");
       state.maintenanceRecords.splice(index, 1);
       return persist();
     },
@@ -356,7 +356,7 @@ export function createAppController({
     },
 
     recordNotificationStatus(input) {
-      if (!input?.id) return failure("Identificador da notificação ausente.");
+      if (!input?.id) return failure("Identificador do aviso ausente. Atualize a página e tente novamente.");
       const log = state.notificationLog ?? [];
       const index = log.findIndex((entry) => entry.id === input.id);
       const entry: NotificationLogEntry = {
@@ -446,11 +446,11 @@ export function createAppController({
 
   function checkCatalogCapacity(routine: Routine): string | null {
     if (!catalogHasName("teachers", routine.teacher) && state.teachers.length >= MAX_TEACHERS) {
-      return `Limite de ${MAX_TEACHERS} professores atingido.`;
+      return `Limite de ${MAX_TEACHERS} professores cadastrados atingido. Remova nomes em desuso antes de salvar.`;
     }
     for (const device of routine.devices) {
       if (!catalogHasName("devices", device) && state.devices.length >= MAX_DEVICES) {
-        return `Limite de ${MAX_DEVICES} dispositivos atingido.`;
+        return `Limite de ${MAX_DEVICES} equipamentos cadastrados atingido. Remova itens em desuso antes de salvar.`;
       }
     }
     return null;
