@@ -62,7 +62,6 @@
 
   .maintenance-metric.is-danger {
     --metric-dot: var(--accent);
-    border-color: var(--accent-border);
   }
 
   .maintenance-metric.is-neutral {
@@ -191,7 +190,7 @@
   /* larguras explícitas para colunas com badge (prioridade=col6, status=col7) */
   .maintenance-table th:nth-child(6),
   .maintenance-table td:nth-child(6) {
-    width: 90px;
+    width: 120px;
   }
 
   .maintenance-table th:nth-child(7),

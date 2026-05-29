@@ -164,11 +164,6 @@ export function createMaintenanceView({
         value: countBy(records, (r) => r.priority === "alta" || r.priority === "urgente"),
         tone: "danger",
       },
-      {
-        label: "Sem chamado",
-        value: countBy(records, (r) => !normalizeText(r.ticketNumber)),
-        tone: "neutral",
-      },
     ];
 
     replaceChildren(
