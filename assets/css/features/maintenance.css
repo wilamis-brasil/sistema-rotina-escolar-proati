@@ -124,6 +124,16 @@
     overflow-wrap: anywhere;
   }
 
+  .maintenance-table tbody td,
+  .maintenance-table tbody th {
+    padding: 12px 14px;
+  }
+
+  .maintenance-table th:nth-child(5),
+  .maintenance-table td:nth-child(5) {
+    width: 240px;
+  }
+
   .maintenance-table th:last-child,
   .maintenance-table td:last-child {
     border-right: 0;
@@ -169,8 +179,8 @@
     border-right: 1px solid var(--border-strong);
   }
 
-  .maintenance-table tbody tr:hover .maintenance-cell-id,
-  .maintenance-table tbody tr:hover td {
+  .maintenance-table .maintenance-row:hover .maintenance-cell-id,
+  .maintenance-table .maintenance-row:hover td {
     background: var(--surface-soft);
   }
 
@@ -484,5 +494,116 @@
     .maintenance-table {
       min-width: 1000px;
     }
+  }
+
+  /* ── Linha principal: célula de problema ─────────── */
+
+  .maintenance-cell-problem {
+    vertical-align: top;
+  }
+
+  .maintenance-problem-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .maintenance-problem-title {
+    color: var(--text);
+    font-size: var(--font-sm);
+    font-weight: 500;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  .maintenance-problem-meta {
+    color: var(--muted);
+    font-size: var(--font-xs);
+    line-height: 1.3;
+    overflow-wrap: anywhere;
+  }
+
+  /* ── Botão Ver mais / Ver menos ──────────────────── */
+
+  .maintenance-expand-toggle {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 2px 8px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: transparent;
+    color: var(--muted);
+    font-size: var(--font-xs);
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: color 120ms, background 120ms, border-color 120ms;
+  }
+
+  .maintenance-expand-toggle svg {
+    width: 12px;
+    height: 12px;
+    flex: 0 0 auto;
+    transition: transform 200ms ease;
+  }
+
+  .maintenance-expand-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  .maintenance-expand-toggle:hover {
+    color: var(--text);
+    background: var(--surface-soft);
+    border-color: var(--border-strong);
+  }
+
+  .maintenance-expand-toggle:focus-visible {
+    outline: none;
+    box-shadow: var(--focus-ring);
+  }
+
+  /* ── Linha expandida ─────────────────────────────── */
+
+  .maintenance-expanded-row > td {
+    padding: 0;
+    background: var(--surface-soft);
+    border-bottom: 2px solid var(--border);
+  }
+
+  .maintenance-expanded-panel {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .maintenance-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
+  }
+
+  .maintenance-detail-block {
+    display: grid;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .maintenance-detail-label {
+    color: var(--muted);
+    font-size: var(--font-xs);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .maintenance-detail-value {
+    margin: 0;
+    color: var(--text);
+    font-size: var(--font-sm);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 }

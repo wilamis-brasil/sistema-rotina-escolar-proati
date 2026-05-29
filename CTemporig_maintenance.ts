@@ -73,7 +73,6 @@ export function createMaintenanceView({
   onChange: () => void;
 }): MaintenanceView {
   const filters: Filters = { query: "", type: "", status: "", priority: "" };
-  const expandedRecordIds = new Set<string>();
 
   function bindEvents(): void {
     refs.maintenanceFilter.addEventListener("input", () => {
@@ -187,8 +186,6 @@ export function createMaintenanceView({
   }
 
   function renderTable(): void {
-    const activeExpandId = (document.activeElement as HTMLElement | null)?.dataset?.expandId ?? null;
-
     const state = getState();
     const all = state.maintenanceRecords;
     const filtered = applyFilters(all, filters);
@@ -196,7 +193,7 @@ export function createMaintenanceView({
     const total = all.length;
     const shown = filtered.length;
     refs.maintenanceResultsCount.textContent =
-      shown < total ? `${shown} de ${total} registro${total !== 1 ? 's' : ''}` : `${total} registro${total !== 1 ? 's' : ''}`;
+      shown < total ? `${shown} de ${total} registro${total !== 1 ? "s" : ""}` : `${total} registro${total !== 1 ? "s" : ""}`;
 
     refs.maintenanceFilterClear.hidden = !hasActiveFilters(filters);
 
@@ -215,12 +212,6 @@ export function createMaintenanceView({
 
     replaceChildren(refs.maintenanceTableWrap, [renderTableElement(filtered)]);
     refreshIcons(refs.maintenanceTableWrap);
-
-    if (activeExpandId) {
-      refs.maintenanceTableWrap
-        .querySelector<HTMLElement>(`[data-expand-id=”${activeExpandId}”]`)
-        ?.focus({ preventScroll: true });
-    }
   }
 
   function renderTableElement(records: MaintenanceRecord[]): HTMLElement {
@@ -244,95 +235,27 @@ export function createMaintenanceView({
         el(
           "tbody",
           {},
-          records.flatMap((record) => renderRowGroup(record)),
+          records.map((record) => renderRow(record)),
         ),
       ]),
     ]);
   }
 
-  function hasExpandableContent(record: MaintenanceRecord): boolean {
-    return Boolean(
-      normalizeText(record.technicalDescription) ||
-      normalizeText(record.actionsTaken) ||
-      normalizeText(record.notes),
-    );
-  }
-
-  function toggleExpanded(id: string): void {
-    if (expandedRecordIds.has(id)) expandedRecordIds.delete(id);
-    else expandedRecordIds.add(id);
-    renderTable();
-  }
-
-  function renderRowGroup(record: MaintenanceRecord): HTMLElement[] {
-    const isExpanded = expandedRecordIds.has(record.id);
-    const hasExtra = hasExpandableContent(record);
-    const rows: HTMLElement[] = [renderMainRow(record, isExpanded, hasExtra)];
-    if (isExpanded && hasExtra) rows.push(renderExpandedRow(record));
-    return rows;
-  }
-
-  function renderMainRow(record: MaintenanceRecord, isExpanded: boolean, hasExtra: boolean): HTMLElement {
-    return el("tr", { className: "maintenance-row" }, [
+  function renderRow(record: MaintenanceRecord): HTMLElement {
+    return el("tr", {}, [
       el("th", { className: "maintenance-cell-id", attrs: { scope: "row" } }, [
         el("strong", { text: record.equipmentId }),
       ]),
       el("td", { text: record.type || "—" }),
       el("td", { text: record.brandModel || "—" }),
       el("td", { text: record.location || "—" }),
-      renderProblemCell(record, isExpanded, hasExtra),
+      el("td", { text: record.mainProblem || "—" }),
       el("td", {}, [priorityBadge(record.priority)]),
       el("td", {}, [statusBadge(record.status)]),
       el("td", { text: record.ticketNumber || "—" }),
       el("td", { text: formatDateTime(record.createdAt) || "—" }),
       el("td", { text: formatDateTime(record.updatedAt) || "—" }),
       el("td", { className: "maintenance-cell-actions" }, [renderRowActions(record)]),
-    ]);
-  }
-
-  function renderProblemCell(record: MaintenanceRecord, isExpanded: boolean, hasExtra: boolean): HTMLElement {
-    const stackChildren: (HTMLElement | false)[] = [
-      el("span", { className: "maintenance-problem-title", text: record.mainProblem || "—" }),
-      !!normalizeText(record.responsibleContact) &&
-        el("span", { className: "maintenance-problem-meta", text: record.responsibleContact }),
-    ];
-
-    if (hasExtra) {
-      const btn = el(
-        "button",
-        {
-          className: "maintenance-expand-toggle",
-          attrs: {
-            type: "button",
-            "aria-expanded": String(isExpanded),
-            "aria-controls": `maintenance-expanded-${record.id}`,
-            "aria-label": `${isExpanded ? "Recolher detalhes de" : "Ver mais sobre"} ${record.equipmentId}`,
-            "data-expand-id": record.id,
-          },
-        },
-        [icon("chevron-down"), el("span", { text: isExpanded ? "Ver menos" : "Ver mais" })],
-      );
-      btn.addEventListener("click", () => toggleExpanded(record.id));
-      stackChildren.push(btn);
-    }
-
-    return el("td", { className: "maintenance-cell-problem" }, [
-      el("div", { className: "maintenance-problem-stack" }, stackChildren),
-    ]);
-  }
-
-  function renderExpandedRow(record: MaintenanceRecord): HTMLElement {
-    return el("tr", { className: "maintenance-expanded-row" }, [
-      el("td", { className: "maintenance-expanded-cell", attrs: { colspan: "11" } }, [
-        el("div", { className: "maintenance-expanded-panel", attrs: { id: `maintenance-expanded-${record.id}` } }, [
-          el("div", { className: "maintenance-detail-grid" }, [
-            detailBlock("Descrição técnica", record.technicalDescription),
-            detailBlock("Ações realizadas", record.actionsTaken),
-            detailBlock("Observações", record.notes),
-            detailBlock("Responsável", record.responsibleContact),
-          ]),
-        ]),
-      ]),
     ]);
   }
 
@@ -609,13 +532,6 @@ function th(label: string, className = ""): HTMLElement {
 
 function emptyState(message: string): HTMLElement {
   return el("div", { className: "maintenance-empty" }, [icon("wrench"), el("strong", { text: message })]);
-}
-
-function detailBlock(label: string, value: string | undefined): HTMLElement {
-  return el("div", { className: "maintenance-detail-block" }, [
-    el("span", { className: "maintenance-detail-label", text: label }),
-    el("p", { className: "maintenance-detail-value", text: normalizeText(value) || "Não informado" }),
-  ]);
 }
 
 function countBy(records: MaintenanceRecord[], predicate: (r: MaintenanceRecord) => boolean): number {
