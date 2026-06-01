@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && node scripts/sync-pages-root.mjs",
     "preview": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

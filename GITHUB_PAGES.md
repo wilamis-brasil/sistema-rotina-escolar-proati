@@ -25,11 +25,16 @@ Saída esperada:
 
 ```txt
 dist/
+index.html
+assets/index-*.js
+assets/index-*.css
 ```
 
 ## O que vai para o Pages
 
 Publique o conteúdo de `dist/`. Essa pasta contém JavaScript compilado, CSS e imagens prontos para o navegador.
+
+O build também sincroniza o `index.html` e os assets versionados na raiz do repositório. Isso evita conteúdo antigo quando o GitHub Pages estiver configurado como **Deploy from a branch** usando `main`/raiz. Não apague os assets versionados antigos imediatamente: navegadores com HTML cacheado ainda podem requisitá-los por alguns minutos.
 
 ## Configuração do Vite
 
@@ -52,6 +57,8 @@ O projeto já inclui um workflow em `.github/workflows/pages.yml` que executa au
 3. `npm test`
 4. `npm run build`
 5. Publica `dist/` no GitHub Pages.
+
+Nas configurações do repositório, prefira **Settings → Pages → Source: GitHub Actions**. Se a origem estiver como `Deploy from a branch`, o Pages servirá o `index.html` da raiz; por isso esse fallback também é atualizado pelo `npm run build`.
 
 ### Opção 2: branch `gh-pages`
 
