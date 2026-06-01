@@ -12,6 +12,7 @@ const rootDir = process.cwd();
 const distDir = join(rootDir, "dist");
 const distAssetsDir = join(distDir, "assets");
 const rootAssetsDir = join(rootDir, "assets");
+const hashedAssetPattern = /^index-[\w-]+\.(css|js)$/;
 const textFilePattern = /\.(html|json|txt|webmanifest)$/;
 
 function detectNewline(filePath) {
@@ -40,6 +41,22 @@ function copyRootFile(source, destination) {
 
   copyFileSync(source, destination);
 }
+
+function preserveExistingHashedAssets() {
+  if (!existsSync(rootAssetsDir)) {
+    return;
+  }
+
+  mkdirSync(distAssetsDir, { recursive: true });
+
+  for (const entry of readdirSync(rootAssetsDir, { withFileTypes: true })) {
+    if (entry.isFile() && hashedAssetPattern.test(entry.name)) {
+      copyFileSync(join(rootAssetsDir, entry.name), join(distAssetsDir, entry.name));
+    }
+  }
+}
+
+preserveExistingHashedAssets();
 
 for (const entry of readdirSync(distDir, { withFileTypes: true })) {
   if (entry.isFile()) {
