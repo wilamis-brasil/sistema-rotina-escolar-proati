@@ -1,0 +1,8 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# Logs and local tooling caches
+*.log
+.cache/
+node_modules/

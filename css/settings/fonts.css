@@ -1,0 +1,17 @@
+@layer settings {
+  @font-face {
+    font-family: "Rawline";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: local("Rawline"), local("Rawline Regular");
+  }
+
+  @font-face {
+    font-family: "Rawline";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: local("Rawline Bold"), local("Rawline");
+  }
+}
