@@ -56,4 +56,4 @@ aplicação.
 
 ## Licença
 
-MIT
+[MIT](https://github.com/wilamis-brasil/sistema-rotina-escolar-proati/blob/7c48103359d6ccb1937322720c19797910be584a/LICENSE)
