@@ -39,7 +39,7 @@ tests/              # testes com node:test
 
 ## Decisões
 
-- Usei JavaScript puro porque o projeto precisava ser fácil de publicar e
+- Usei JavaScript puro porque o projeto precisava ser fácil (tanto para mim quanto para outros estagiários que queiram entender, modificar ou contribuir com este projeto) de publicar e
 manter, sem depender de pipeline de build.
 - Separei domínio, persistência e UI para reduzir acoplamento e facilitar teste.
 - Mantive os dados no navegador para preservar privacidade e evitar backend
