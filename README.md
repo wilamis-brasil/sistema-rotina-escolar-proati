@@ -22,10 +22,7 @@ navegador, sem servidor e sem build.
 ## Stack
 
 - HTML, CSS e JavaScript puro.
-- ES Modules nativos no navegador.
-- `localStorage` para persistência local.
-- `node:test` para testes automatizados.
-- Sem framework, sem bundler e sem dependências de runtime.
+
 
 ## Estrutura
 
