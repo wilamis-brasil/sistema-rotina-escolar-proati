@@ -1,12 +1,4 @@
-# Arquitetura
-
-Aplicação frontend modular e **estática**: HTML, CSS e JavaScript puros (ES modules
-nativos), **sem build e sem dependências de runtime**. O navegador executa os
-arquivos-fonte diretamente; o GitHub Pages os serve como estão.
-
-O objetivo não é parecer enterprise — é ser fácil de entender, manter e publicar.
-
-## Visão geral
+# MINHAS Decisões de Arquitetura
 
 ```txt
 index.html
@@ -57,19 +49,7 @@ persistência.
 Renderização e eventos DOM, sem regras de negócio. Padrão de fábrica + injeção
 de dependências: `create-ui.js` instancia cada view (`today`, `week`, catálogos,
 `maintenance`, `notifications`, `settings`) passando `getState`/`actions` e
-callbacks. Ícones são **SVG inline** (`ui/icons.js`), substituindo a dependência
-`lucide`: `refreshIcons` troca os placeholders `[data-lucide]` após cada render.
-
-## Modelo de dados
-
-- Chave de armazenamento: `sistema-rotina-escolar-proati-state-v1`.
-- Chave legada suportada (lida e migrada): `kickoff-proati-state-v1`.
-- Versão do schema: **8**. Estados salvos em versões anteriores são migrados
-  automaticamente no carregamento.
-
-Entidades: `Routine`, `MaintenanceRecord` (com histórico, 10 status e 4
-prioridades), `Teacher`, `Room` (com `studentCount`), `Device`,
-`NotificationLogEntry`, `Settings`/`NotificationSettings`.
+callbacks.
 
 ## Engine de notificações
 
@@ -94,8 +74,3 @@ notificações, persistência, ações do controller e views puras.
 - **Schema versionado.** Migração automática evita que dados antigos quebrem.
 - **Dados locais.** Tudo fica no navegador (`localStorage`) — combina com a
   ferramenta local; `localStorage` não é armazenamento seguro para segredos.
-
-## Riscos conhecidos
-
-- Notificações param se a aba for fechada (sem Push API).
-- `localStorage` é por-origem e legível por código na mesma origem.
