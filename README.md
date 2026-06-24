@@ -38,6 +38,8 @@ js/
 tests/              # testes com node:test
 ```
 
+Veja mais em: [ARCHITECTURE.md](https://github.com/wilamis-brasil/sistema-rotina-escolar-proati/blob/903ad3c81a0977cf2516e7b3aa85e61f16ec1532/ARCHITECTURE.md)
+
 ## Decisões
 
 - Usei JavaScript puro porque o projeto precisava ser fácil (tanto para mim quanto para outros estagiários que queiram entender, modificar ou contribuir com este projeto) de publicar e
