@@ -38,7 +38,7 @@
     }
 
     :root {
-      --site-logo-width: 196px;
+      --site-logo-width: 172px;
       --main-menu-button-width: 48px;
     }
 
@@ -57,7 +57,7 @@
       justify-content: flex-end;
     }
 
-    .site-logo-mark {
+    .site-logo::before {
       width: 46px;
       height: 46px;
       flex-basis: 46px;
