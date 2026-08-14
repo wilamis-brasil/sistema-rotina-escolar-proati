@@ -16,19 +16,48 @@
   .site-logo {
     display: inline-flex;
     align-items: center;
+    gap: 10px;
     width: var(--site-logo-width);
     min-width: 0;
     line-height: 0;
     text-decoration: none;
   }
 
-  .site-logo img {
+  .site-logo-mark {
     display: block;
-    width: 100%;
-    height: auto;
-    max-height: 36px;
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
     object-fit: contain;
-    object-position: left center;
+  }
+
+  .site-logo-copy {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    gap: 3px;
+    line-height: 1;
+  }
+
+  .site-logo-context,
+  .site-logo-name {
+    display: block;
+    white-space: nowrap;
+  }
+
+  .site-logo-context {
+    color: var(--text);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .site-logo-name {
+    color: var(--accent);
+    font-size: 1.38rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
   }
 
   .main-nav {
