@@ -1,5 +1,6 @@
 # Sistema de Rotina Escolar PROATI
-<img width="1897" height="892" alt="image" src="https://github.com/user-attachments/assets/173c1931-83a6-4ce9-8f52-33855aaca20d" />
+<img width="1284" height="753" alt="image" src="https://github.com/user-attachments/assets/5ca1eb5a-abd7-41f5-99a5-f4c8d675645a" />
+
 
 Preview: [https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/](https://wilamis-brasil.github.io/sistema-rotina-escolar-proati/)
 
