@@ -1,0 +1,59 @@
+@layer layout {
+  .panel {
+    padding: 28px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .priority-panel {
+    min-height: 436px;
+  }
+
+  .priority-panel .panel-heading {
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .panel-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+
+  .panel-heading h2 {
+    margin-top: 6px;
+    font-size: 1.42rem;
+    font-weight: 800;
+    line-height: 1.08;
+    letter-spacing: -0.005em;
+  }
+
+  .panel-heading p {
+    max-width: 520px;
+    margin-top: 8px;
+    color: var(--muted);
+    line-height: 1.52;
+  }
+
+  .toolbar-heading {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 16px;
+  }
+
+  .toolbar,
+  .form-actions {
+    display: flex;
+    align-items: end;
+    justify-content: flex-end;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .toolbar {
+    min-width: min(100%, 520px);
+  }
+}

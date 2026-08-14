@@ -1,0 +1,41 @@
+@layer base {
+  .menu-button,
+  .nav-button,
+  .button,
+  .icon-button,
+  .action-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid transparent;
+    border-radius: var(--radius);
+    transition: none;
+  }
+
+  .button svg,
+  .menu-button svg,
+  .nav-button svg,
+  .icon-button svg,
+  .action-button svg {
+    width: 17px;
+    height: 17px;
+    flex: 0 0 auto;
+  }
+
+  .panel h2,
+  .panel p,
+  .form-block h3 {
+    margin: 0;
+  }
+
+  .panel p,
+  .notice-text,
+  .routine-meta,
+  .catalog-item span,
+  .empty-state,
+  .metric-item span,
+  .metric-item small {
+    color: var(--muted);
+  }
+}

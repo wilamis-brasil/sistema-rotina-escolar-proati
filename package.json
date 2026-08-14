@@ -1,0 +1,12 @@
+{
+  "name": "sistema-rotina-escolar-proati",
+  "version": "2.0.0",
+  "description": "Sistema local de rotina escolar PROATI: HTML, CSS e JavaScript puros, sem build e sem dependências.",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\"",
+    "serve": "npx --yes serve@latest ."
+  }
+}

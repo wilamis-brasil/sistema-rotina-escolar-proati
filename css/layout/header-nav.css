@@ -1,0 +1,203 @@
+@layer layout {
+  .app-header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: 24px;
+    align-items: center;
+    padding: 12px max(20px, calc((100% - var(--content-width)) / 2));
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .site-logo {
+    display: inline-flex;
+    align-items: center;
+    width: var(--site-logo-width);
+    min-width: 0;
+    line-height: 0;
+    text-decoration: none;
+  }
+
+  .site-logo img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: 48px;
+    object-fit: contain;
+    object-position: left center;
+  }
+
+  .main-nav {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    justify-self: end;
+    width: auto;
+    min-width: 0;
+    gap: 8px;
+  }
+
+  .main-nav .notification-bell-button {
+    margin-right: 0;
+  }
+
+  .menu-button {
+    justify-content: flex-start;
+    width: var(--main-menu-button-width);
+    flex: 0 0 var(--main-menu-button-width);
+    height: 42px;
+    min-height: 42px;
+    padding: 0 10px;
+    color: var(--text);
+    background: transparent;
+    border-color: var(--border);
+    font-size: 0.86rem;
+    font-weight: 600;
+  }
+
+  .menu-button:hover,
+  .menu-button[aria-expanded="true"] {
+    color: var(--text);
+    background: var(--surface-soft);
+    border-color: var(--accent-border);
+  }
+
+  .menu-button[aria-expanded="true"] .menu-button-label {
+    color: var(--accent);
+  }
+
+  .menu-button-copy {
+    display: grid;
+    width: 96px;
+    min-width: 96px;
+    gap: 2px;
+    line-height: 1.05;
+    text-align: left;
+  }
+
+  .menu-button-label {
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  #main-menu-current {
+    width: 96px;
+    max-width: 96px;
+    overflow: hidden;
+    font-size: 0.88rem;
+    font-weight: 700;
+    line-height: 1.1;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .menu-button-chevron {
+    color: var(--muted);
+  }
+
+  .menu-button-chevron {
+    margin-left: auto;
+  }
+
+  .menu-button[aria-expanded="true"] .menu-button-chevron {
+    transform: rotate(180deg);
+  }
+
+  .menu-panel {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    z-index: 40;
+    display: grid;
+    width: var(--main-menu-panel-width);
+    max-width: calc(100vw - 24px);
+    gap: 4px;
+    padding: 8px 8px 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 18px 38px rgba(0, 0, 0, 0.12);
+    max-height: calc(100vh - 90px);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    scrollbar-width: thin;
+  }
+
+  .menu-panel[hidden] {
+    display: none;
+  }
+
+  .nav-button {
+    position: relative;
+    justify-content: flex-start;
+    width: 100%;
+    height: var(--main-menu-item-height);
+    min-height: var(--main-menu-item-height);
+    padding: 0 12px;
+    color: var(--text);
+    background: transparent;
+    font-size: 0.88rem;
+    font-weight: 600;
+    text-align: left;
+    white-space: normal;
+  }
+
+  .nav-button::before {
+    content: "";
+    width: 3px;
+    height: 24px;
+    flex: 0 0 auto;
+    margin-left: -4px;
+    background: transparent;
+    border-radius: var(--radius-pill);
+  }
+
+  .nav-button:hover {
+    color: var(--text);
+    background: var(--surface-soft);
+    border-color: var(--border);
+  }
+
+  .nav-button.is-active {
+    color: var(--text);
+    background: var(--accent-soft);
+    border-color: var(--accent-border);
+  }
+
+  .nav-button.is-active::before {
+    background: var(--accent);
+  }
+
+  .nav-button.is-active svg {
+    color: var(--accent);
+  }
+
+  .nav-button-copy {
+    display: grid;
+    min-width: 0;
+    gap: 2px;
+    line-height: 1.12;
+  }
+
+  .nav-button-copy span {
+    font-weight: 700;
+  }
+
+  .nav-button-copy small {
+    color: var(--muted);
+    font-size: 0.76rem;
+    font-weight: 500;
+  }
+
+  .nav-button.is-active .nav-button-copy small {
+    color: var(--muted);
+  }
+}
