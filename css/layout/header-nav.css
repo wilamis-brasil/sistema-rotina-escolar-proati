@@ -16,19 +16,37 @@
   .site-logo {
     display: inline-flex;
     align-items: center;
+    gap: 9px;
     width: var(--site-logo-width);
     min-width: 0;
     line-height: 0;
     text-decoration: none;
   }
 
+  .site-logo::before {
+    content: "";
+    width: 40px;
+    height: 40px;
+    flex: 0 0 40px;
+    background: url("../../icon-proati.svg") center / contain no-repeat;
+  }
+
+  .site-logo::after {
+    content: "PROATI";
+    color: var(--text);
+    font-size: 1.18rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.055em;
+  }
+
   .site-logo img {
-    display: block;
-    width: 100%;
-    height: auto;
-    max-height: 36px;
-    object-fit: contain;
-    object-position: left center;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .main-nav {
